@@ -15,3 +15,1385 @@
     --font-sans: 'Estedad', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer components {
+    .neova-home {
+        --paper: #f4f0e7;
+        --paper-deep: #eae4d8;
+        --ink: #0b1b2b;
+        --muted: #5f6b73;
+        --blue: #075de8;
+        --blue-dark: #0348b9;
+        --mint: #68d7ad;
+        --line: rgba(11, 27, 43, 0.16);
+        background: var(--paper);
+        color: var(--ink);
+        min-height: 100vh;
+        overflow-x: hidden;
+    }
+
+    .neova-home * {
+        box-sizing: border-box;
+    }
+
+    .neova-home ::selection {
+        color: white;
+        background: var(--blue);
+    }
+
+    .neova-home a,
+    .neova-home button {
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .neova-home a:focus-visible,
+    .neova-home button:focus-visible {
+        outline: 3px solid var(--mint);
+        outline-offset: 4px;
+    }
+
+    .neova-shell {
+        width: min(1180px, calc(100% - 48px));
+        margin-inline: auto;
+    }
+
+    .neova-skip-link {
+        position: fixed;
+        z-index: 100;
+        top: 12px;
+        right: 12px;
+        transform: translateY(-150%);
+        border-radius: 8px;
+        background: var(--ink);
+        color: white;
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .neova-skip-link:focus {
+        transform: translateY(0);
+    }
+
+    .neova-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 88px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .neova-wordmark {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 20px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+    }
+
+    .neova-mark {
+        position: relative;
+        display: inline-flex;
+        align-items: flex-end;
+        gap: 3px;
+        width: 31px;
+        height: 27px;
+        padding: 5px;
+        border-radius: 9px 9px 5px 5px;
+        background: var(--ink);
+        transform: rotate(-2deg);
+    }
+
+    .neova-mark i {
+        display: block;
+        width: 5px;
+        border-radius: 2px 2px 0 0;
+        background: var(--mint);
+    }
+
+    .neova-mark i:nth-child(1) { height: 9px; }
+    .neova-mark i:nth-child(2) { height: 16px; }
+    .neova-mark i:nth-child(3) { height: 12px; }
+
+    .neova-header-actions,
+    .neova-hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+    }
+
+    .neova-text-link {
+        position: relative;
+        color: var(--ink);
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .neova-text-link::after {
+        position: absolute;
+        right: 0;
+        bottom: -4px;
+        width: 0;
+        height: 2px;
+        background: var(--blue);
+        content: '';
+        transition: width 180ms ease;
+    }
+
+    .neova-text-link:hover::after {
+        width: 100%;
+    }
+
+    .neova-button {
+        display: inline-flex;
+        min-height: 50px;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        border: 1px solid var(--blue);
+        border-radius: 9px;
+        background: var(--blue);
+        box-shadow: 0 6px 0 #063c91;
+        color: white;
+        padding: 12px 20px;
+        font-size: 13px;
+        font-weight: 800;
+        transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+    }
+
+    .neova-button:hover {
+        background: var(--blue-dark);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 0 #063c91;
+    }
+
+    .neova-button:active {
+        transform: translateY(4px);
+        box-shadow: 0 2px 0 #063c91;
+    }
+
+    .neova-button svg {
+        width: 18px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2;
+        transform: scaleX(-1);
+    }
+
+    .neova-button--small {
+        min-height: 40px;
+        box-shadow: 0 4px 0 #063c91;
+        padding: 8px 15px;
+        font-size: 12px;
+    }
+
+    .neova-opening {
+        display: grid;
+        grid-template-columns: minmax(280px, .7fr) minmax(650px, 1.5fr);
+        gap: clamp(40px, 6vw, 84px);
+        align-items: start;
+        padding-block: 60px 90px;
+    }
+
+    .neova-opening-copy {
+        display: flex;
+        min-height: 650px;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-block: 4px 20px;
+    }
+
+    .neova-editorial-index {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+
+    .neova-editorial-index a {
+        display: inline;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.9;
+    }
+
+    .neova-editorial-index strong {
+        margin-left: 6px;
+        color: var(--blue);
+        font-weight: 800;
+        text-decoration: underline;
+        text-decoration-color: rgba(7, 93, 232, .35);
+        text-decoration-thickness: 2px;
+        text-underline-offset: 4px;
+    }
+
+    .neova-editorial-index a:hover strong {
+        text-decoration-color: var(--blue);
+    }
+
+    .neova-hero-copy h1 {
+        max-width: 520px;
+        font-size: clamp(40px, 4.1vw, 68px);
+        font-weight: 900;
+        letter-spacing: -0.055em;
+        line-height: 1.16;
+    }
+
+    .neova-hero-copy > p {
+        max-width: 500px;
+        margin-top: 22px;
+        color: var(--muted);
+        font-size: 16px;
+        line-height: 2;
+    }
+
+    .neova-hero-copy .neova-hero-actions {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 14px;
+        margin-top: 30px;
+    }
+
+    .neova-hero-actions > span,
+    .neova-closing-copy > small {
+        color: var(--muted);
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .neova-board-wrap {
+        position: relative;
+        padding-top: 18px;
+    }
+
+    .neova-note {
+        position: absolute;
+        z-index: 2;
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 800;
+        transform: rotate(-3deg);
+    }
+
+    .neova-note::after {
+        display: block;
+        width: 86px;
+        height: 15px;
+        margin-top: 2px;
+        border-bottom: 2px solid var(--blue);
+        border-radius: 50%;
+        content: '';
+        transform: rotate(3deg);
+    }
+
+    .neova-note--board {
+        top: -13px;
+        left: 25px;
+    }
+
+    .neova-board {
+        min-height: 620px;
+        border: 1px solid rgba(255, 255, 255, .09);
+        border-radius: 14px;
+        background: #0d1f2d;
+        box-shadow: 0 30px 70px rgba(11, 27, 43, .2), 10px 12px 0 rgba(7, 93, 232, .13);
+        color: #edf4f8;
+        padding: 28px;
+    }
+
+    .neova-board-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-bottom: 24px;
+        border-bottom: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    .neova-board-kicker {
+        display: block;
+        margin-bottom: 4px;
+        color: #7690a2;
+        font-size: 9px;
+        font-weight: 700;
+        letter-spacing: .08em;
+    }
+
+    .neova-board-head h2 {
+        font-size: 20px;
+        font-weight: 900;
+    }
+
+    .neova-avatars {
+        display: flex;
+        flex-direction: row-reverse;
+    }
+
+    .neova-avatars span {
+        display: grid;
+        width: 30px;
+        height: 30px;
+        margin-right: -8px;
+        place-items: center;
+        border: 2px solid #0d1f2d;
+        border-radius: 50%;
+        background: #185d91;
+        color: white;
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .neova-avatars span:nth-child(2) { background: #d56b52; }
+    .neova-avatars span:nth-child(3) { background: #327d68; }
+
+    .neova-board-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        padding-top: 24px;
+        direction: rtl;
+    }
+
+    .neova-column {
+        min-height: 492px;
+        border-radius: 9px;
+        background: rgba(255, 255, 255, .035);
+        padding: 11px;
+    }
+
+    .neova-column--done {
+        background: rgba(104, 215, 173, .045);
+    }
+
+    .neova-column-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 35px;
+        color: #b7c6cf;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .neova-column-head span {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+
+    .neova-column-head i {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--blue);
+    }
+
+    .neova-column-head i.is-amber { background: #e8a649; }
+    .neova-column-head i.is-violet { background: #a98dec; }
+    .neova-column-head i.is-mint { background: var(--mint); }
+
+    .neova-column-head b {
+        display: grid;
+        width: 20px;
+        height: 20px;
+        place-items: center;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, .07);
+        color: #879ba8;
+        font-size: 9px;
+    }
+
+    .neova-task {
+        margin-top: 10px;
+        border: 1px solid rgba(255, 255, 255, .09);
+        border-radius: 8px;
+        background: #172b3b;
+        box-shadow: 0 8px 18px rgba(0, 0, 0, .12);
+        padding: 13px 12px;
+        transition: transform 180ms ease, border-color 180ms ease;
+    }
+
+    .neova-task:hover {
+        border-color: rgba(104, 215, 173, .5);
+        transform: translateY(-3px);
+    }
+
+    .neova-task--active {
+        border-color: rgba(7, 93, 232, .7);
+        box-shadow: inset 3px 0 0 var(--blue), 0 10px 22px rgba(0, 0, 0, .18);
+    }
+
+    .neova-task small {
+        color: #718998;
+        font-size: 8px;
+        font-weight: 700;
+    }
+
+    .neova-task h3 {
+        margin-top: 8px;
+        font-size: 11px;
+        font-weight: 800;
+        line-height: 1.6;
+    }
+
+    .neova-task-meta {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 16px;
+        color: #8194a0;
+        font-size: 8px;
+    }
+
+    .neova-task-meta span {
+        border-radius: 4px;
+        background: rgba(7, 93, 232, .18);
+        color: #82aff7;
+        padding: 3px 5px;
+        font-weight: 700;
+    }
+
+    .neova-task-meta span.is-mint {
+        background: rgba(104, 215, 173, .12);
+        color: var(--mint);
+    }
+
+    .neova-progress {
+        height: 4px;
+        margin-top: 14px;
+        overflow: hidden;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .08);
+    }
+
+    .neova-progress i {
+        display: block;
+        height: 100%;
+        border-radius: inherit;
+        background: var(--blue);
+    }
+
+    .neova-checkline {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 14px;
+        color: #8194a0;
+        font-size: 8px;
+    }
+
+    .neova-checkline > i {
+        height: 3px;
+        flex: 1;
+        overflow: hidden;
+        border-radius: 4px;
+        background: rgba(255,255,255,.08);
+    }
+
+    .neova-checkline b {
+        display: block;
+        height: 100%;
+        background: var(--mint);
+    }
+
+    .neova-proof-band {
+        border-block: 1px solid var(--line);
+        background: var(--paper-deep);
+    }
+
+    .neova-proof-list {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .neova-proof-list p {
+        min-height: 125px;
+        padding: 30px 24px;
+        border-left: 1px solid var(--line);
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1.9;
+    }
+
+    .neova-proof-list p:last-child {
+        border-left: 0;
+    }
+
+    .neova-proof-list span {
+        display: block;
+        margin-bottom: 12px;
+        color: var(--blue);
+        font-size: 10px;
+        font-weight: 900;
+    }
+
+    .neova-letter-section {
+        display: grid;
+        grid-template-columns: .72fr 1.28fr;
+        gap: clamp(50px, 10vw, 150px);
+        padding-block: 140px;
+    }
+
+    .neova-section-heading h2,
+    .neova-evidence-title h2,
+    .neova-capabilities-title h2,
+    .neova-closing-copy h2 {
+        font-size: clamp(32px, 4vw, 58px);
+        font-weight: 900;
+        letter-spacing: -0.055em;
+        line-height: 1.28;
+    }
+
+    .neova-handline {
+        display: block;
+        width: 135px;
+        height: 28px;
+        margin-top: 20px;
+        border-bottom: 3px solid var(--blue);
+        border-radius: 50%;
+        transform: rotate(-2deg);
+    }
+
+    .neova-letter {
+        max-width: 650px;
+        color: #34414a;
+        font-size: 15px;
+        line-height: 2.15;
+    }
+
+    .neova-letter p + p {
+        margin-top: 21px;
+    }
+
+    .neova-signature {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin-top: 36px;
+    }
+
+    .neova-signature svg {
+        width: 100px;
+        fill: none;
+        stroke: var(--ink);
+        stroke-linecap: round;
+        stroke-width: 2;
+    }
+
+    .neova-signature strong {
+        font-size: 12px;
+    }
+
+    .neova-evidence-section {
+        border-top: 1px solid var(--line);
+    }
+
+    .neova-evidence-row {
+        display: grid;
+        grid-template-columns: .75fr 1.25fr;
+        gap: clamp(50px, 10vw, 150px);
+        padding-block: 115px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .neova-evidence-title > span {
+        display: inline-block;
+        margin-bottom: 20px;
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 900;
+    }
+
+    .neova-evidence-body > p {
+        max-width: 650px;
+        margin-bottom: 38px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 2.1;
+    }
+
+    .neova-structure-map {
+        display: grid;
+        grid-template-columns: 1fr 50px 1fr 50px 1fr;
+        align-items: center;
+        border-block: 1px solid var(--line);
+        padding-block: 28px;
+    }
+
+    .neova-structure-map div {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+    }
+
+    .neova-structure-map small {
+        color: var(--blue);
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .neova-structure-map strong {
+        font-size: 13px;
+    }
+
+    .neova-structure-map span {
+        color: var(--muted);
+        font-size: 10px;
+    }
+
+    .neova-structure-map svg {
+        width: 36px;
+        fill: none;
+        stroke: rgba(11, 27, 43, .35);
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.5;
+        transform: scaleX(-1);
+    }
+
+    .neova-people-panel,
+    .neova-task-panel {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .48);
+        box-shadow: 10px 10px 0 rgba(7, 93, 232, .08);
+    }
+
+    .neova-panel-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+        padding: 17px 20px;
+        font-size: 12px;
+    }
+
+    .neova-panel-head button {
+        min-height: 38px;
+        border-radius: 7px;
+        background: var(--blue);
+        color: white;
+        padding: 8px 12px;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .neova-person {
+        display: grid;
+        grid-template-columns: 38px 1fr auto;
+        gap: 12px;
+        align-items: center;
+        min-height: 72px;
+        padding-inline: 20px;
+        border-bottom: 1px solid rgba(11, 27, 43, .09);
+    }
+
+    .neova-person:last-child { border-bottom: 0; }
+
+    .neova-person-avatar {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--blue);
+        color: white;
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .neova-person-avatar.is-coral { background: #d66e57; }
+    .neova-person-avatar.is-mint { background: #34866a; }
+
+    .neova-person p {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .neova-person strong { font-size: 11px; }
+    .neova-person small { color: var(--muted); font-size: 9px; direction: ltr; text-align: right; }
+    .neova-person > b { color: var(--blue); font-size: 10px; }
+
+    .neova-person > button {
+        display: flex;
+        min-height: 36px;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        padding: 6px 10px;
+        color: var(--ink);
+        font-size: 9px;
+        font-weight: 700;
+    }
+
+    .neova-person > button svg {
+        width: 9px;
+        fill: none;
+        stroke: currentColor;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.5;
+    }
+
+    .neova-task-panel {
+        display: grid;
+        grid-template-columns: 1fr 180px;
+        overflow: hidden;
+    }
+
+    .neova-task-panel-main {
+        padding: 28px;
+    }
+
+    .neova-task-panel-main > small {
+        color: var(--blue);
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .neova-task-panel-main h3 {
+        margin-top: 9px;
+        font-size: 20px;
+        font-weight: 900;
+    }
+
+    .neova-task-panel-main h4 {
+        margin-block: 26px 10px;
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .neova-task-panel-main label {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        min-height: 34px;
+        font-size: 11px;
+    }
+
+    .neova-task-panel-main input {
+        width: 15px;
+        height: 15px;
+        accent-color: var(--blue);
+    }
+
+    .neova-task-panel-main input:checked + span {
+        color: #81909a;
+        text-decoration: line-through;
+    }
+
+    .neova-comment {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        border-radius: 8px;
+        background: white;
+        padding: 12px;
+    }
+
+    .neova-comment > span {
+        display: grid;
+        width: 26px;
+        height: 26px;
+        flex: 0 0 auto;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--ink);
+        color: white;
+        font-size: 8px;
+    }
+
+    .neova-comment p {
+        color: var(--muted);
+        font-size: 10px;
+        line-height: 1.8;
+    }
+
+    .neova-comment strong {
+        margin-left: 5px;
+        color: var(--ink);
+    }
+
+    .neova-task-panel aside {
+        border-right: 1px solid var(--line);
+        background: rgba(11, 27, 43, .025);
+        padding: 28px 20px;
+    }
+
+    .neova-task-panel dl {
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+    }
+
+    .neova-task-panel dl div {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .neova-task-panel dt {
+        color: var(--muted);
+        font-size: 9px;
+        font-weight: 800;
+    }
+
+    .neova-task-panel dd {
+        display: flex;
+        gap: 5px;
+        font-size: 10px;
+        font-weight: 700;
+    }
+
+    .neova-task-panel dd span {
+        display: grid;
+        width: 25px;
+        height: 25px;
+        place-items: center;
+        border-radius: 50%;
+        background: var(--blue);
+        color: white;
+        font-size: 8px;
+    }
+
+    .neova-task-panel dd span + span { background: #d66e57; }
+
+    .neova-task-panel dd b {
+        border-radius: 4px;
+        background: rgba(7, 93, 232, .1);
+        color: var(--blue);
+        padding: 4px 6px;
+        font-size: 8px;
+    }
+
+    .neova-task-panel dd b.is-mint {
+        background: rgba(104, 215, 173, .18);
+        color: #237456;
+    }
+
+    .neova-capabilities {
+        background: var(--ink);
+        color: #f7f3ea;
+    }
+
+    .neova-capabilities-grid {
+        display: grid;
+        grid-template-columns: .72fr 1.28fr;
+        gap: clamp(50px, 10vw, 150px);
+        padding-block: 130px;
+    }
+
+    .neova-capabilities-title {
+        position: sticky;
+        top: 40px;
+        align-self: start;
+    }
+
+    .neova-capabilities-title p {
+        max-width: 310px;
+        margin-top: 24px;
+        color: #9eabb3;
+        font-size: 13px;
+        line-height: 2;
+    }
+
+    .neova-question-list {
+        border-top: 1px solid rgba(255, 255, 255, .15);
+    }
+
+    .neova-question-list p {
+        display: grid;
+        grid-template-columns: 22px 1fr auto;
+        gap: 13px;
+        align-items: center;
+        min-height: 60px;
+        border-bottom: 1px solid rgba(255, 255, 255, .11);
+        color: #d9e0e4;
+        font-size: 12px;
+        transition: background 180ms ease, padding 180ms ease;
+    }
+
+    .neova-question-list p:hover {
+        background: rgba(255, 255, 255, .035);
+        padding-inline: 10px;
+    }
+
+    .neova-question-list svg {
+        width: 18px;
+        fill: none;
+        stroke: var(--mint);
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 2.6;
+    }
+
+    .neova-question-list strong {
+        border-radius: 3px;
+        background: rgba(104, 215, 173, .15);
+        color: var(--mint);
+        padding: 2px 5px;
+        font-size: 8px;
+        font-weight: 900;
+        transform: rotate(-2deg);
+    }
+
+    .neova-underlined-link {
+        display: inline-block;
+        margin-top: 24px;
+        border-bottom: 2px solid var(--blue);
+        color: #85b3ff;
+        padding-bottom: 4px;
+        font-size: 11px;
+        font-weight: 800;
+    }
+
+    .neova-closing {
+        display: grid;
+        grid-template-columns: .9fr 1.1fr;
+        gap: clamp(50px, 10vw, 140px);
+        align-items: center;
+        min-height: 700px;
+        padding-block: 130px;
+    }
+
+    .neova-closing-copy > p {
+        max-width: 530px;
+        margin-top: 25px;
+        color: var(--muted);
+        font-size: 15px;
+        line-height: 2.1;
+    }
+
+    .neova-closing-copy .neova-hero-actions {
+        margin-top: 32px;
+    }
+
+    .neova-closing-copy > small {
+        display: block;
+        margin-top: 18px;
+    }
+
+    .neova-mini-board {
+        display: grid;
+        grid-template-columns: 1fr 55px 1fr;
+        align-items: center;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .42);
+        box-shadow: 12px 12px 0 rgba(7, 93, 232, .08);
+        padding: 24px;
+    }
+
+    .neova-mini-board > div {
+        min-height: 220px;
+        border-radius: 8px;
+        background: rgba(11, 27, 43, .04);
+        padding: 14px;
+    }
+
+    .neova-mini-board > div > span {
+        font-size: 10px;
+        font-weight: 800;
+    }
+
+    .neova-mini-board > svg {
+        width: 38px;
+        margin-inline: auto;
+        fill: none;
+        stroke: var(--blue);
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 1.8;
+        transform: scaleX(-1);
+    }
+
+    .neova-mini-board article {
+        position: relative;
+        margin-top: 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 8px 20px rgba(11, 27, 43, .07);
+        padding: 14px;
+        transition: opacity 300ms ease, transform 450ms cubic-bezier(.22, .85, .26, 1);
+    }
+
+    .neova-mini-board article small {
+        display: block;
+        color: var(--blue);
+        font-size: 8px;
+        font-weight: 800;
+    }
+
+    .neova-mini-board article strong {
+        display: block;
+        margin-top: 8px;
+        font-size: 10px;
+    }
+
+    .neova-mini-board article i {
+        display: block;
+        width: 34px;
+        height: 4px;
+        margin-top: 18px;
+        border-radius: 4px;
+        background: #d9e2e7;
+    }
+
+    .neova-mini-board .is-done article {
+        opacity: .18;
+        transform: translateY(12px);
+    }
+
+    .neova-mini-board article.is-moved {
+        opacity: 0;
+        transform: translateX(-75px) rotate(-3deg);
+    }
+
+    .neova-mini-board .is-done article.is-arrived {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .neova-mini-board .is-done article.is-arrived i {
+        background: var(--mint);
+    }
+
+    .neova-footer {
+        border-top: 1px solid var(--line);
+        background: var(--paper-deep);
+    }
+
+    .neova-footer-top,
+    .neova-footer-bottom {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .neova-footer-top {
+        min-height: 130px;
+    }
+
+    .neova-footer-top nav {
+        display: flex;
+        gap: 28px;
+    }
+
+    .neova-footer-top nav a,
+    .neova-footer-bottom {
+        color: var(--muted);
+        font-size: 11px;
+    }
+
+    .neova-footer-top nav a:hover,
+    .neova-footer-bottom a:hover {
+        color: var(--blue);
+    }
+
+    .neova-footer-bottom {
+        min-height: 62px;
+        border-top: 1px solid var(--line);
+    }
+
+    .neova-footer-bottom p {
+        color: var(--ink);
+        font-weight: 700;
+    }
+
+    @media (max-width: 1050px) {
+        .neova-opening {
+            grid-template-columns: 1fr;
+        }
+
+        .neova-opening-copy {
+            min-height: auto;
+            gap: 70px;
+        }
+
+        .neova-editorial-index {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .neova-board-wrap {
+            max-width: 850px;
+            margin-inline: auto;
+        }
+
+        .neova-letter-section,
+        .neova-evidence-row,
+        .neova-capabilities-grid {
+            gap: 70px;
+        }
+
+        .neova-closing {
+            grid-template-columns: 1fr;
+            min-height: auto;
+        }
+
+        .neova-mini-board {
+            max-width: 700px;
+        }
+    }
+
+    @media (max-width: 760px) {
+        .neova-shell {
+            width: min(100% - 30px, 650px);
+        }
+
+        .neova-header {
+            min-height: 72px;
+        }
+
+        .neova-header-actions {
+            gap: 14px;
+        }
+
+        .neova-button--small {
+            min-height: 44px;
+        }
+
+        .neova-opening {
+            gap: 55px;
+            padding-block: 40px 65px;
+        }
+
+        .neova-opening-copy {
+            gap: 52px;
+        }
+
+        .neova-editorial-index {
+            grid-template-columns: 1fr;
+            gap: 3px;
+        }
+
+        .neova-editorial-index a {
+            font-size: 11px;
+        }
+
+        .neova-hero-copy h1 {
+            font-size: clamp(38px, 12vw, 56px);
+        }
+
+        .neova-hero-copy > p {
+            font-size: 14px;
+        }
+
+        .neova-board-wrap {
+            width: calc(100vw - 16px);
+            margin-right: calc((100vw - min(100vw - 30px, 650px)) / -2 + 8px);
+            overflow-x: auto;
+            padding: 18px 8px 28px;
+            scrollbar-width: thin;
+        }
+
+        .neova-note--board {
+            right: 20px;
+            left: auto;
+        }
+
+        .neova-board {
+            width: 760px;
+            min-height: 580px;
+            padding: 22px;
+        }
+
+        .neova-column {
+            min-height: 445px;
+        }
+
+        .neova-proof-list {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .neova-proof-list p {
+            min-height: 118px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .neova-proof-list p:nth-child(2) {
+            border-left: 0;
+        }
+
+        .neova-proof-list p:nth-child(n+3) {
+            border-bottom: 0;
+        }
+
+        .neova-letter-section,
+        .neova-evidence-row,
+        .neova-capabilities-grid {
+            grid-template-columns: 1fr;
+            gap: 45px;
+            padding-block: 85px;
+        }
+
+        .neova-section-heading h2,
+        .neova-evidence-title h2,
+        .neova-capabilities-title h2,
+        .neova-closing-copy h2 {
+            font-size: clamp(34px, 10vw, 48px);
+        }
+
+        .neova-evidence-body > p,
+        .neova-letter,
+        .neova-closing-copy > p {
+            font-size: 14px;
+        }
+
+        .neova-structure-map {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .neova-structure-map svg {
+            transform: rotate(90deg);
+        }
+
+        .neova-task-panel {
+            grid-template-columns: 1fr;
+        }
+
+        .neova-task-panel aside {
+            border-top: 1px solid var(--line);
+            border-right: 0;
+        }
+
+        .neova-task-panel dl {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .neova-capabilities-title {
+            position: static;
+        }
+
+        .neova-question-list p {
+            min-height: 68px;
+            line-height: 1.8;
+        }
+
+        .neova-closing {
+            padding-block: 90px;
+        }
+
+        .neova-closing-copy .neova-hero-actions {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .neova-mini-board {
+            grid-template-columns: 1fr 32px 1fr;
+            padding: 14px;
+        }
+
+        .neova-mini-board > div {
+            min-height: 190px;
+            padding: 10px;
+        }
+
+        .neova-mini-board > svg {
+            width: 25px;
+        }
+
+        .neova-footer-top {
+            align-items: flex-start;
+            flex-direction: column;
+            gap: 30px;
+            padding-block: 38px;
+        }
+
+        .neova-footer-top nav {
+            flex-wrap: wrap;
+            gap: 18px 24px;
+        }
+    }
+
+    @media (max-width: 430px) {
+        .neova-wordmark {
+            font-size: 18px;
+        }
+
+        .neova-header-actions .neova-text-link {
+            display: none;
+        }
+
+        .neova-proof-list {
+            grid-template-columns: 1fr;
+        }
+
+        .neova-proof-list p,
+        .neova-proof-list p:nth-child(2),
+        .neova-proof-list p:nth-child(n+3) {
+            min-height: auto;
+            border-bottom: 1px solid var(--line);
+            border-left: 0;
+            padding: 23px 4px;
+        }
+
+        .neova-proof-list p:last-child {
+            border-bottom: 0;
+        }
+
+        .neova-person {
+            grid-template-columns: 34px 1fr;
+            padding-block: 13px;
+        }
+
+        .neova-person > b,
+        .neova-person > button {
+            grid-column: 2;
+            justify-self: start;
+        }
+
+        .neova-task-panel dl {
+            grid-template-columns: 1fr;
+        }
+
+        .neova-question-list p {
+            grid-template-columns: 20px 1fr;
+        }
+
+        .neova-question-list strong {
+            display: none;
+        }
+
+        .neova-mini-board article {
+            padding: 10px 8px;
+        }
+
+        .neova-mini-board article strong {
+            font-size: 9px;
+            line-height: 1.7;
+        }
+
+        .neova-footer-bottom {
+            align-items: flex-start;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .neova-home *,
+        .neova-home *::before,
+        .neova-home *::after {
+            scroll-behavior: auto !important;
+            transition-duration: .01ms !important;
+            animation-duration: .01ms !important;
+            animation-iteration-count: 1 !important;
+        }
+
+        .neova-mini-board article.is-moved {
+            opacity: 1;
+            transform: none;
+        }
+    }
+}

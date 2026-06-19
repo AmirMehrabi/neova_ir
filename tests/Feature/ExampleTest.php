@@ -10,10 +10,14 @@ class ExampleTest extends TestCase
     /**
      * A basic test example.
      */
-    public function test_the_application_returns_a_successful_response(): void
+    public function test_the_public_homepage_is_available(): void
     {
         $response = $this->get('/');
 
-        $response->assertRedirect(route('auth'));
+        $response
+            ->assertOk()
+            ->assertSee('کار تیمی، بدون گم‌شدن بین پیام‌ها.')
+            ->assertSee('رایگان شروع کنید')
+            ->assertSee(route('auth'), false);
     }
 }

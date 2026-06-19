@@ -9,8 +9,8 @@ use App\Http\Controllers\WorkspaceManagementController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return redirect()->route('auth');
-});
+    return view('welcome');
+})->name('home');
 
 Route::get('/auth', [AuthController::class, 'showAuth'])->name('auth');
 Route::post('/auth/send-otp', [AuthController::class, 'sendOtp'])->name('auth.send-otp');
