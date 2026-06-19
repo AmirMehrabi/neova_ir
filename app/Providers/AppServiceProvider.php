@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,15 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        View::composer('*', function ($view): void {
+            if (! auth()->check()) {
+                return;
+            }
+
+            $view->with([
+                'navbarNotifications' => auth()->user()->notifications()->latest()->limit(5)->get(),
+                'navbarUnreadCount' => auth()->user()->unreadNotifications()->count(),
+            ]);
+        });
     }
 }

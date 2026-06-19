@@ -6,8 +6,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -28,12 +28,12 @@ class User extends Authenticatable
 
     public function getFullNameAttribute(): string
     {
-        return trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? '')) ?: $this->name;
+        return trim(($this->first_name ?? '').' '.($this->last_name ?? '')) ?: $this->name;
     }
 
     public function isProfileComplete(): bool
     {
-        return !empty($this->first_name) && !empty($this->last_name);
+        return ! empty($this->first_name) && ! empty($this->last_name);
     }
 
     public function ownedWorkspaces(): HasMany
@@ -52,6 +52,19 @@ class User extends Authenticatable
     {
         $owned = $this->ownedWorkspaces;
         $member = $this->workspaces;
+
         return $owned->merge($member)->unique('id');
+    }
+
+    public function projects(): BelongsToMany
+    {
+        return $this->belongsToMany(Project::class, 'project_members')
+            ->withPivot('added_by')
+            ->withTimestamps();
+    }
+
+    public function workspaceInvitations(): HasMany
+    {
+        return $this->hasMany(WorkspaceInvitation::class, 'responded_by');
     }
 }

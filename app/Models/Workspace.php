@@ -47,4 +47,41 @@ class Workspace extends Model
     {
         return $this->members()->where('user_id', $user->id)->exists() || $this->isOwnedBy($user);
     }
+
+    public function invitations(): HasMany
+    {
+        return $this->hasMany(WorkspaceInvitation::class);
+    }
+
+    public function roleFor(User $user): ?string
+    {
+        if ($this->isOwnedBy($user)) {
+            return 'owner';
+        }
+
+        return $this->members()
+            ->where('users.id', $user->id)
+            ->value('workspace_members.role');
+    }
+
+    public function canManageMembers(User $user): bool
+    {
+        return in_array($this->roleFor($user), ['owner', 'admin'], true);
+    }
+
+    public function canEditBoards(User $user): bool
+    {
+        return in_array($this->roleFor($user), ['owner', 'admin', 'user'], true);
+    }
+
+    public function canManageRole(User $actor, string $targetRole): bool
+    {
+        $actorRole = $this->roleFor($actor);
+
+        if ($actorRole === 'owner') {
+            return in_array($targetRole, ['admin', 'user', 'viewer'], true);
+        }
+
+        return $actorRole === 'admin' && in_array($targetRole, ['user', 'viewer'], true);
+    }
 }

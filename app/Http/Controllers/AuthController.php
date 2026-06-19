@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\WorkspaceInvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -23,7 +24,7 @@ class AuthController extends Controller
 
     public function showProfile()
     {
-        if (!session('otp_verified_phone')) {
+        if (! session('otp_verified_phone')) {
             return redirect()->route('auth');
         }
 
@@ -33,9 +34,9 @@ class AuthController extends Controller
     public function sendOtp(Request $request)
     {
         $raw = $request->input('phone', '');
-        $phone = '09' . preg_replace('/[^0-9]/', '', $raw);
+        $phone = '09'.preg_replace('/[^0-9]/', '', $raw);
 
-        if (!preg_match('/^09[0-9]{9}$/', $phone)) {
+        if (! preg_match('/^09[0-9]{9}$/', $phone)) {
             return response()->json([
                 'success' => false,
                 'message' => 'شماره تلفن نادرست است',
@@ -57,17 +58,17 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $raw = $request->input('phone', '');
-        $phone = '09' . preg_replace('/[^0-9]/', '', $raw);
+        $phone = '09'.preg_replace('/[^0-9]/', '', $raw);
         $code = $request->input('code', '');
 
-        if (!preg_match('/^09[0-9]{9}$/', $phone) || !preg_match('/^[0-9]{6}$/', $code)) {
+        if (! preg_match('/^09[0-9]{9}$/', $phone) || ! preg_match('/^[0-9]{6}$/', $code)) {
             return response()->json([
                 'success' => false,
                 'message' => 'اطلاعات وارد شده نادرست است',
             ], 422);
         }
 
-        if (!OtpCode::verify($phone, $code)) {
+        if (! OtpCode::verify($phone, $code)) {
             return response()->json([
                 'success' => false,
                 'message' => 'کد تایید نادرست یا منقضی شده است',
@@ -80,11 +81,12 @@ class AuthController extends Controller
 
         if ($user) {
             Auth::login($user);
+            app(WorkspaceInvitationService::class)->syncPendingNotifications($user);
             session()->forget(['otp_phone', 'otp_verified_phone']);
 
             return response()->json([
                 'success' => true,
-                'redirect' => route('dashboard'),
+                'redirect' => $this->redirectUrlAfterLogin(),
                 'message' => 'ورود موفقیت‌آمیز بود',
             ]);
         }
@@ -106,7 +108,7 @@ class AuthController extends Controller
 
         $phone = session('otp_verified_phone');
 
-        if (!$phone) {
+        if (! $phone) {
             return redirect()->route('auth');
         }
 
@@ -114,7 +116,7 @@ class AuthController extends Controller
             'phone' => $phone,
             'first_name' => $request->first_name,
             'last_name' => $request->last_name,
-            'name' => $request->first_name . ' ' . $request->last_name,
+            'name' => $request->first_name.' '.$request->last_name,
             'national_code' => $request->national_code,
             'password' => bcrypt(Str::random(32)),
         ]);
@@ -125,9 +127,10 @@ class AuthController extends Controller
         ]);
 
         Auth::login($user);
+        app(WorkspaceInvitationService::class)->syncPendingNotifications($user);
         session()->forget(['otp_phone', 'otp_verified_phone']);
 
-        return redirect()->route('board');
+        return redirect($this->redirectUrlAfterLogin());
     }
 
     public function logout(Request $request)
@@ -143,10 +146,19 @@ class AuthController extends Controller
     {
         $user = Auth::user();
 
-        if (!$user->isProfileComplete()) {
+        if (! $user->isProfileComplete()) {
             return redirect()->route('auth.profile');
         }
 
-        return redirect()->route('dashboard');
+        return redirect($this->redirectUrlAfterLogin());
+    }
+
+    private function redirectUrlAfterLogin(): string
+    {
+        $invitationCode = session('workspace_invitation_code');
+
+        return $invitationCode
+            ? route('invitations.show', $invitationCode)
+            : route('dashboard');
     }
 }

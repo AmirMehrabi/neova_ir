@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
+use App\Models\ProjectColumn;
+use App\Models\Task;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
 
@@ -35,6 +37,7 @@ class DashboardController extends Controller
 
         $projects = collect();
         $stats = ['total_projects' => 0, 'total_tasks' => 0, 'done_tasks' => 0];
+        $activeWorkspaceRole = $activeWorkspace?->roleFor($user);
 
         if ($activeWorkspace) {
             $projects = Project::with([
@@ -62,7 +65,7 @@ class DashboardController extends Controller
             }
         }
 
-        return view('dashboard', compact('workspaces', 'activeWorkspace', 'projects', 'stats'));
+        return view('dashboard', compact('workspaces', 'activeWorkspace', 'activeWorkspaceRole', 'projects', 'stats'));
     }
 
     public function storeWorkspace(Request $request)
@@ -82,6 +85,11 @@ class DashboardController extends Controller
     public function storeProject(Request $request, string $workspaceSlug)
     {
         $workspace = Workspace::where('slug', $workspaceSlug)->firstOrFail();
+
+        if (! $workspace->hasMember($request->user())
+            || ! in_array($workspace->roleFor($request->user()), ['owner', 'admin'], true)) {
+            abort(403);
+        }
 
         $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -112,7 +120,7 @@ class DashboardController extends Controller
     {
         $workspace = Workspace::where('slug', $slug)->firstOrFail();
 
-        if (!$workspace->isOwnedBy($request->user())) {
+        if (! $workspace->isOwnedBy($request->user())) {
             abort(403);
         }
 
@@ -124,6 +132,12 @@ class DashboardController extends Controller
     public function destroyProject(Request $request, string $workspaceSlug, string $projectSlug)
     {
         $workspace = Workspace::where('slug', $workspaceSlug)->firstOrFail();
+
+        if (! $workspace->hasMember($request->user())
+            || ! in_array($workspace->roleFor($request->user()), ['owner', 'admin'], true)) {
+            abort(403);
+        }
+
         $project = Project::where('workspace_id', $workspace->id)->where('slug', $projectSlug)->firstOrFail();
         $project->delete();
 
@@ -146,10 +160,10 @@ class DashboardController extends Controller
             ->where('name', 'LIKE', "%{$query}%")
             ->limit(5)
             ->get()
-            ->map(fn($ws) => [
+            ->map(fn ($ws) => [
                 'type' => 'workspace',
                 'name' => $ws->name,
-                'subtitle' => $ws->projects_count ?? $ws->projects()->count() . ' پروژه',
+                'subtitle' => $ws->projects_count ?? $ws->projects()->count().' پروژه',
                 'url' => route('dashboard', ['workspace' => $ws->slug]),
             ]);
         $results = $results->merge($workspaces);
@@ -159,25 +173,25 @@ class DashboardController extends Controller
             ->with('workspace')
             ->limit(5)
             ->get()
-            ->map(fn($p) => [
+            ->map(fn ($p) => [
                 'type' => 'project',
                 'name' => $p->name,
-                'subtitle' => $p->workspace->name . ' · ' . $p->key,
+                'subtitle' => $p->workspace->name.' · '.$p->key,
                 'url' => route('board', [$p->workspace->slug, $p->slug]),
             ]);
         $results = $results->merge($projects);
 
         $projectIds = Project::whereIn('workspace_id', $workspaceIds)->pluck('id');
-        $columnIds = \App\Models\ProjectColumn::whereIn('project_id', $projectIds)->pluck('id');
-        $tasks = \App\Models\Task::whereIn('column_id', $columnIds)
+        $columnIds = ProjectColumn::whereIn('project_id', $projectIds)->pluck('id');
+        $tasks = Task::whereIn('column_id', $columnIds)
             ->where('title', 'LIKE', "%{$query}%")
             ->with('column.project.workspace')
             ->limit(5)
             ->get()
-            ->map(fn($t) => [
+            ->map(fn ($t) => [
                 'type' => 'task',
                 'name' => $t->title,
-                'subtitle' => $t->column->project->workspace->name . ' · ' . $t->column->project->name,
+                'subtitle' => $t->column->project->workspace->name.' · '.$t->column->project->name,
                 'url' => route('board', [$t->column->project->workspace->slug, $t->column->project->slug]),
             ]);
         $results = $results->merge($tasks);

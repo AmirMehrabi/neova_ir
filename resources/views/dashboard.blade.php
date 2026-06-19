@@ -231,7 +231,7 @@
 
                 <div class="flex items-center gap-2.5 shrink-0">
                     {{-- New Project Button --}}
-                    @if ($activeWorkspace)
+                    @if ($activeWorkspace && in_array($activeWorkspaceRole, ['owner', 'admin'], true))
                         <button
                             @click="modalType = 'project'; showModal = true"
                             class="sm:hidden flex items-center justify-center bg-[#0069FF] hover:bg-[#0057D9] text-white w-8 h-8 rounded-lg transition-all active:scale-[0.97]"
@@ -240,6 +240,8 @@
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                         </button>
                     @endif
+
+                    <x-notification-menu />
 
                     {{-- User Dropdown --}}
                     <div class="relative" @click.away="userDropdown = false">
@@ -270,6 +272,12 @@
                                     <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                                     داشبورد
                                 </a>
+                                @if ($activeWorkspace && in_array($activeWorkspaceRole, ['owner', 'admin'], true))
+                                    <a href="{{ route('workspaces.settings', $activeWorkspace->slug) }}" class="flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[#475569] hover:bg-[#F8FAFC] transition-colors">
+                                        <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15.5A3.5 3.5 0 1012 8a3.5 3.5 0 000 7.5z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.12 2.12-.06-.06a1.7 1.7 0 00-1.88-.34 1.7 1.7 0 00-1.03 1.56V20h-3v-.08a1.7 1.7 0 00-1.03-1.56 1.7 1.7 0 00-1.88.34l-.06.06-2.12-2.12.06-.06A1.7 1.7 0 007 15a1.7 1.7 0 00-1.56-1.03H5v-3h.44A1.7 1.7 0 007 9.94a1.7 1.7 0 00-.34-1.88L6.6 8l2.12-2.12.06.06a1.7 1.7 0 001.88.34A1.7 1.7 0 0011.7 4.7V4h3v.7a1.7 1.7 0 001.03 1.56 1.7 1.7 0 001.88-.34l.06-.06L19.8 8l-.06.06a1.7 1.7 0 00-.34 1.88A1.7 1.7 0 0020.96 11H21v3h-.04A1.7 1.7 0 0019.4 15z"/></svg>
+                                        مدیریت فضای کاری
+                                    </a>
+                                @endif
                             </div>
                             <div class="border-t border-[#F1F5F9] py-1">
                                 <form action="{{ route('auth.logout') }}" method="POST">
@@ -295,13 +303,23 @@
                             <h1 class="text-xl sm:text-2xl font-black text-[#172B4D] truncate">{{ $activeWorkspace->name }}</h1>
                             <p class="text-xs sm:text-[13px] text-[#64748B] mt-1">{{ $projects->count() }} پروژه</p>
                         </div>
-                        <button
-                            @click="modalType = 'project'; showModal = true"
-                            class="hidden sm:flex items-center gap-2 bg-[#0069FF] hover:bg-[#0057D9] text-white text-[12px] font-bold px-4 py-2.5 rounded-lg transition-all active:scale-[0.98] shrink-0"
-                        >
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                            پروژه جدید
-                        </button>
+                        <div class="hidden sm:flex items-center gap-2">
+                            @if (in_array($activeWorkspaceRole, ['owner', 'admin'], true))
+                                <a href="{{ route('workspaces.settings', $activeWorkspace->slug) }}" class="text-[11px] font-bold text-[#64748B] border border-[#DCE3ED] bg-white rounded-lg px-3.5 py-2.5">مدیریت فضا</a>
+                                <button
+                                    @click="modalType = 'project'; showModal = true"
+                                    class="flex items-center gap-2 bg-[#0069FF] hover:bg-[#0057D9] text-white text-[12px] font-bold px-4 py-2.5 rounded-lg transition-all active:scale-[0.98] shrink-0"
+                                >
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                    پروژه جدید
+                                </button>
+                            @elseif ($activeWorkspaceRole !== 'owner')
+                                <form method="POST" action="{{ route('workspaces.leave', $activeWorkspace->slug) }}">
+                                    @csrf
+                                    <button class="text-[11px] font-bold text-red-500 border border-red-200 bg-white rounded-lg px-3.5 py-2.5">ترک فضا</button>
+                                </form>
+                            @endif
+                        </div>
                     </div>
 
                 @if ($projects->count())

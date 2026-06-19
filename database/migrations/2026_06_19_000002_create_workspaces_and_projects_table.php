@@ -21,7 +21,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('workspace_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('role', ['owner', 'admin', 'member'])->default('member');
+            $table->enum('role', ['owner', 'admin', 'user', 'viewer'])->default('user');
             $table->timestamps();
 
             $table->unique(['workspace_id', 'user_id']);

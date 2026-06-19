@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Middleware\EnsureProject;
+use App\Http\Middleware\EnsureWorkspace;
+use App\Http\Middleware\EnsureWorkspaceEditor;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,8 +16,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'workspace' => \App\Http\Middleware\EnsureWorkspace::class,
-            'project' => \App\Http\Middleware\EnsureProject::class,
+            'workspace' => EnsureWorkspace::class,
+            'project' => EnsureProject::class,
+            'workspace.editor' => EnsureWorkspaceEditor::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

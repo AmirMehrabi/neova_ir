@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'kavenegar' => [
+        'enabled' => env('KAVENEGAR_SMS_ENABLED', false),
+        'api_key' => env('KAVENEGAR_API_KEY'),
+        'workspace_invite' => [
+            'template' => env('KAVENEGAR_WORKSPACE_INVITE_TEMPLATE'),
+            'token' => env('KAVENEGAR_WORKSPACE_INVITE_TOKEN', 'invitation_code'),
+            'token2' => env('KAVENEGAR_WORKSPACE_INVITE_TOKEN2', 'role_name'),
+            'token3' => env('KAVENEGAR_WORKSPACE_INVITE_TOKEN3', 'expires_at'),
+            'token10' => env('KAVENEGAR_WORKSPACE_INVITE_TOKEN10', 'workspace_name'),
+            'token20' => env('KAVENEGAR_WORKSPACE_INVITE_TOKEN20', 'inviter_name'),
+        ],
+    ],
+
 ];

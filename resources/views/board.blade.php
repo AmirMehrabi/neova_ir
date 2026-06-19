@@ -43,13 +43,18 @@
             <div class="flex items-center gap-3">
                 <span class="text-blue-200 text-xs" x-text="totalTasks() + ' وظیفه'"></span>
                 <div class="h-5 w-px bg-white/20"></div>
-                <button
-                    @click="openAddModal(columns[0]?.id)"
-                    class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
-                >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    وظیفه جدید
-                </button>
+                <x-notification-menu />
+                @if ($canEdit)
+                    <button
+                        @click="openAddModal(columns[0]?.id)"
+                        class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        وظیفه جدید
+                    </button>
+                @else
+                    <span class="text-[10px] font-bold text-blue-100 bg-white/10 rounded-md px-2.5 py-1.5">فقط مشاهده</span>
+                @endif
             </div>
         </div>
     </header>
@@ -65,9 +70,11 @@
                             <h2 class="text-[13px] font-bold text-[#1A1D21]" x-text="column.title"></h2>
                             <span class="text-[10px] font-bold min-w-[20px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="column.tasks.length"></span>
                         </div>
-                        <button @click="openAddModal(column.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-[#0069FF] hover:bg-[#E8F0FE] transition-all" title="افزودن وظیفه">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                        </button>
+                        @if ($canEdit)
+                            <button @click="openAddModal(column.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-[#0069FF] hover:bg-[#E8F0FE] transition-all" title="افزودن وظیفه">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            </button>
+                        @endif
                     </div>
 
                     <div class="flex flex-col gap-2.5 min-h-[200px] max-h-[calc(100vh-11rem)] overflow-y-auto rounded-xl p-2 bg-[#E2E8F0]/50 border border-[#CBD5E1]/40" :id="'col-' + column.id" x-init="$nextTick(() => initSortable(column.id))">
@@ -100,11 +107,13 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="absolute top-3 left-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button @click.stop="confirmDelete(column.id, task.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-all" title="حذف">
-                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
-                                </div>
+                                @if ($canEdit)
+                                    <div class="absolute top-3 left-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button @click.stop="confirmDelete(column.id, task.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-all" title="حذف">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                        </button>
+                                    </div>
+                                @endif
                             </div>
                         </template>
                         <div x-show="column.tasks.length === 0" class="flex flex-col items-center justify-center py-8 text-center">
@@ -175,6 +184,7 @@
                             <input
                                 x-model="form.title"
                                 type="text"
+                                :disabled="!canEdit"
                                 class="w-full text-base font-bold text-[#1A1D21] border-b-2 border-[#E2E8F0] pb-2 focus:outline-none focus:border-[#0069FF] transition-colors bg-transparent placeholder:text-[#CBD5E1]"
                                 placeholder="عنوان وظیفه..."
                             >
@@ -183,7 +193,7 @@
                         {{-- Description --}}
                         <div>
                             <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">توضیحات</label>
-                            <div x-show="!editingDescription" @click="editingDescription = true" class="cursor-pointer min-h-[32px]" :class="form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]'" x-text="form.description || 'افزودن توضیحات...'"></div>
+                            <div x-show="!editingDescription" @click="if (canEdit) editingDescription = true" class="min-h-[32px]" :class="[(canEdit ? 'cursor-pointer' : 'cursor-default'), form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]']" x-text="form.description || 'توضیحی ثبت نشده'"></div>
                             <div x-show="editingDescription" x-transition>
                                 <textarea
                                     x-model="form.description"
@@ -213,15 +223,18 @@
                                 <template x-for="(item, idx) in form.checklist" :key="idx">
                                     <div class="check-item flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[#F8FAFC] group/item transition-colors">
                                         <label class="flex items-center gap-2.5 cursor-pointer flex-1">
-                                            <input type="checkbox" x-model="item.done" class="w-4 h-4 rounded border-2 border-[#CBD5E1] text-[#0069FF] focus:ring-[#0069FF]/20 cursor-pointer accent-[#0069FF]">
+                                            <input type="checkbox" x-model="item.done" :disabled="!canEdit" class="w-4 h-4 rounded border-2 border-[#CBD5E1] text-[#0069FF] focus:ring-[#0069FF]/20 cursor-pointer accent-[#0069FF] disabled:cursor-default">
                                             <span class="text-sm text-[#1A1D21] transition-all" x-text="item.text"></span>
                                         </label>
-                                        <button @click="removeCheckItem(idx)" class="opacity-0 group-hover/item:opacity-100 text-[#94A3B8] hover:text-red-500 transition-all">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
+                                        @if ($canEdit)
+                                            <button @click="removeCheckItem(idx)" class="opacity-0 group-hover/item:opacity-100 text-[#94A3B8] hover:text-red-500 transition-all">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        @endif
                                     </div>
                                 </template>
                             </div>
+                            @if ($canEdit)
                             <div class="mt-2">
                                 <input
                                     x-model="newCheckItem"
@@ -231,6 +244,7 @@
                                     placeholder="افزودن آیتم..."
                                 >
                             </div>
+                            @endif
                         </div>
 
                         {{-- Conversation / Activity --}}
@@ -252,6 +266,7 @@
                                     </div>
                                 </template>
                             </div>
+                            @if ($canEdit)
                             <div class="mt-3 flex gap-2.5">
                                 <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#0069FF] to-[#003B8E] flex items-center justify-center shrink-0 shadow-sm">
                                     <span class="text-[9px] text-white font-bold">ش</span>
@@ -270,6 +285,7 @@
                                     </div>
                                 </div>
                             </div>
+                            @endif
                         </div>
                     </div>
 
@@ -278,7 +294,7 @@
                         {{-- Column --}}
                         <div>
                             <label class="block text-[9px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">ستون</label>
-                            <select x-model="form.columnId" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#0069FF] transition-colors bg-white">
+                            <select x-model="form.columnId" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#0069FF] transition-colors bg-white disabled:bg-[#F1F5F9]">
                                 <template x-for="col in columns" :key="col.id">
                                     <option :value="col.id" x-text="col.title"></option>
                                 </template>
@@ -291,7 +307,7 @@
                             <div class="flex flex-col gap-1">
                                 <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-amber-500'}, {name:'پایین', color:'bg-green-500'}]" :key="p.name">
                                     <label class="flex items-center gap-2 text-[11px] cursor-pointer px-2.5 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#0069FF] bg-[#E8F0FE]' : 'border-transparent hover:bg-white'">
-                                        <input type="radio" :value="p.name" x-model="form.priority" class="hidden">
+                                        <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEdit" class="hidden">
                                         <span class="w-2 h-2 rounded-full" :class="p.color"></span>
                                         <span class="font-semibold" :class="form.priority === p.name ? 'text-[#003B8E]' : 'text-[#64748B]'" x-text="p.name"></span>
                                     </label>
@@ -302,7 +318,7 @@
                         {{-- Due Date --}}
                         <div>
                             <label class="block text-[9px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">سررسید</label>
-                            <input x-model="form.dueDate" type="date" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#0069FF] transition-colors bg-white">
+                            <input x-model="form.dueDate" type="date" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#0069FF] transition-colors bg-white disabled:bg-[#F1F5F9]">
                             <p x-show="form.dueDate && isOverdue(form.dueDate)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
                         </div>
 
@@ -312,15 +328,18 @@
 
                             {{-- Selected chips + trigger --}}
                             <div
-                                @click="assigneeOpen = !assigneeOpen"
-                                class="w-full min-h-[36px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-1.5 cursor-pointer hover:border-[#CBD5E1] transition-colors bg-white flex flex-wrap items-center gap-1"
+                                @click="if (canEdit) assigneeOpen = !assigneeOpen"
+                                class="w-full min-h-[36px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-1.5 transition-colors bg-white flex flex-wrap items-center gap-1"
+                                :class="canEdit ? 'cursor-pointer hover:border-[#CBD5E1]' : 'cursor-default bg-[#F1F5F9]'"
                             >
                                 <template x-for="name in form.assignees" :key="name">
                                     <span class="inline-flex items-center gap-1 bg-[#E8F0FE] text-[#003B8E] text-[10px] font-bold px-2 py-0.5 rounded-md">
                                         <span x-text="name"></span>
-                                        <button @click.stop="removeAssignee(name)" class="hover:text-red-500 ml-0.5">
-                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
+                                        @if ($canEdit)
+                                            <button @click.stop="removeAssignee(name)" class="hover:text-red-500 ml-0.5">
+                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        @endif
                                     </span>
                                 </template>
                                 <span x-show="form.assignees.length === 0" class="text-xs text-[#CBD5E1]">انتخاب کنید...</span>
@@ -394,7 +413,7 @@
                             <label class="block text-[9px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">برچسب‌ها</label>
                             <div class="flex flex-wrap gap-1">
                                 <template x-for="tag in allTags" :key="tag.name">
-                                    <button type="button" @click="toggleTag(tag.name)" class="text-[9px] font-bold px-2 py-1 rounded-md border transition-all duration-150" :class="form.tags.includes(tag.name) ? tag.activeClass : tag.inactiveClass" x-text="tag.name"></button>
+                                    <button type="button" @click="if (canEdit) toggleTag(tag.name)" :disabled="!canEdit" class="text-[9px] font-bold px-2 py-1 rounded-md border transition-all duration-150" :class="form.tags.includes(tag.name) ? tag.activeClass : tag.inactiveClass" x-text="tag.name"></button>
                                 </template>
                             </div>
                         </div>
@@ -403,6 +422,7 @@
                         <div class="border-t border-[#E2E8F0]"></div>
 
                         {{-- Actions --}}
+                        @if ($canEdit)
                         <div class="space-y-2">
                             <button type="button" @click="saveTask()" class="w-full text-[11px] font-bold text-white bg-gradient-to-l from-[#003B8E] to-[#0069FF] hover:from-[#004BAA] hover:to-[#4D99FF] px-4 py-2.5 rounded-xl shadow-md shadow-[#0069FF]/25 hover:shadow-lg transition-all active:scale-[0.97]">
                                 <span x-text="editingTask ? 'ذخیره تغییرات' : 'ایجاد وظیفه'"></span>
@@ -412,6 +432,9 @@
                                 حذف وظیفه
                             </button>
                         </div>
+                        @else
+                            <div class="text-[11px] leading-5 text-[#64748B] bg-white border border-[#E2E8F0] rounded-lg px-3 py-2.5">شما دسترسی مشاهده دارید و نمی‌توانید این وظیفه را تغییر دهید.</div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -470,6 +493,7 @@
             const serverMembers = @json($membersData);
 
             return {
+                canEdit: @json($canEdit),
                 showModal: false,
                 showDeleteModal: false,
                 editingTask: null,
@@ -574,6 +598,7 @@
                 },
 
                 initSortable(columnId) {
+                    if (!this.canEdit) return;
                     const el = document.getElementById('col-' + columnId);
                     if (!el) return;
                     const self = this;
@@ -590,6 +615,7 @@
                 },
 
                 moveTask(fromColId, toColId, taskId, newIndex) {
+                    if (!this.canEdit) return;
                     const fromCol = this.columns.find(c => c.id === fromColId);
                     const toCol = this.columns.find(c => c.id === toColId);
                     if (!fromCol || !toCol) return;
@@ -606,6 +632,7 @@
                 },
 
                 openAddModal(columnId) {
+                    if (!this.canEdit) return;
                     this.editingTask = null;
                     this.editingDescription = false;
                     this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', tags: [], checklist: [], comments: [] };
@@ -635,6 +662,7 @@
                 },
 
                 async saveTask() {
+                    if (!this.canEdit) return;
                     if (!this.form.title.trim()) return;
                     const token = '{{ csrf_token() }}';
                     const headers = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
@@ -663,11 +691,13 @@
                 },
 
                 confirmDelete(columnId, taskId) {
+                    if (!this.canEdit) return;
                     this.deleteTarget = { columnId, taskId };
                     this.showDeleteModal = true;
                 },
 
                 async deleteTask() {
+                    if (!this.canEdit) return;
                     const col = this.columns.find(c => c.id === this.deleteTarget.columnId);
                     if (col) {
                         const task = col.tasks.find(t => t.id === this.deleteTarget.taskId);
