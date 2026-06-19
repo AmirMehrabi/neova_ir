@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Project;
 use App\Models\Workspace;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class DashboardController extends Controller
 {
@@ -24,19 +23,37 @@ class DashboardController extends Controller
         $memberIds = $user->workspaces()->pluck('workspaces.id');
         $workspaceIds = $ownedIds->merge($memberIds)->unique();
 
-        $workspaces = Workspace::with('owner', 'projects')
+        $workspaces = Workspace::with(['projects' => function ($q) {
+            $q->withCount('columns');
+        }])
+            ->withCount('projects')
             ->whereIn('workspaces.id', $workspaceIds)
             ->get();
 
-        return view('dashboard', compact('workspaces'));
-    }
+        $activeSlug = $request->query('workspace');
+        $activeWorkspace = $workspaces->firstWhere('slug', $activeSlug) ?? $workspaces->first();
 
-    public function workspace(Request $request, string $slug)
-    {
-        $workspace = $request->attributes->get('workspace');
-        $projects = $workspace->projects()->with('columns')->get();
+        $projects = collect();
+        $stats = ['total_projects' => 0, 'total_tasks' => 0, 'done_tasks' => 0];
 
-        return view('workspace', compact('workspace', 'projects'));
+        if ($activeWorkspace) {
+            $projects = Project::with('columns')
+                ->where('workspace_id', $activeWorkspace->id)
+                ->get();
+
+            foreach ($projects as $project) {
+                $stats['total_projects']++;
+                foreach ($project->columns as $column) {
+                    $taskCount = $column->tasks()->count();
+                    $stats['total_tasks'] += $taskCount;
+                    if ($column->title === 'انجام شده') {
+                        $stats['done_tasks'] += $taskCount;
+                    }
+                }
+            }
+        }
+
+        return view('dashboard', compact('workspaces', 'activeWorkspace', 'projects', 'stats'));
     }
 
     public function storeWorkspace(Request $request)
@@ -50,12 +67,12 @@ class DashboardController extends Controller
             'name' => $request->name,
         ]);
 
-        return redirect()->route('workspace', $workspace->slug);
+        return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
     }
 
-    public function storeProject(Request $request)
+    public function storeProject(Request $request, string $workspaceSlug)
     {
-        $workspace = $request->attributes->get('workspace');
+        $workspace = Workspace::where('slug', $workspaceSlug)->firstOrFail();
 
         $request->validate([
             'name' => ['required', 'string', 'max:100'],
@@ -82,9 +99,9 @@ class DashboardController extends Controller
         return redirect()->route('board', [$workspace->slug, $project->slug]);
     }
 
-    public function destroyWorkspace(Request $request)
+    public function destroyWorkspace(Request $request, string $slug)
     {
-        $workspace = $request->attributes->get('workspace');
+        $workspace = Workspace::where('slug', $slug)->firstOrFail();
 
         if (!$workspace->isOwnedBy($request->user())) {
             abort(403);
@@ -95,11 +112,12 @@ class DashboardController extends Controller
         return redirect()->route('dashboard');
     }
 
-    public function destroyProject(Request $request)
+    public function destroyProject(Request $request, string $workspaceSlug, string $projectSlug)
     {
-        $project = $request->attributes->get('project');
+        $workspace = Workspace::where('slug', $workspaceSlug)->firstOrFail();
+        $project = Project::where('workspace_id', $workspace->id)->where('slug', $projectSlug)->firstOrFail();
         $project->delete();
 
-        return redirect()->route('workspace', $project->workspace->slug);
+        return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
     }
 }

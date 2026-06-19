@@ -26,7 +26,7 @@
     <header class="bg-[#003B8E] shadow-lg shadow-[#003B8E]/20 sticky top-0 z-40">
         <div class="max-w-[1600px] mx-auto px-5 h-14 flex items-center justify-between">
             <div class="flex items-center gap-4">
-                <a href="{{ route('workspace', $workspace->slug) }}" class="text-blue-200 hover:text-white transition-colors">
+                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="text-blue-200 hover:text-white transition-colors">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                 </a>
                 <div class="h-5 w-px bg-white/20"></div>
