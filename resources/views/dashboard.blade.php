@@ -6,54 +6,60 @@
     x-init="init()"
 >
     <style>
+        [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
-        .project-card { transition: all 0.15s ease; }
-        .project-card:hover { transform: translateY(-1px); border-color: #0069FF30; }
+        .project-row { transition: border-color 0.15s ease, box-shadow 0.15s ease; }
+        .project-row:hover { border-color: rgba(0, 105, 255, 0.28); box-shadow: 0 8px 24px rgba(3, 27, 78, 0.06); }
         .ws-item { transition: all 0.15s ease; }
-        .ws-item.active { background: rgba(255,255,255,0.08); }
+        .ws-item.active { background: rgba(255,255,255,0.1); box-shadow: inset -3px 0 0 #0069FF; }
         .ws-item:hover { background: rgba(255,255,255,0.05); }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-        .search-highlight { background: #E8F0FE; border-radius: 2px; padding: 0 2px; }
+        @media (prefers-reduced-motion: reduce) {
+            .project-row, .ws-item { transition: none; }
+        }
     </style>
 
     {{-- Sidebar --}}
     <aside
-        class="fixed md:sticky top-0 right-0 h-screen w-[220px] bg-[#003078] flex flex-col z-40 transition-transform duration-200 shrink-0"
+        class="fixed md:sticky top-0 right-0 h-screen w-[236px] bg-[#031B4E] flex flex-col z-40 transition-transform duration-200 shrink-0"
         :class="sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'"
     >
-        <div class="px-4 py-3.5 flex items-center gap-2.5 border-b border-white/10">
-            <div class="w-7 h-7 rounded-lg bg-[#0069FF] flex items-center justify-center">
-                <span class="text-white font-black text-xs">N</span>
+        <div class="px-4 py-4 flex items-center gap-2.5 border-b border-white/10">
+            <div class="w-8 h-8 rounded-lg bg-[#0069FF] flex items-center justify-center shadow-sm shadow-black/10">
+                <span class="text-white font-black text-sm">N</span>
             </div>
-            <span class="text-white font-bold text-[13px]">Neova</span>
+            <div>
+                <span class="text-white font-bold text-sm block leading-tight">Neova</span>
+                <span class="text-blue-200/55 text-[10px]">نئووا</span>
+            </div>
             <button @click="sidebarOpen = false" class="mr-auto md:hidden text-white/50 hover:text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
         </div>
 
-        <div class="flex-1 overflow-y-auto py-2.5 px-2">
-            <p class="text-[8px] font-bold text-blue-300/40 uppercase tracking-[0.15em] px-2.5 mb-1.5">فضاهای کاری</p>
+        <div class="flex-1 overflow-y-auto py-4 px-2.5">
+            <p class="text-[11px] font-bold text-blue-200/55 px-2.5 mb-2">فضاهای کاری</p>
             @forelse ($workspaces as $ws)
                 <a
                     href="{{ route('dashboard', ['workspace' => $ws->slug]) }}"
-                    class="ws-item flex items-center gap-2 px-2.5 py-[7px] rounded-lg mb-px {{ $activeWorkspace?->slug === $ws->slug ? 'active' : '' }}"
+                    class="ws-item flex items-center gap-2 px-3 py-2.5 rounded-lg mb-1 {{ $activeWorkspace?->slug === $ws->slug ? 'active' : '' }}"
                 >
                     <div class="flex-1 min-w-0">
-                        <p class="text-[12px] font-semibold text-white/90 truncate">{{ $ws->name }}</p>
-                        <p class="text-[9px] text-blue-300/40">{{ $ws->projects_count }} پروژه</p>
+                        <p class="text-[13px] font-semibold text-white/90 truncate">{{ $ws->name }}</p>
+                        <p class="text-[10px] text-blue-200/45 mt-0.5">{{ $ws->projects_count }} پروژه</p>
                     </div>
                 </a>
             @empty
-                <p class="text-[10px] text-blue-300/30 px-2.5">فضای کاری‌ای وجود ندارد</p>
+                <p class="text-xs text-blue-200/40 px-2.5">فضای کاری‌ای وجود ندارد</p>
             @endforelse
         </div>
 
-        <div class="p-2 border-t border-white/10">
+        <div class="p-2.5 border-t border-white/10">
             <button
                 @click="modalType = 'workspace'; showModal = true"
-                class="w-full flex items-center justify-center gap-1.5 text-[10px] font-semibold text-blue-300/60 hover:text-white hover:bg-white/5 px-2.5 py-2 rounded-lg transition-all"
+                class="w-full flex items-center justify-center gap-2 text-[11px] font-semibold text-blue-200/60 hover:text-white hover:bg-white/5 px-3 py-2.5 rounded-lg transition-all"
             >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                 فضای کاری جدید
@@ -78,7 +84,7 @@
     <div class="flex-1 flex flex-col min-h-screen min-w-0">
         {{-- Header --}}
         <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-[#E2E8F0]">
-            <div class="px-5 h-12 flex items-center gap-3">
+            <div class="px-4 sm:px-6 h-14 flex items-center gap-3">
                 <button @click="sidebarOpen = true" class="md:hidden text-[#64748B] hover:text-[#1A1D21] shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
@@ -96,8 +102,8 @@
                             @keydown.arrow-up.prevent="navigateResults(-1)"
                             @keydown.enter.prevent="selectResult()"
                             type="text"
-                            class="w-full text-[12px] font-medium bg-[#F1F5F9] border border-transparent rounded-lg pr-9 pl-3 py-[7px] focus:outline-none focus:bg-white focus:border-[#0069FF]/30 transition-all placeholder:text-[#94A3B8]"
-                            placeholder="جستجو..."
+                            class="w-full text-[13px] font-medium bg-[#F1F5F9] border border-transparent rounded-lg pr-9 pl-3 py-2 focus:outline-none focus:bg-white focus:border-[#0069FF]/30 transition-all placeholder:text-[#94A3B8]"
+                            placeholder="جستجوی پروژه یا وظیفه…"
                         >
                     </div>
 
@@ -228,10 +234,10 @@
                     @if ($activeWorkspace)
                         <button
                             @click="modalType = 'project'; showModal = true"
-                            class="hidden sm:flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition-all active:scale-[0.97]"
+                            class="sm:hidden flex items-center justify-center bg-[#0069FF] hover:bg-[#0057D9] text-white w-8 h-8 rounded-lg transition-all active:scale-[0.97]"
+                            aria-label="پروژه جدید"
                         >
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                            پروژه جدید
                         </button>
                     @endif
 
@@ -281,59 +287,90 @@
         </header>
 
         {{-- Content --}}
-        <main class="flex-1 p-5">
+        <main class="flex-1 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
             @if ($activeWorkspace)
+                <div class="max-w-5xl mx-auto">
+                    <div class="flex items-start sm:items-center justify-between gap-4 mb-7">
+                        <div class="min-w-0">
+                            <h1 class="text-xl sm:text-2xl font-black text-[#172B4D] truncate">{{ $activeWorkspace->name }}</h1>
+                            <p class="text-xs sm:text-[13px] text-[#64748B] mt-1">{{ $projects->count() }} پروژه</p>
+                        </div>
+                        <button
+                            @click="modalType = 'project'; showModal = true"
+                            class="hidden sm:flex items-center gap-2 bg-[#0069FF] hover:bg-[#0057D9] text-white text-[12px] font-bold px-4 py-2.5 rounded-lg transition-all active:scale-[0.98] shrink-0"
+                        >
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            پروژه جدید
+                        </button>
+                    </div>
+
                 @if ($projects->count())
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="flex items-center justify-between gap-4 mb-3">
+                        <h2 class="text-[15px] font-bold text-[#172B4D]">پروژه‌ها</h2>
+                        <span class="hidden sm:inline text-[11px] text-[#94A3B8]">برای ورود، پروژه را انتخاب کنید</span>
+                    </div>
+                    <div class="space-y-2.5">
                         @foreach ($projects as $project)
                             <a
                                 href="{{ route('board', [$activeWorkspace->slug, $project->slug]) }}"
-                                class="project-card block bg-white rounded-xl border border-[#E2E8F0] p-5 relative group"
+                                class="project-row group flex items-center gap-3 sm:gap-5 bg-white rounded-xl border border-[#DFE5EF] px-4 py-4 sm:px-5"
                             >
-                                <div class="flex items-center justify-between mb-3">
-                                    <div class="w-10 h-10 rounded-xl bg-[#0069FF]/10 flex items-center justify-center group-hover:bg-[#0069FF] transition-colors">
-                                        <span class="text-[#0069FF] font-black text-xs group-hover:text-white transition-colors">{{ $project->key }}</span>
+                                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-lg bg-[#E8F0FE] flex items-center justify-center shrink-0 group-hover:bg-[#0069FF] transition-colors">
+                                    <span class="text-[#0069FF] font-black text-[11px] sm:text-xs group-hover:text-white transition-colors">
+                                        {{ $project->key ?: mb_substr($project->name, 0, 2) }}
+                                    </span>
+                                </div>
+
+                                <div class="flex-1 min-w-0">
+                                    <h3 class="text-[14px] sm:text-[15px] font-bold text-[#172B4D] truncate">{{ $project->name }}</h3>
+                                    @if ($project->description)
+                                        <p class="hidden sm:block text-[12px] text-[#64748B] truncate mt-1">{{ $project->description }}</p>
+                                    @else
+                                        <p class="hidden sm:block text-[12px] text-[#94A3B8] mt-1">تخته وظایف و روند اجرای پروژه</p>
+                                    @endif
+                                </div>
+
+                                <div class="hidden md:block w-52 shrink-0">
+                                    <div class="flex items-center justify-between gap-3 mb-2">
+                                        @if ($project->total_tasks > 0)
+                                            <span class="text-[11px] text-[#64748B]">
+                                                {{ $project->done_tasks }} از {{ $project->total_tasks }} وظیفه انجام شده
+                                            </span>
+                                            <span class="text-[10px] font-bold text-[#0069FF]">{{ $project->progress_percentage }}٪</span>
+                                        @else
+                                            <span class="text-[11px] text-[#94A3B8]">هنوز وظیفه‌ای ثبت نشده</span>
+                                        @endif
                                     </div>
-                                    <div class="flex items-center gap-1.5">
-                                        @foreach ($project->columns->take(4) as $col)
-                                            <span class="w-2 h-2 rounded-full opacity-60" style="background: {{ $col->color ?? '#94A3B8' }}" title="{{ $col->title }}: {{ $col->tasks_count ?? $col->tasks->count() }}"></span>
-                                        @endforeach
+                                    <div class="h-1.5 bg-[#E9EEF5] rounded-full overflow-hidden">
+                                        <div class="h-full bg-[#0069FF] rounded-full" style="width: {{ $project->progress_percentage }}%"></div>
                                     </div>
                                 </div>
-                                <h3 class="text-[14px] font-bold text-[#1A1D21] mb-1 leading-relaxed">{{ $project->name }}</h3>
-                                @if ($project->description)
-                                    <p class="text-[11px] text-[#94A3B8] line-clamp-2 leading-relaxed">{{ $project->description }}</p>
-                                @endif
-                                <div class="flex items-center justify-between mt-4 pt-3 border-t border-[#F1F5F9]">
-                                    <div class="flex items-center gap-3">
-                                        @foreach ($project->columns->take(4) as $col)
-                                            <div class="flex items-center gap-1">
-                                                <span class="text-[10px] text-[#94A3B8]">{{ $col->tasks_count ?? $col->tasks->count() }}</span>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                    <svg class="w-4 h-4 text-[#CBD5E1] group-hover:text-[#0069FF] transition-colors -rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+
+                                <div class="flex items-center gap-2 shrink-0 text-[#0069FF]">
+                                    <span class="hidden lg:inline text-[12px] font-bold">ورود به تخته</span>
+                                    <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/></svg>
                                 </div>
                             </a>
                         @endforeach
                     </div>
                 @else
-                    <div class="flex flex-col items-center justify-center py-24 text-center">
+                    <div class="bg-white border border-[#DFE5EF] rounded-xl flex flex-col items-center justify-center py-20 px-5 text-center">
                         <div class="w-14 h-14 rounded-2xl bg-[#E8F0FE] flex items-center justify-center mb-4">
                             <svg class="w-7 h-7 text-[#0069FF]/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                         </div>
-                        <p class="text-sm font-bold text-[#1A1D21] mb-1">پروژه‌ای وجود ندارد</p>
-                        <p class="text-[11px] text-[#94A3B8] mb-4">اولین پروژه خود را بسازید</p>
-                        <button @click="modalType = 'project'; showModal = true" class="text-[11px] font-semibold text-[#0069FF] hover:text-[#4D99FF] transition-colors">+ پروژه جدید</button>
+                        <p class="text-[15px] font-bold text-[#172B4D] mb-1">پروژه‌ای وجود ندارد</p>
+                        <p class="text-xs text-[#64748B] mb-5">اولین پروژه این فضای کاری را بسازید و وارد تخته شوید.</p>
+                        <button @click="modalType = 'project'; showModal = true" class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] px-4 py-2.5 rounded-lg transition-colors">ایجاد پروژه</button>
                     </div>
                 @endif
+                </div>
             @else
                 <div class="flex flex-col items-center justify-center py-24 text-center">
                     <div class="w-14 h-14 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mb-4">
                         <svg class="w-7 h-7 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                     </div>
-                    <p class="text-sm font-bold text-[#1A1D21] mb-1">فضای کاری انتخاب کنید</p>
-                    <p class="text-[11px] text-[#94A3B8]">از منوی کناری یک فضای کاری انتخاب کنید</p>
+                    <p class="text-[15px] font-bold text-[#172B4D] mb-1">فضای کاری انتخاب کنید</p>
+                    <p class="text-xs text-[#64748B]">از منوی کناری یک فضای کاری انتخاب کنید</p>
                 </div>
             @endif
         </main>

@@ -37,19 +37,28 @@ class DashboardController extends Controller
         $stats = ['total_projects' => 0, 'total_tasks' => 0, 'done_tasks' => 0];
 
         if ($activeWorkspace) {
-            $projects = Project::with('columns')
+            $projects = Project::with([
+                'columns' => fn ($query) => $query->withCount('tasks'),
+            ])
                 ->where('workspace_id', $activeWorkspace->id)
                 ->get();
 
             foreach ($projects as $project) {
+                $totalTasks = (int) $project->columns->sum('tasks_count');
+                $doneTasks = (int) $project->columns
+                    ->where('title', 'انجام شده')
+                    ->sum('tasks_count');
+
+                $project->setAttribute('total_tasks', $totalTasks);
+                $project->setAttribute('done_tasks', $doneTasks);
+                $project->setAttribute(
+                    'progress_percentage',
+                    $totalTasks > 0 ? (int) round(($doneTasks / $totalTasks) * 100) : 0
+                );
+
                 $stats['total_projects']++;
-                foreach ($project->columns as $column) {
-                    $taskCount = $column->tasks()->count();
-                    $stats['total_tasks'] += $taskCount;
-                    if ($column->title === 'انجام شده') {
-                        $stats['done_tasks'] += $taskCount;
-                    }
-                }
+                $stats['total_tasks'] += $totalTasks;
+                $stats['done_tasks'] += $doneTasks;
             }
         }
 
