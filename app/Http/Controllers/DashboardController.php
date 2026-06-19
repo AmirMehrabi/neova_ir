@@ -120,4 +120,59 @@ class DashboardController extends Controller
 
         return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
     }
+
+    public function search(Request $request)
+    {
+        $request->validate(['q' => 'required|string|min:1|max:100']);
+        $query = $request->q;
+        $user = $request->user();
+
+        $ownedIds = $user->ownedWorkspaces()->pluck('workspaces.id');
+        $memberIds = $user->workspaces()->pluck('workspaces.id');
+        $workspaceIds = $ownedIds->merge($memberIds)->unique();
+
+        $results = [];
+
+        $workspaces = Workspace::whereIn('id', $workspaceIds)
+            ->where('name', 'LIKE', "%{$query}%")
+            ->limit(5)
+            ->get()
+            ->map(fn($ws) => [
+                'type' => 'workspace',
+                'name' => $ws->name,
+                'subtitle' => $ws->projects_count ?? $ws->projects()->count() . ' پروژه',
+                'url' => route('dashboard', ['workspace' => $ws->slug]),
+            ]);
+        $results = $results->merge($workspaces);
+
+        $projects = Project::whereIn('workspace_id', $workspaceIds)
+            ->where('name', 'LIKE', "%{$query}%")
+            ->with('workspace')
+            ->limit(5)
+            ->get()
+            ->map(fn($p) => [
+                'type' => 'project',
+                'name' => $p->name,
+                'subtitle' => $p->workspace->name . ' · ' . $p->key,
+                'url' => route('board', [$p->workspace->slug, $p->slug]),
+            ]);
+        $results = $results->merge($projects);
+
+        $projectIds = Project::whereIn('workspace_id', $workspaceIds)->pluck('id');
+        $columnIds = \App\Models\ProjectColumn::whereIn('project_id', $projectIds)->pluck('id');
+        $tasks = \App\Models\Task::whereIn('column_id', $columnIds)
+            ->where('title', 'LIKE', "%{$query}%")
+            ->with('column.project.workspace')
+            ->limit(5)
+            ->get()
+            ->map(fn($t) => [
+                'type' => 'task',
+                'name' => $t->title,
+                'subtitle' => $t->column->project->workspace->name . ' · ' . $t->column->project->name,
+                'url' => route('board', [$t->column->project->workspace->slug, $t->column->project->slug]),
+            ]);
+        $results = $results->merge($tasks);
+
+        return response()->json($results->values());
+    }
 }

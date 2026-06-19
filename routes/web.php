@@ -18,6 +18,7 @@ Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logou
 
 Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/search', [DashboardController::class, 'search'])->name('dashboard.search');
     Route::post('/dashboard/workspace', [DashboardController::class, 'storeWorkspace'])->name('dashboard.workspace.store');
     Route::delete('/dashboard/workspace/{slug}', [DashboardController::class, 'destroyWorkspace'])->name('dashboard.workspace.destroy');
     Route::post('/dashboard/workspace/{workspaceSlug}/project', [DashboardController::class, 'storeProject'])->name('dashboard.project.store');
