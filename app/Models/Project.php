@@ -1,0 +1,40 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
+
+class Project extends Model
+{
+    protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'key', 'is_active'];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Project $project) {
+            if (empty($project->slug)) {
+                $project->slug = Str::slug($project->name);
+            }
+            if (empty($project->key)) {
+                $project->key = strtoupper(substr(preg_replace('/[^a-zA-Z]/', '', $project->name), 0, 3));
+            }
+        });
+    }
+
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
+    }
+
+    public function columns(): HasMany
+    {
+        return $this->hasMany(ProjectColumn::class)->orderBy('position');
+    }
+
+    public function tasks()
+    {
+        return Task::whereIn('column_id', $this->columns()->pluck('id'));
+    }
+}

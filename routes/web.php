@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BoardController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,7 +17,23 @@ Route::post('/auth/profile', [AuthController::class, 'completeProfile'])->name('
 Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/board', function () {
-        return view('board');
-    })->name('board');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::post('/dashboard/workspace', [DashboardController::class, 'storeWorkspace'])->name('dashboard.workspace.store');
+
+    Route::middleware('workspace')->group(function () {
+        Route::get('/{workspace}', [DashboardController::class, 'workspace'])->name('workspace');
+        Route::post('/{workspace}/project', [DashboardController::class, 'storeProject'])->name('workspace.project.store');
+        Route::delete('/{workspace}', [DashboardController::class, 'destroyWorkspace'])->name('workspace.destroy');
+
+        Route::middleware('project')->group(function () {
+            Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
+            Route::post('/{workspace}/{project}/task', [BoardController::class, 'storeTask'])->name('board.task.store');
+            Route::put('/{workspace}/{project}/task/{task}', [BoardController::class, 'updateTask'])->name('board.task.update');
+            Route::delete('/{workspace}/{project}/task/{task}', [BoardController::class, 'destroyTask'])->name('board.task.destroy');
+            Route::post('/{workspace}/{project}/task/{task}/move', [BoardController::class, 'moveTask'])->name('board.task.move');
+            Route::post('/{workspace}/{project}/column', [BoardController::class, 'storeColumn'])->name('board.column.store');
+            Route::delete('/{workspace}/{project}/column/{column}', [BoardController::class, 'destroyColumn'])->name('board.column.destroy');
+            Route::delete('/{workspace}/{project}', [DashboardController::class, 'destroyProject'])->name('workspace.project.destroy');
+        });
+    });
 });

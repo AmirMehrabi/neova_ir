@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\OtpCode;
 use App\Models\User;
+use App\Models\Workspace;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -83,7 +84,7 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'redirect' => route('board'),
+                'redirect' => route('dashboard'),
                 'message' => 'ورود موفقیت‌آمیز بود',
             ]);
         }
@@ -118,6 +119,11 @@ class AuthController extends Controller
             'password' => bcrypt(Str::random(32)),
         ]);
 
+        Workspace::create([
+            'owner_id' => $user->id,
+            'name' => 'فضای کاری من',
+        ]);
+
         Auth::login($user);
         session()->forget(['otp_phone', 'otp_verified_phone']);
 
@@ -141,6 +147,6 @@ class AuthController extends Controller
             return redirect()->route('auth.profile');
         }
 
-        return redirect()->route('board');
+        return redirect()->route('dashboard');
     }
 }

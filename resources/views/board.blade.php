@@ -6,17 +6,7 @@
     <title>تخته اسکرام</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        @font-face { font-family: 'Estedad'; src: url('/assets/fonts/estedad/Estedad-Thin.woff2') format('woff2'); font-weight: 100; font-style: normal; font-display: swap; }
-        @font-face { font-family: 'Estedad'; src: url('/assets/fonts/estedad/Estedad-Light.woff2') format('woff2'); font-weight: 300; font-style: normal; font-display: swap; }
-        @font-face { font-family: 'Estedad'; src: url('/assets/fonts/estedad/Estedad-Medium.woff2') format('woff2'); font-weight: 500; font-style: normal; font-display: swap; }
-        @font-face { font-family: 'Estedad'; src: url('/assets/fonts/estedad/Estedad-Bold.woff2') format('woff2'); font-weight: 700; font-style: normal; font-display: swap; }
-        @font-face { font-family: 'Estedad'; src: url('/assets/fonts/estedad/Estedad-Black.woff2') format('woff2'); font-weight: 900; font-style: normal; font-display: swap; }
-
-        @theme { --font-sans: 'Estedad', ui-sans-serif, system-ui, sans-serif; }
         [x-cloak] { display: none !important; }
-        body {
-            font-family: 'Estedad';
-        }
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
         .sortable-ghost { opacity: 0.4; background: #E8F0FE !important; border: 2px dashed #0069FF !important; box-shadow: none !important; }
         .sortable-chosen { box-shadow: 0 12px 28px rgba(0,105,255,0.18), 0 2px 8px rgba(0,0,0,0.12) !important; transform: rotate(1.5deg); z-index: 50; }
@@ -36,21 +26,25 @@
     <header class="bg-[#003B8E] shadow-lg shadow-[#003B8E]/20 sticky top-0 z-40">
         <div class="max-w-[1600px] mx-auto px-5 h-14 flex items-center justify-between">
             <div class="flex items-center gap-4">
+                <a href="{{ route('workspace', $workspace->slug) }}" class="text-blue-200 hover:text-white transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </a>
+                <div class="h-5 w-px bg-white/20"></div>
                 <div class="flex items-center gap-2.5">
                     <div class="w-8 h-8 rounded-lg bg-[#0069FF] flex items-center justify-center shadow-md shadow-[#0069FF]/30">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
+                        <span class="text-white font-bold text-xs">{{ $project->key }}</span>
                     </div>
-                    <span class="text-white font-bold text-[15px]">تخته اسکرام</span>
+                    <div>
+                        <span class="text-white font-bold text-[15px]">{{ $project->name }}</span>
+                        <span class="text-blue-200 text-[10px] mr-2">{{ $workspace->name }}</span>
+                    </div>
                 </div>
-                <div class="h-5 w-px bg-white/20"></div>
-                <span class="text-blue-200 text-xs font-medium">اسپرینت ۱۲</span>
-                <span class="bg-[#0069FF]/40 text-blue-100 text-[10px] font-bold px-2 py-0.5 rounded-full">فعال</span>
             </div>
             <div class="flex items-center gap-3">
                 <span class="text-blue-200 text-xs" x-text="totalTasks() + ' وظیفه'"></span>
                 <div class="h-5 w-px bg-white/20"></div>
                 <button
-                    @click="openAddModal('backlog')"
+                    @click="openAddModal(columns[0]?.id)"
                     class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
@@ -471,6 +465,10 @@
 
     <script>
         function board() {
+            const serverColumns = @json($columnsData);
+
+            const serverMembers = @json($membersData);
+
             return {
                 showModal: false,
                 showDeleteModal: false,
@@ -480,9 +478,9 @@
                 toast: { show: false, message: '' },
                 newCheckItem: '',
                 newComment: '',
-                form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: 'backlog', dueDate: '', tags: [], checklist: [], comments: [] },
+                form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: '', dueDate: '', tags: [], checklist: [], comments: [] },
 
-                assignees: ['علی محمدی', 'سارا احمدی', 'رضا کریمی', 'نیلوفر شریفی', 'امیر حسینی', 'مریم رضایی'],
+                assignees: serverMembers,
 
                 allTags: [
                     { name: 'طراحی', activeClass: 'border-purple-400 bg-purple-50 text-purple-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' },
@@ -493,37 +491,7 @@
                     { name: 'بهبود', activeClass: 'border-teal-400 bg-teal-50 text-teal-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' },
                 ],
 
-                columns: [
-                    {
-                        id: 'backlog', title: 'پس‌زمینه', dotColor: 'bg-[#94A3B8]', badgeClass: 'bg-[#F1F5F9] text-[#64748B]',
-                        tasks: [
-                            { id: 'SCR-001', title: 'طراحی صفحه ورود کاربران', description: 'طراحی مجدد فرم ورود با رابط کاربری ساده‌تر و تجربه کاربری بهتر', priority: 'متوسط', assignees: ['علی محمدی', 'نیلوفر شریفی'], dueDate: '2026-07-01', tags: ['طراحی', 'فرانت‌اند'], checklist: [{text:' wireframe', done:true},{text:'پروتوتایپ', done:false}], comments: [{author:'علی محمدی', text:'نیاز به بررسی مجدد دارد', time:'۲ ساعت پیش'}] },
-                            { id: 'SCR-002', title: 'بررسی عملکرد سرور', description: '', priority: 'پایین', assignees: ['رضا کریمی'], dueDate: '', tags: ['بک‌اند'], checklist: [], comments: [] },
-                            { id: 'SCR-003', title: 'به‌روزرسانی مستندات API', description: 'افزودن مستندات اندپوینت‌های جدید به Swagger', priority: 'پایین', assignees: ['نیلوفر شریفی'], dueDate: '2026-07-10', tags: ['بک‌اند'], checklist: [{text:'اندپوینت‌های کاربر', done:true},{text:'اندپوینت‌های پرداخت', done:false}], comments: [] },
-                        ]
-                    },
-                    {
-                        id: 'progress', title: 'در حال انجام', dotColor: 'bg-[#0069FF]', badgeClass: 'bg-[#E8F0FE] text-[#0069FF]',
-                        tasks: [
-                            { id: 'SCR-004', title: 'پیاده‌سازی سیستم اعلان‌ها', description: 'ارسال اعلان از طریق ایمیل و پوش نوتیفیکیشن', priority: 'بالا', assignees: ['سارا احمدی', 'امیر حسینی'], dueDate: '2026-06-25', tags: ['توسعه', 'بک‌اند'], checklist: [{text:'ایمیل', done:true},{text:'پوش', done:false},{text:'تست', done:false}], comments: [{author:'سارا احمدی', text:'ایمیل تمام شد، روی پوش کار می‌کنم', time:'۱ روز پیش'}] },
-                            { id: 'SCR-005', title: 'اتصال به درگاه پرداخت', description: 'پیاده‌سازی درگاه زرین‌پال', priority: 'متوسط', assignees: ['امیر حسینی'], dueDate: '2026-07-05', tags: ['توسعه'], checklist: [], comments: [] },
-                        ]
-                    },
-                    {
-                        id: 'review', title: 'بررسی', dotColor: 'bg-[#F59E0B]', badgeClass: 'bg-[#FEF3C7] text-[#D97706]',
-                        tasks: [
-                            { id: 'SCR-006', title: 'اصلاح باگ فرم ثبت‌نام', description: 'مشکل اعتبارسنجی ایمیل', priority: 'بالا', assignees: ['مریم رضایی', 'علی محمدی'], dueDate: '2026-06-22', tags: ['باگ', 'فرانت‌اند'], checklist: [{text:'بررسی کد', done:true},{text:'تست', done:true}], comments: [{author:'مریم رضایی', text:'تست شد، آماده بررسی نهایی', time:'۳ ساعت پیش'}] },
-                        ]
-                    },
-                    {
-                        id: 'done', title: 'انجام شده', dotColor: 'bg-[#22C55E]', badgeClass: 'bg-[#DCFCE7] text-[#16A34A]',
-                        tasks: [
-                            { id: 'SCR-007', title: 'راه‌اندازی محیط توسعه', description: 'docker-compose', priority: 'متوسط', assignees: ['رضا کریمی'], dueDate: '2026-06-10', tags: ['توسعه'], checklist: [], comments: [] },
-                            { id: 'SCR-008', title: 'طراحی دیتابیس', description: 'طراحی اسکیما و ERD', priority: 'بالا', assignees: ['علی محمدی'], dueDate: '2026-06-08', tags: ['بک‌اند'], checklist: [{text:'ERD', done:true},{text:'Migration', done:true}], comments: [] },
-                        ]
-                    }
-                ],
-
+                columns: serverColumns,
                 sortableInstances: [],
 
                 totalTasks() { return this.columns.reduce((sum, col) => sum + col.tasks.length, 0); },
@@ -589,7 +557,7 @@
 
                 addComment() {
                     if (!this.newComment.trim()) return;
-                    this.form.comments.push({ author: 'شما', text: this.newComment.trim(), time: 'همین الان' });
+                    this.form.comments.push({ author: '{{ auth()->user()->full_name }}', text: this.newComment.trim(), time: 'همین الان' });
                     this.newComment = '';
                 },
 
@@ -629,12 +597,18 @@
                     if (idx === -1) return;
                     const [task] = fromCol.tasks.splice(idx, 1);
                     toCol.tasks.splice(newIndex, 0, task);
+
+                    fetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ column_id: parseInt(toColId), position: newIndex }),
+                    });
                 },
 
                 openAddModal(columnId) {
                     this.editingTask = null;
                     this.editingDescription = false;
-                    this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId, dueDate: '', tags: [], checklist: [], comments: [] };
+                    this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', tags: [], checklist: [], comments: [] };
                     this.newCheckItem = '';
                     this.newComment = '';
                     this.showModal = true;
@@ -660,33 +634,28 @@
                     this.editingDescription = false;
                 },
 
-                saveTask() {
+                async saveTask() {
                     if (!this.form.title.trim()) return;
+                    const token = '{{ csrf_token() }}';
+                    const headers = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
+
                     if (this.editingTask) {
                         const col = this.columns.find(c => c.id === this.form.columnId);
                         const task = col?.tasks.find(t => t.id === this.editingTask);
                         if (task) {
-                            task.title = this.form.title;
-                            task.description = this.form.description;
-                            task.priority = this.form.priority;
-                            task.assignees = [...this.form.assignees];
-                            task.dueDate = this.form.dueDate;
-                            task.tags = [...this.form.tags];
-                            task.checklist = JSON.parse(JSON.stringify(this.form.checklist));
-                            task.comments = JSON.parse(JSON.stringify(this.form.comments));
+                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId) };
+                            const res = await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
+                            const data = await res.json();
+                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: [...this.form.assignees], dueDate: this.form.dueDate, tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
                         }
                         this.showToast('تغییرات ذخیره شد');
                     } else {
                         const col = this.columns.find(c => c.id === this.form.columnId);
                         if (col) {
-                            const maxNum = this.columns.reduce((max, c) => Math.max(max, ...c.tasks.map(t => parseInt(t.id.replace('SCR-', '')) || 0)), 0);
-                            col.tasks.push({
-                                id: 'SCR-' + String(maxNum + 1).padStart(3, '0'),
-                                title: this.form.title, description: this.form.description, priority: this.form.priority,
-                                assignees: [...this.form.assignees], dueDate: this.form.dueDate,
-                                tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)),
-                                comments: JSON.parse(JSON.stringify(this.form.comments))
-                            });
+                            const payload = { column_id: parseInt(this.form.columnId), title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments };
+                            const res = await fetch('{{ route("board.task.store", [$workspace->slug, $project->slug]) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
+                            const data = await res.json();
+                            col.tasks.push({ id: data.title, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [] });
                             this.showToast('وظیفه جدید ایجاد شد');
                         }
                     }
@@ -698,9 +667,13 @@
                     this.showDeleteModal = true;
                 },
 
-                deleteTask() {
+                async deleteTask() {
                     const col = this.columns.find(c => c.id === this.deleteTarget.columnId);
                     if (col) {
+                        const task = col.tasks.find(t => t.id === this.deleteTarget.taskId);
+                        if (task) {
+                            await fetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
+                        }
                         col.tasks = col.tasks.filter(t => t.id !== this.deleteTarget.taskId);
                         this.showToast('وظیفه حذف شد');
                     }
