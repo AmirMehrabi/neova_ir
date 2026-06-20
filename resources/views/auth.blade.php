@@ -23,15 +23,14 @@
                     <div>
                         <label class="block text-[10px] font-bold text-[#94A3B8] mb-2 uppercase tracking-widest">شماره تلفن</label>
                         <div class="relative">
-                            <span class="absolute right-3 top-1/2 -translate-y-1/2 text-sm font-bold text-[#94A3B8]">۰۹</span>
                             <input
                                 x-model="phone"
                                 type="tel"
-                                maxlength="9"
-                                class="w-full text-lg font-bold text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl pr-12 pl-4 py-3.5 focus:outline-none focus:border-[#0069FF] focus:ring-2 focus:ring-[#0069FF]/10 transition-all placeholder:text-[#CBD5E1] tracking-wider"
-                                placeholder="۹۱۲۳۴۵۶۷۸۹"
+                                maxlength="11"
+                                class="w-full text-lg font-bold text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-4 py-3.5 focus:outline-none focus:border-[#0069FF] focus:ring-2 focus:ring-[#0069FF]/10 transition-all placeholder:text-[#CBD5E1] tracking-wider"
+                                placeholder="۰۹۱۲۳۴۵۶۷۸۹"
                                 dir="ltr"
-                                @input="phone = phone.replace(/[^0-9]/g, '').substring(0, 9)"
+                                @input="phone = phone.replace(/[^0-9]/g, '').substring(0, 11)"
                             >
                         </div>
                         <p x-show="errors.phone" class="text-[11px] text-red-500 font-semibold mt-1.5" x-text="errors.phone"></p>
@@ -44,7 +43,7 @@
 
                     <button
                         type="submit"
-                        :disabled="loading || phone.length !== 9"
+                        :disabled="loading || phone.length !== 11"
                         class="w-full text-sm font-bold text-white bg-gradient-to-l from-[#003B8E] to-[#0069FF] hover:from-[#004BAA] hover:to-[#4D99FF] disabled:opacity-50 disabled:cursor-not-allowed px-5 py-3.5 rounded-xl shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"
                     >
                         <svg x-show="loading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -59,7 +58,7 @@
                     <div class="flex items-center justify-between bg-[#F8FAFC] rounded-xl px-4 py-3 border border-[#F1F5F9]">
                         <div class="flex items-center gap-2">
                             <svg class="w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                            <span class="text-sm font-bold text-[#475569]" x-text="'09' + phone"></span>
+                            <span class="text-sm font-bold text-[#475569]" x-text="phone"></span>
                         </div>
                         <button type="button" @click="step = 'phone'; code = ''; globalError = ''" class="text-[11px] font-bold text-[#0069FF] hover:text-[#003B8E] transition-colors">ویرایش</button>
                     </div>
@@ -127,8 +126,8 @@
             async sendOtp() {
                 this.errors = {};
                 this.globalError = '';
-                if (this.phone.length !== 9) {
-                    this.errors.phone = 'شماره تلفن باید ۹ رقم باشد';
+                if (this.phone.length !== 11) {
+                    this.errors.phone = 'شماره تلفن باید ۱۱ رقم باشد';
                     return;
                 }
                 this.loading = true;

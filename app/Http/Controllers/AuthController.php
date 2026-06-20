@@ -34,7 +34,7 @@ class AuthController extends Controller
     public function sendOtp(Request $request)
     {
         $raw = $request->input('phone', '');
-        $phone = '09'.preg_replace('/[^0-9]/', '', $raw);
+        $phone = preg_replace('/[^0-9]/', '', $raw);
 
         if (! preg_match('/^09[0-9]{9}$/', $phone)) {
             return response()->json([
@@ -58,7 +58,7 @@ class AuthController extends Controller
     public function verifyOtp(Request $request)
     {
         $raw = $request->input('phone', '');
-        $phone = '09'.preg_replace('/[^0-9]/', '', $raw);
+        $phone = preg_replace('/[^0-9]/', '', $raw);
         $code = $request->input('code', '');
 
         if (! preg_match('/^09[0-9]{9}$/', $phone) || ! preg_match('/^[0-9]{6}$/', $code)) {
