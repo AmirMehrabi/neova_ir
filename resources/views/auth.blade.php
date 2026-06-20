@@ -8,9 +8,7 @@
 
     <div class="relative w-full max-w-[420px]">
         <div class="text-center mb-8">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#003B8E] to-[#0069FF] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#0069FF]/25">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/></svg>
-            </div>
+            <img src="{{ asset('assets/logo/logo-black.png') }}" alt="نئووا" class="w-22 h-22 object-cover rounded-2xl  p-1 mx-auto mb-4 ">
             <h1 class="text-xl font-black text-[#1A1D21]" x-text="step === 'phone' ? 'ورود به تخته اسکرام' : 'تایید شماره تلفن'"></h1>
             <p class="text-sm text-[#64748B] mt-1.5" x-text="step === 'phone' ? 'شماره تلفن خود را وارد کنید' : 'کد ۶ رقمی ارسال شده را وارد کنید'"></p>
         </div>

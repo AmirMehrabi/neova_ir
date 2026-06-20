@@ -27,12 +27,10 @@
         :class="sidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'"
     >
         <div class="px-4 py-4 flex items-center gap-2.5 border-b border-white/10">
-            <div class="w-8 h-8 rounded-lg bg-[#0069FF] flex items-center justify-center shadow-sm shadow-black/10">
-                <span class="text-white font-black text-sm">N</span>
-            </div>
-            <div>
-                <span class="text-white font-bold text-sm block leading-tight">Neova</span>
-                <span class="text-blue-200/55 text-[10px]">نئووا</span>
+            <img src="{{ asset('assets/logo/logo.png') }}" alt="نئووا" class="w-12 h-12 object-contain rounded-lg">
+            <div class="flex flex-col">
+                <span class="text-white font-bold  block leading-tight">Neova</span>
+                <span class="text-blue-200/55 text-sm">نئووا</span>
             </div>
             <button @click="sidebarOpen = false" class="mr-auto md:hidden text-white/50 hover:text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>

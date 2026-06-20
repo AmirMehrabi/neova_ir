@@ -7,6 +7,7 @@
     <title>نئووا | مدیریت روشن کار تیمی</title>
     <meta name="description" content="نئووا کارها، مسئول‌ها، موعدها و گفت‌وگوهای هر پروژه را در یک جای روشن نگه می‌دارد.">
     <link rel="canonical" href="{{ url('/') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/logo/logo-white.png') }}">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fa_IR">
     <meta property="og:title" content="نئووا | مدیریت روشن کار تیمی">
@@ -31,10 +32,8 @@
 
     <header class="neova-shell neova-header" aria-label="سربرگ">
         <a href="{{ url('/') }}" class="neova-wordmark" aria-label="نئووا، صفحه اصلی">
-            <span class="neova-mark" aria-hidden="true">
-                <i></i><i></i><i></i>
-            </span>
-            <span>نئووا</span>
+                        <img src="{{ asset('assets/logo/horizental-logo-black.png') }}" alt="نئووا" class="h-12 bg-white object-contain rounded-2xl  p-1 mx-auto ">
+
         </a>
 
         <nav class="neova-header-actions" aria-label="دسترسی سریع">

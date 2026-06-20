@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\OtpCode;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\KavenegarVerifyLookupService;
 use App\Services\WorkspaceInvitationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,6 +45,12 @@ class AuthController extends Controller
         }
 
         $code = OtpCode::generate($phone);
+
+        try {
+            app(KavenegarVerifyLookupService::class)->sendOtp($phone, $code);
+        } catch (\Exception $e) {
+            Log::error("Kavenegar OTP failed for {$phone}: {$e->getMessage()}");
+        }
 
         Log::info("OTP for {$phone}: {$code}");
 

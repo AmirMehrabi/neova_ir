@@ -7,7 +7,7 @@
                 <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             </a>
         @endif
-        <a href="{{ route('dashboard') }}" class="w-8 h-8 rounded-lg bg-[#0069FF] text-white flex items-center justify-center font-black text-xs">N</a>
+        <a href="{{ route('dashboard') }}"><img src="{{ asset('assets/logo/logo-white.png') }}" alt="نئووا" class="w-8 h-8 object-contain rounded-lg bg-[#0069FF] p-1"></a>
         <h1 class="text-sm font-bold text-[#172B4D] truncate">{{ $title }}</h1>
         <div class="mr-auto flex items-center gap-2">
             <x-notification-menu />

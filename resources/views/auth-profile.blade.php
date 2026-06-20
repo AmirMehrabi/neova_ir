@@ -8,9 +8,7 @@
 
     <div class="relative w-full max-w-[460px]">
         <div class="text-center mb-8">
-            <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#003B8E] to-[#0069FF] flex items-center justify-center mx-auto mb-4 shadow-lg shadow-[#0069FF]/25">
-                <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-            </div>
+            <img src="{{ asset('assets/logo/logo-white.png') }}" alt="نئووا" class="w-14 h-14 object-contain rounded-2xl bg-gradient-to-br from-[#003B8E] to-[#0069FF] p-2 mx-auto mb-4 shadow-lg shadow-[#0069FF]/25">
             <h1 class="text-xl font-black text-[#1A1D21]">تکمیل اطلاعات</h1>
             <p class="text-sm text-[#64748B] mt-1.5">برای ادامه، اطلاعات شخصی خود را وارد کنید</p>
         </div>

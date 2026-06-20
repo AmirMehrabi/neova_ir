@@ -6,9 +6,7 @@
 
     <main class="max-w-xl mx-auto px-4 py-12">
         <div class="bg-white border border-[#DFE5EF] rounded-2xl p-6 sm:p-8 text-center">
-            <div class="w-14 h-14 rounded-2xl bg-[#E8F0FE] text-[#0069FF] flex items-center justify-center mx-auto mb-5">
-                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H2v-2a4 4 0 014-4h3m6-6a4 4 0 11-8 0 4 4 0 018 0zm6 3v6m3-3h-6"/></svg>
-            </div>
+            <img src="{{ asset('assets/logo/logo-white.png') }}" alt="نئووا" class="w-14 h-14 object-contain rounded-2xl bg-[#E8F0FE] p-2 mx-auto mb-5">
             <h2 class="text-xl font-black text-[#172B4D]">دعوت به {{ $invitation->workspace->name }}</h2>
             <p class="text-sm text-[#64748B] leading-7 mt-3">{{ $invitation->inviter->full_name }} شما را برای همکاری در این فضای کاری دعوت کرده است.</p>
 

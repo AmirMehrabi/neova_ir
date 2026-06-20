@@ -38,6 +38,9 @@ return [
     'kavenegar' => [
         'enabled' => env('KAVENEGAR_SMS_ENABLED', false),
         'api_key' => env('KAVENEGAR_API_KEY'),
+        'otp' => [
+            'template' => env('KAVENEGAR_OTP_TEMPLATE'),
+        ],
         'workspace_invite' => [
             'template' => env('KAVENEGAR_WORKSPACE_INVITE_TEMPLATE'),
             'token' => env('KAVENEGAR_WORKSPACE_INVITE_TOKEN', 'invitation_code'),
