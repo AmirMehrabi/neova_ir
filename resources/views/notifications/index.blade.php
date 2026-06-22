@@ -62,10 +62,10 @@
             <h3 class="text-sm font-bold text-[#172B4D] mb-3">تاریخچه اعلان‌ها</h3>
             <div class="bg-white border border-[#DFE5EF] rounded-xl overflow-hidden">
                 @forelse ($notifications as $notification)
-                    <div class="px-4 py-4 border-b border-[#F1F5F9] last:border-0 {{ $notification->read_at ? '' : 'bg-[#F5F9FF]' }}">
+                    <a href="{{ route('notifications.open', $notification) }}" class="block px-4 py-4 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] {{ $notification->read_at ? '' : 'bg-[#F5F9FF]' }}">
                         <p class="text-[12px] text-[#334155]">{{ $notification->data['message'] ?? 'اعلان جدید' }}</p>
                         <p class="text-[9px] text-[#94A3B8] mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                    </div>
+                    </a>
                 @empty
                     <div class="py-10 text-center text-xs text-[#94A3B8]">اعلانی وجود ندارد</div>
                 @endforelse

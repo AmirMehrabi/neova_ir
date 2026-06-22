@@ -42,6 +42,16 @@
 
         @slot('actions')
             <span class="hidden sm:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
+            @if ($canManageProject)
+                <button
+                    @click="openProjectDrawer()"
+                    aria-label="مدیریت پروژه"
+                    class="flex items-center gap-1.5 text-white/85 hover:text-white bg-white/8 hover:bg-white/12 border border-white/10 text-[11px] font-bold px-3 py-2 rounded-xl transition-colors"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
+                    <span class="hidden sm:inline">مدیریت پروژه</span>
+                </button>
+            @endif
             @if ($canEdit)
                 <button
                     @click="openAddModal(columns[0]?.id)"
@@ -125,6 +135,91 @@
         </div>
     </main>
 
+    {{-- Project management drawer --}}
+    <div x-show="projectDrawerOpen" class="fixed inset-0 z-[55]" @keydown.escape.window="closeProjectDrawer()">
+        <div x-show="projectDrawerOpen" x-transition.opacity class="absolute inset-0 bg-[#071B33]/45 backdrop-blur-[2px]" @click="closeProjectDrawer()"></div>
+        <aside
+            x-show="projectDrawerOpen"
+            x-transition:enter="transition ease-out duration-250"
+            x-transition:enter-start="opacity-0 -translate-x-full"
+            x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition ease-in duration-180"
+            x-transition:leave-start="opacity-100 translate-x-0"
+            x-transition:leave-end="opacity-0 -translate-x-full"
+            class="absolute inset-y-0 left-0 w-full sm:w-[430px] bg-white shadow-[18px_0_50px_rgba(7,27,51,0.22)] flex flex-col"
+            @click.stop
+        >
+            <header class="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-black text-[#071B33]">مدیریت پروژه</h2>
+                    <p class="text-[11px] text-[#64748B] mt-1" x-text="projectForm.name"></p>
+                </div>
+                <button @click="closeProjectDrawer()" class="w-9 h-9 rounded-lg text-[#64748B] hover:text-[#071B33] hover:bg-[#F1F5F9] flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </header>
+
+            <div class="flex border-b border-[#E2E8F0] px-5">
+                <button @click="projectDrawerTab = 'members'" class="px-1 py-3.5 ml-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'members' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">اعضای پروژه</button>
+                <button @click="projectDrawerTab = 'settings'" class="px-1 py-3.5 text-xs font-black border-b-2" :class="projectDrawerTab === 'settings' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">تنظیمات</button>
+            </div>
+
+            <div class="flex-1 overflow-y-auto p-5">
+                <section x-show="projectDrawerTab === 'members'">
+                    <div class="mb-4">
+                        <h3 class="text-sm font-black text-[#071B33]">تیم پروژه</h3>
+                        <p class="text-[11px] leading-5 text-[#64748B] mt-1">افراد انتخاب‌شده می‌توانند به وظیفه‌ها تخصیص داده شوند و در گفتگوها منشن شوند.</p>
+                    </div>
+                    <div class="relative mb-4">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input x-model="projectMemberSearch" class="w-full text-xs border-2 border-[#E2E8F0] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#1668FF]" placeholder="جستجوی اعضای فضای کاری…">
+                    </div>
+                    <div class="space-y-2">
+                        <template x-for="person in filteredWorkspacePeople()" :key="person.id">
+                            <button
+                                @click="toggleProjectMember(person)"
+                                :disabled="projectMemberSaving === person.id"
+                                class="w-full flex items-center gap-3 rounded-xl border p-3 text-right transition-all disabled:opacity-60"
+                                :class="isProjectMember(person.id) ? 'border-[#BBD1FF] bg-[#F4F8FF]' : 'border-[#E2E8F0] hover:border-[#B8C4D4] bg-white'"
+                            >
+                                <div class="w-9 h-9 rounded-full bg-[#071B33] text-white flex items-center justify-center text-xs font-black" x-text="person.name.charAt(0)"></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[12px] font-bold text-[#172B4D] truncate" x-text="person.name"></p>
+                                    <p class="text-[10px] text-[#94A3B8] mt-0.5" x-text="person.phone"></p>
+                                </div>
+                                <span class="w-6 h-6 rounded-md flex items-center justify-center border-2" :class="isProjectMember(person.id) ? 'bg-[#1668FF] border-[#1668FF] text-white' : 'border-[#CBD5E1] text-transparent'">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                </span>
+                            </button>
+                        </template>
+                    </div>
+                </section>
+
+                <section x-show="projectDrawerTab === 'settings'" class="space-y-5">
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">نام پروژه</label>
+                        <input x-model="projectForm.name" class="w-full text-sm font-bold border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#1668FF]">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">کلید پروژه</label>
+                        <input x-model="projectForm.key" maxlength="10" dir="ltr" class="w-full text-sm font-bold uppercase border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#1668FF]">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">توضیحات پروژه</label>
+                        <textarea x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#1668FF] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
+                    </div>
+                </section>
+            </div>
+
+            <footer class="border-t border-[#E2E8F0] p-4 bg-[#F8FAFC]">
+                <button x-show="projectDrawerTab === 'settings'" @click="saveProjectSettings()" :disabled="projectSettingsSaving" class="w-full bg-[#1668FF] hover:bg-[#0E57DB] disabled:opacity-60 text-white text-xs font-black rounded-xl px-4 py-3">
+                    <span x-text="projectSettingsSaving ? 'در حال ذخیره…' : 'ذخیره تغییرات'"></span>
+                </button>
+                <p x-show="projectDrawerTab === 'members'" class="text-[10px] text-[#64748B] text-center"><span x-text="projectMembers.length"></span> عضو در تیم پروژه</p>
+            </footer>
+        </aside>
+    </div>
+
     {{-- ======== Trello-Style Task Modal ======== --}}
     {{-- Backdrop (fixed, never scrolls) --}}
     <div
@@ -190,16 +285,29 @@
                         {{-- Description --}}
                         <div>
                             <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">توضیحات</label>
-                            <div x-show="!editingDescription" @click="if (canEdit) editingDescription = true" class="min-h-[32px]" :class="[(canEdit ? 'cursor-pointer' : 'cursor-default'), form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]']" x-text="form.description || 'توضیحی ثبت نشده'"></div>
-                            <div x-show="editingDescription" x-transition>
+                            <div x-show="!editingDescription" @click="if (canEdit) editingDescription = true" class="min-h-[32px]" :class="[(canEdit ? 'cursor-pointer' : 'cursor-default'), form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]']" x-html="form.description ? formatMentionText(form.description) : 'توضیحی ثبت نشده'"></div>
+                            <div x-show="editingDescription" x-transition class="relative">
                                 <textarea
                                     x-model="form.description"
                                     x-init="$nextTick(() => $el.focus())"
                                     rows="4"
                                     class="w-full text-sm text-[#1A1D21] border-2 border-[#0069FF] rounded-lg px-3 py-2 focus:outline-none transition-colors resize-none leading-relaxed"
                                     placeholder="توضیحات وظیفه را بنویسید..."
-                                    @keydown.escape="editingDescription = false"
+                                    @input="handleMentionInput('description', $event)"
+                                    @keydown.down.prevent="moveMentionSelection(1)"
+                                    @keydown.up.prevent="moveMentionSelection(-1)"
+                                    @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
+                                    @keydown.escape="mentionOpen ? closeMentionMenu() : editingDescription = false"
                                 ></textarea>
+                                <div x-show="mentionOpen && mentionField === 'description'" class="absolute top-full right-0 left-0 mt-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
+                                    <template x-for="(person, index) in mentionResults" :key="person.id">
+                                        <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#EAF1FF]' : 'hover:bg-[#F8FAFC]'">
+                                            <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
+                                            <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                                <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                                 <div class="flex gap-2 mt-2">
                                     <button @click="editingDescription = false" class="text-[11px] font-bold text-white bg-[#0069FF] hover:bg-[#0055CC] px-3 py-1.5 rounded-lg transition-all">ذخیره</button>
                                     <button @click="editingDescription = false; form.description = ''" class="text-[11px] font-bold text-[#64748B] hover:text-[#1A1D21] px-3 py-1.5 rounded-lg transition-all">لغو</button>
@@ -258,7 +366,7 @@
                                                 <span class="text-[11px] font-bold text-[#1A1D21]" x-text="comment.author"></span>
                                                 <span class="text-[9px] text-[#94A3B8]" x-text="comment.time"></span>
                                             </div>
-                                            <p class="text-[12px] text-[#475569] leading-relaxed" x-text="comment.text"></p>
+                                            <p class="text-[12px] text-[#475569] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
                                         </div>
                                     </div>
                                 </template>
@@ -268,15 +376,29 @@
                                 <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#0069FF] to-[#003B8E] flex items-center justify-center shrink-0 shadow-sm">
                                     <span class="text-[9px] text-white font-bold">ش</span>
                                 </div>
-                                <div class="flex-1">
+                                <div class="flex-1 relative">
                                     <textarea
                                         x-model="newComment"
                                         rows="2"
                                         class="w-full text-sm border-2 border-[#E2E8F0] rounded-xl px-3 py-2 focus:outline-none focus:border-[#0069FF] transition-colors resize-none placeholder:text-[#CBD5E1]"
                                         placeholder="پیام بنویسید..."
+                                        @input="handleMentionInput('comment', $event)"
+                                        @keydown.down.prevent="moveMentionSelection(1)"
+                                        @keydown.up.prevent="moveMentionSelection(-1)"
+                                        @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
+                                        @keydown.escape="closeMentionMenu()"
                                         @keydown.meta.enter="addComment()"
                                         @keydown.ctrl.enter="addComment()"
                                     ></textarea>
+                                    <div x-show="mentionOpen && mentionField === 'comment'" class="absolute bottom-full right-0 left-0 mb-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
+                                        <template x-for="(person, index) in mentionResults" :key="person.id">
+                                            <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#EAF1FF]' : 'hover:bg-[#F8FAFC]'">
+                                                <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
+                                                <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
+                                            </button>
+                                        </template>
+                                    </div>
+                                    <p class="text-[10px] text-[#94A3B8] mt-1">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                                     <div class="flex justify-end mt-1.5" x-show="newComment.trim()">
                                         <button @click="addComment()" class="text-[10px] font-bold text-white bg-[#0069FF] hover:bg-[#0055CC] px-3 py-1 rounded-lg transition-all">ارسال (Ctrl+Enter)</button>
                                     </div>
@@ -488,20 +610,42 @@
             const serverColumns = @json($columnsData);
 
             const serverMembers = @json($membersData);
+            const serverWorkspacePeople = @json($workspacePeopleData);
 
             return {
                 canEdit: @json($canEdit),
+                canManageProject: @json($canManageProject),
                 showModal: false,
                 showDeleteModal: false,
+                projectDrawerOpen: false,
+                projectDrawerTab: 'members',
+                projectMemberSearch: '',
+                projectMemberSaving: null,
+                projectSettingsSaving: false,
                 editingTask: null,
                 editingDescription: false,
                 deleteTarget: { columnId: null, taskId: null },
                 toast: { show: false, message: '' },
                 newCheckItem: '',
                 newComment: '',
+                commentPosting: false,
+                mentionOpen: false,
+                mentionField: null,
+                mentionQuery: '',
+                mentionResults: [],
+                mentionIndex: 0,
+                mentionStart: null,
+                mentionCursor: null,
                 form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: '', dueDate: '', tags: [], checklist: [], comments: [] },
 
-                assignees: serverMembers,
+                projectMembers: serverMembers,
+                workspacePeople: serverWorkspacePeople,
+                assignees: serverMembers.map(member => member.name),
+                projectForm: {
+                    name: @json($project->name),
+                    key: @json($project->key),
+                    description: @json($project->description ?? ''),
+                },
 
                 allTags: [
                     { name: 'طراحی', activeClass: 'border-purple-400 bg-purple-50 text-purple-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' },
@@ -516,6 +660,159 @@
                 sortableInstances: [],
 
                 totalTasks() { return this.columns.reduce((sum, col) => sum + col.tasks.length, 0); },
+
+                openProjectDrawer() {
+                    if (!this.canManageProject) return;
+                    this.projectDrawerOpen = true;
+                    this.projectDrawerTab = 'members';
+                    document.body.classList.add('modal-open');
+                },
+
+                closeProjectDrawer() {
+                    this.projectDrawerOpen = false;
+                    document.body.classList.remove('modal-open');
+                },
+
+                isProjectMember(userId) {
+                    return this.projectMembers.some(member => member.id === userId);
+                },
+
+                filteredWorkspacePeople() {
+                    const query = this.projectMemberSearch.trim().toLowerCase();
+                    if (!query) return this.workspacePeople;
+                    return this.workspacePeople.filter(person =>
+                        person.name.toLowerCase().includes(query) || (person.phone || '').includes(query)
+                    );
+                },
+
+                async toggleProjectMember(person) {
+                    if (!this.canManageProject || this.projectMemberSaving) return;
+                    this.projectMemberSaving = person.id;
+                    const selected = this.isProjectMember(person.id);
+                    const url = selected
+                        ? '{{ route("board.project.members.destroy", [$workspace->slug, $project->slug, "__USER__"], false) }}'.replace('__USER__', person.id)
+                        : '{{ route("board.project.members.store", [$workspace->slug, $project->slug], false) }}';
+                    try {
+                        const response = await fetch(url, {
+                            method: selected ? 'DELETE' : 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: selected ? null : JSON.stringify({ user_id: person.id }),
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || 'ذخیره تغییرات انجام نشد.');
+                        if (selected) {
+                            this.projectMembers = this.projectMembers.filter(member => member.id !== person.id);
+                            this.form.assignees = this.form.assignees.filter(name => name !== person.name);
+                            this.columns.forEach(column => column.tasks.forEach(task => {
+                                task.assignees = (task.assignees || []).filter(name => name !== person.name);
+                            }));
+                        } else {
+                            this.projectMembers.push(data.member);
+                        }
+                        this.assignees = this.projectMembers.map(member => member.name);
+                        this.showToast(data.message);
+                    } catch (error) {
+                        this.showToast(error.message);
+                    } finally {
+                        this.projectMemberSaving = null;
+                    }
+                },
+
+                async saveProjectSettings() {
+                    if (!this.canManageProject || this.projectSettingsSaving) return;
+                    this.projectSettingsSaving = true;
+                    try {
+                        const response = await fetch('{{ route("board.project.update", [$workspace->slug, $project->slug], false) }}', {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify(this.projectForm),
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره تنظیمات انجام نشد.');
+                        this.projectForm = { ...this.projectForm, ...data.project };
+                        this.showToast(data.message);
+                    } catch (error) {
+                        this.showToast(error.message);
+                    } finally {
+                        this.projectSettingsSaving = false;
+                    }
+                },
+
+                mentionableMembers() {
+                    return this.projectMembers;
+                },
+
+                handleMentionInput(field, event) {
+                    const value = field === 'description' ? this.form.description : this.newComment;
+                    const cursor = event.target.selectionStart;
+                    const beforeCursor = value.slice(0, cursor);
+                    const match = beforeCursor.match(/(?:^|\s)@([^\s@]*)$/u);
+                    if (!match) {
+                        this.closeMentionMenu();
+                        return;
+                    }
+                    this.mentionField = field;
+                    this.mentionQuery = match[1] || '';
+                    this.mentionCursor = cursor;
+                    this.mentionStart = cursor - this.mentionQuery.length - 1;
+                    const query = this.mentionQuery.toLowerCase();
+                    this.mentionResults = this.mentionableMembers()
+                        .filter(person => person.name.toLowerCase().includes(query))
+                        .slice(0, 6);
+                    this.mentionIndex = 0;
+                    this.mentionOpen = this.mentionResults.length > 0;
+                },
+
+                moveMentionSelection(direction) {
+                    if (!this.mentionOpen || !this.mentionResults.length) return;
+                    this.mentionIndex = (this.mentionIndex + direction + this.mentionResults.length) % this.mentionResults.length;
+                },
+
+                selectActiveMention() {
+                    const person = this.mentionResults[this.mentionIndex];
+                    if (person) this.selectMention(person);
+                },
+
+                selectMention(person) {
+                    const field = this.mentionField;
+                    const value = field === 'description' ? this.form.description : this.newComment;
+                    const token = `@[${person.name}](user:${person.id}) `;
+                    const nextValue = value.slice(0, this.mentionStart) + token + value.slice(this.mentionCursor);
+                    if (field === 'description') this.form.description = nextValue;
+                    else this.newComment = nextValue;
+                    this.closeMentionMenu();
+                },
+
+                closeMentionMenu() {
+                    this.mentionOpen = false;
+                    this.mentionField = null;
+                    this.mentionResults = [];
+                    this.mentionIndex = 0;
+                },
+
+                mentionIds(text) {
+                    return [...text.matchAll(/@\[[^\]]+\]\(user:(\d+)\)/gu)].map(match => Number(match[1]));
+                },
+
+                formatMentionText(text) {
+                    const escaped = String(text)
+                        .replaceAll('&', '&amp;')
+                        .replaceAll('<', '&lt;')
+                        .replaceAll('>', '&gt;')
+                        .replaceAll('"', '&quot;')
+                        .replaceAll("'", '&#039;');
+                    return escaped
+                        .replace(/@\[([^\]]+)\]\(user:\d+\)/gu, '<span class="inline-flex bg-[#EAF1FF] text-[#1668FF] font-bold rounded px-1.5 py-0.5">@$1</span>')
+                        .replaceAll('\n', '<br>');
+                },
 
                 getTagClass(tagName) {
                     const tag = this.allTags.find(t => t.name === tagName);
@@ -576,10 +873,48 @@
                     this.form.checklist.splice(idx, 1);
                 },
 
-                addComment() {
-                    if (!this.newComment.trim()) return;
-                    this.form.comments.push({ author: '{{ auth()->user()->full_name }}', text: this.newComment.trim(), time: 'همین الان' });
+                async addComment() {
+                    if (!this.newComment.trim() || this.commentPosting) return;
+                    const pendingComment = {
+                        author: '{{ auth()->user()->full_name }}',
+                        author_id: {{ auth()->id() }},
+                        text: this.newComment.trim(),
+                        mention_ids: this.mentionIds(this.newComment),
+                        time: 'همین الان',
+                    };
+                    if (!this.editingTask) {
+                        this.form.comments.push(pendingComment);
+                        this.newComment = '';
+                        this.closeMentionMenu();
+                        return;
+                    }
+                    this.commentPosting = true;
+                    try {
+                        const response = await fetch('{{ route("board.task.comments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                text: pendingComment.text,
+                                mention_ids: pendingComment.mention_ids,
+                            }),
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || 'ارسال پیام انجام نشد.');
+                        this.form.comments.push(data.comment);
+                        const task = this.columns.flatMap(column => column.tasks).find(item => item.dbId === this.editingTask);
+                        if (task) task.comments = JSON.parse(JSON.stringify(this.form.comments));
+                        this.showToast('پیام ارسال شد.');
+                    } catch (error) {
+                        this.showToast(error.message);
+                    } finally {
+                        this.commentPosting = false;
+                    }
                     this.newComment = '';
+                    this.closeMentionMenu();
                 },
 
                 formatDate(dateStr) {

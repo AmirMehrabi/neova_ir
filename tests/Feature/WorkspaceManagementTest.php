@@ -170,4 +170,94 @@ class WorkspaceManagementTest extends TestCase
             'position' => 1,
         ]);
     }
+
+    public function test_project_manager_can_manage_members_from_board_routes(): void
+    {
+        $owner = User::factory()->create();
+        $member = User::factory()->create();
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'Product Team']);
+        $workspace->members()->attach($member->id, ['role' => 'user']);
+        $project = Project::create([
+            'workspace_id' => $workspace->id,
+            'name' => 'First Project',
+            'key' => 'PRJ',
+        ]);
+
+        $this->actingAs($owner)
+            ->postJson(route('board.project.members.store', [$workspace->slug, $project->slug]), [
+                'user_id' => $member->id,
+            ])
+            ->assertOk()
+            ->assertJsonPath('member.id', $member->id);
+
+        $this->assertDatabaseHas('project_members', [
+            'project_id' => $project->id,
+            'user_id' => $member->id,
+        ]);
+
+        $this->actingAs($owner)
+            ->deleteJson(route('board.project.members.destroy', [$workspace->slug, $project->slug, $member]))
+            ->assertOk();
+
+        $this->assertDatabaseMissing('project_members', [
+            'project_id' => $project->id,
+            'user_id' => $member->id,
+        ]);
+
+        $this->actingAs($owner)
+            ->patchJson(route('board.project.update', [$workspace->slug, $project->slug]), [
+                'name' => 'Renamed Project',
+                'key' => 'NEW',
+                'description' => 'Updated description',
+            ])
+            ->assertOk()
+            ->assertJsonPath('project.name', 'Renamed Project');
+    }
+
+    public function test_task_assignment_update_and_mention_create_human_readable_notifications(): void
+    {
+        $owner = User::factory()->create(['first_name' => 'مالک', 'last_name' => 'پروژه']);
+        $member = User::factory()->create(['first_name' => 'عضو', 'last_name' => 'تیم']);
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'Product Team']);
+        $workspace->members()->attach($member->id, ['role' => 'user']);
+        $project = Project::create([
+            'workspace_id' => $workspace->id,
+            'name' => 'First Project',
+            'key' => 'PRJ',
+        ]);
+        $project->members()->attach($member->id, ['added_by' => $owner->id]);
+        $column = $project->columns()->create(['title' => 'پس‌زمینه', 'position' => 0]);
+
+        $response = $this->actingAs($owner)
+            ->postJson(route('board.task.store', [$workspace->slug, $project->slug]), [
+                'column_id' => $column->id,
+                'title' => 'کار جدید',
+                'assignees' => [$member->full_name],
+            ])
+            ->assertOk();
+
+        $task = Task::findOrFail($response->json('id'));
+        $this->assertStringContainsString('شما را به وظیفه', $member->notifications()->latest()->first()->data['message']);
+
+        $this->actingAs($owner)
+            ->putJson(route('board.task.update', [$workspace->slug, $project->slug, $task->id]), [
+                'title' => $task->title,
+                'column_id' => $column->id,
+                'priority' => 'بالا',
+                'assignees' => [$member->full_name],
+                'description' => "@[{$member->full_name}](user:{$member->id}) لطفاً بررسی کنید.",
+            ])
+            ->assertOk();
+
+        $this->actingAs($owner)
+            ->postJson(route('board.task.comments.store', [$workspace->slug, $project->slug, $task->id]), [
+                'text' => "@[{$member->full_name}](user:{$member->id}) نظر شما چیست؟",
+                'mention_ids' => [$member->id],
+            ])
+            ->assertOk()
+            ->assertJsonPath('comment.mention_ids.0', $member->id);
+
+        $messages = $member->notifications()->latest()->take(3)->get()->pluck('data.message')->implode(' ');
+        $this->assertStringContainsString('از شما نام برد', $messages);
+    }
 }

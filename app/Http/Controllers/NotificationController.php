@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\WorkspaceInvitation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
 
 class NotificationController extends Controller
@@ -28,5 +29,13 @@ class NotificationController extends Controller
         $request->user()->unreadNotifications->markAsRead();
 
         return back();
+    }
+
+    public function open(Request $request, DatabaseNotification $notification): RedirectResponse
+    {
+        abort_unless((int) $notification->notifiable_id === (int) $request->user()->id, 403);
+        $notification->markAsRead();
+
+        return redirect($notification->data['url'] ?? route('notifications.index'));
     }
 }
