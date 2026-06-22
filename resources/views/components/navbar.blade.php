@@ -78,7 +78,7 @@
             </div>
 
             {{-- User Dropdown --}}
-            <div class="relative" @click.away="userDropdown = false">
+            <div class="relative" x-data="{ userDropdown: false }" @click.away="userDropdown = false">
                 <button
                     @click="userDropdown = !userDropdown"
                     class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
