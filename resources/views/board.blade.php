@@ -26,8 +26,34 @@
         .mobile-board-column { scroll-snap-align: center; scroll-snap-stop: always; }
         .mobile-task-list { touch-action: pan-y; }
         .task-drag-handle { touch-action: none; }
+        body.mobile-task-dragging { user-select: none; -webkit-user-select: none; }
+        body.mobile-task-dragging .mobile-board-track { scroll-behavior: auto !important; }
+        .mobile-drag-edge {
+            position: fixed;
+            z-index: 48;
+            top: 12rem;
+            bottom: max(1rem, env(safe-area-inset-bottom));
+            width: 4.5rem;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 120ms ease, background-color 120ms ease;
+        }
+        .mobile-drag-edge--left {
+            left: 0;
+            background: linear-gradient(to right, rgba(0, 105, 255, .2), transparent);
+        }
+        .mobile-drag-edge--right {
+            right: 0;
+            background: linear-gradient(to left, rgba(0, 105, 255, .2), transparent);
+        }
+        .mobile-drag-edge.is-available { opacity: .55; }
+        .mobile-drag-edge.is-active { opacity: 1; }
         @media (prefers-reduced-motion: reduce) {
             .mobile-board-track { scroll-behavior: auto !important; }
+            .mobile-drag-edge { transition: none; }
         }
     </style>
 </head>
@@ -245,9 +271,14 @@
                             </button>
                         @endif
                     </div>
-                    <div class="mobile-task-list flex flex-col gap-3 min-h-[calc(100dvh-18rem)] rounded-2xl p-2.5 bg-[#E2E8F0]/55 border border-[#CBD5E1]/50" :id="'col-mobile-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'mobile'))">
+                    <div
+                        class="mobile-task-list flex flex-col gap-3 min-h-[calc(100dvh-18rem)] rounded-2xl p-2.5 bg-[#E2E8F0]/55 border transition-colors"
+                        :class="mobileDragActive && activeColumnIndex === colIdx ? 'border-[#0069FF]/60 bg-[#DCE9FF]/65' : 'border-[#CBD5E1]/50'"
+                        :id="'col-mobile-' + column.id"
+                        x-init="$nextTick(() => initSortable(column.id, 'mobile'))"
+                    >
                         <template x-for="task in column.tasks" :key="'mobile-task-' + task.dbId">
-                            <article class="bg-white rounded-2xl border border-[#DDE5EF] p-4 hover:border-[#AFCBFF] transition-colors group relative shadow-[0_3px_12px_rgba(7,27,51,0.05)]" :data-id="task.dbId" :data-column="column.id" @click="openEditModal(task, column.id)">
+                            <article class="bg-white rounded-2xl border border-[#DDE5EF] p-4 hover:border-[#AFCBFF] transition-colors group relative shadow-[0_3px_12px_rgba(7,27,51,0.05)]" :data-id="task.dbId" :data-column="column.id" @click="if (canOpenTaskFromCard()) openEditModal(task, column.id)">
                                 <div class="absolute top-0 right-0 w-1 h-full rounded-r-2xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2.5">
@@ -293,7 +324,7 @@
         </div>
 
         <div
-            x-show="swipeHintVisible"
+            x-show="swipeHintVisible && !mobileDragActive"
             x-transition.opacity
             class="md:hidden fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-20 w-[calc(100%_-_2rem)] max-w-sm"
         >
@@ -304,6 +335,38 @@
         </div>
         <p class="sr-only" aria-live="polite" x-text="'ستون ' + (columns[activeColumnIndex]?.title || '')"></p>
     </main>
+
+    <template x-if="mobileDragActive">
+        <div class="md:hidden">
+            <div
+                class="mobile-drag-edge mobile-drag-edge--left"
+                :class="{
+                    'is-available': activeColumnIndex < columns.length - 1,
+                    'is-active': mobileDragDirection === 'next',
+                }"
+                aria-hidden="true"
+            >
+                <div x-show="activeColumnIndex < columns.length - 1" class="w-10 h-16 rounded-r-2xl bg-[#0069FF] text-white shadow-lg flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M15 19l-7-7 7-7"/></svg>
+                </div>
+            </div>
+            <div
+                class="mobile-drag-edge mobile-drag-edge--right"
+                :class="{
+                    'is-available': activeColumnIndex > 0,
+                    'is-active': mobileDragDirection === 'previous',
+                }"
+                aria-hidden="true"
+            >
+                <div x-show="activeColumnIndex > 0" class="w-10 h-16 rounded-l-2xl bg-[#0069FF] text-white shadow-lg flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M9 5l7 7-7 7"/></svg>
+                </div>
+            </div>
+            <div class="fixed z-50 bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 max-w-[calc(100%_-_2rem)] rounded-xl bg-[#071B33] text-white px-4 py-2.5 shadow-xl pointer-events-none">
+                <p class="text-[10px] font-bold whitespace-nowrap" x-text="mobileDragStatusText()"></p>
+            </div>
+        </div>
+    </template>
 
     {{-- Project management drawer --}}
     <div x-show="projectDrawerOpen" class="fixed inset-0 z-[55]" @keydown.escape.window="closeProjectDrawer()">
@@ -791,6 +854,15 @@
                 mobileBoardObserver: null,
                 mobileScrollTimer: null,
                 boardMediaQuery: null,
+                mobileDragActive: false,
+                mobileDragDirection: null,
+                mobileDragEdgeTimer: null,
+                mobileDragLastX: null,
+                mobileDragLastY: null,
+                mobileDragPointerHandler: null,
+                mobileDragTouchHandler: null,
+                mobileDragSuppressClickUntil: 0,
+                taskMovePending: false,
                 showModal: false,
                 showDeleteModal: false,
                 projectDrawerOpen: false,
@@ -923,6 +995,117 @@
                 destroyMobileBoardObserver() {
                     if (this.mobileBoardObserver) this.mobileBoardObserver.disconnect();
                     this.mobileBoardObserver = null;
+                },
+
+                canOpenTaskFromCard() {
+                    return !this.mobileDragActive && Date.now() > this.mobileDragSuppressClickUntil;
+                },
+
+                mobileDragStatusText() {
+                    if (this.mobileDragDirection === 'next' && this.activeColumnIndex < this.columns.length - 1) {
+                        return 'انتقال به «' + this.columns[this.activeColumnIndex + 1].title + '»';
+                    }
+                    if (this.mobileDragDirection === 'previous' && this.activeColumnIndex > 0) {
+                        return 'انتقال به «' + this.columns[this.activeColumnIndex - 1].title + '»';
+                    }
+                    if (this.activeColumnIndex === 0 && this.mobileDragDirection === 'previous') {
+                        return 'این اولین ستون است';
+                    }
+                    if (this.activeColumnIndex === this.columns.length - 1 && this.mobileDragDirection === 'next') {
+                        return 'این آخرین ستون است';
+                    }
+                    return 'وظیفه را به لبه صفحه ببرید';
+                },
+
+                startMobileDrag() {
+                    this.mobileDragActive = true;
+                    this.mobileDragSuppressClickUntil = Date.now() + 500;
+                    document.body.classList.add('mobile-task-dragging');
+
+                    this.mobileDragPointerHandler = event => this.handleMobileDragPosition(event.clientX, event.clientY);
+                    this.mobileDragTouchHandler = event => {
+                        const touch = event.touches?.[0] || event.changedTouches?.[0];
+                        if (touch) this.handleMobileDragPosition(touch.clientX, touch.clientY);
+                    };
+                    document.addEventListener('pointermove', this.mobileDragPointerHandler, { passive: true });
+                    document.addEventListener('touchmove', this.mobileDragTouchHandler, { passive: true });
+                },
+
+                handleMobileDragPosition(clientX, clientY = null) {
+                    if (!this.mobileDragActive || !Number.isFinite(clientX)) return;
+                    this.mobileDragLastX = clientX;
+                    if (Number.isFinite(clientY)) this.mobileDragLastY = clientY;
+                    const edgeSize = Math.min(82, Math.max(56, window.innerWidth * 0.18));
+                    let direction = null;
+
+                    if (clientX <= edgeSize) direction = 'next';
+                    else if (clientX >= window.innerWidth - edgeSize) direction = 'previous';
+
+                    if (direction !== this.mobileDragDirection) {
+                        this.clearMobileDragEdgeTimer();
+                        this.mobileDragDirection = direction;
+                    }
+
+                    if (!direction) return;
+                    const targetIndex = direction === 'next'
+                        ? this.activeColumnIndex + 1
+                        : this.activeColumnIndex - 1;
+                    if (targetIndex < 0 || targetIndex >= this.columns.length || this.mobileDragEdgeTimer) return;
+
+                    this.mobileDragEdgeTimer = window.setTimeout(() => {
+                        this.mobileDragEdgeTimer = null;
+                        this.navigateDuringMobileDrag(targetIndex);
+                    }, 360);
+                },
+
+                navigateDuringMobileDrag(targetIndex) {
+                    if (!this.mobileDragActive) return;
+                    const track = this.$refs.mobileBoardTrack;
+                    const target = track?.querySelector(`[data-column-index="${targetIndex}"]`);
+                    if (!target) return;
+
+                    target.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' });
+                    this.activeColumnIndex = targetIndex;
+                    window.setTimeout(() => {
+                        if (this.mobileDragActive && Number.isFinite(this.mobileDragLastX)) {
+                            this.handleMobileDragPosition(this.mobileDragLastX, this.mobileDragLastY);
+                        }
+                    }, 460);
+                },
+
+                mobileDropIndex(columnId, clientY) {
+                    const list = document.getElementById('col-mobile-' + columnId);
+                    if (!list) return 0;
+                    const cards = [...list.querySelectorAll(':scope > article[data-id]')];
+                    if (!cards.length || !Number.isFinite(clientY)) return cards.length;
+                    const index = cards.findIndex(card => {
+                        const rect = card.getBoundingClientRect();
+                        return clientY < rect.top + (rect.height / 2);
+                    });
+                    return index === -1 ? cards.length : index;
+                },
+
+                clearMobileDragEdgeTimer() {
+                    if (this.mobileDragEdgeTimer) window.clearTimeout(this.mobileDragEdgeTimer);
+                    this.mobileDragEdgeTimer = null;
+                },
+
+                endMobileDrag() {
+                    this.clearMobileDragEdgeTimer();
+                    if (this.mobileDragPointerHandler) {
+                        document.removeEventListener('pointermove', this.mobileDragPointerHandler);
+                    }
+                    if (this.mobileDragTouchHandler) {
+                        document.removeEventListener('touchmove', this.mobileDragTouchHandler);
+                    }
+                    this.mobileDragPointerHandler = null;
+                    this.mobileDragTouchHandler = null;
+                    this.mobileDragDirection = null;
+                    this.mobileDragLastX = null;
+                    this.mobileDragLastY = null;
+                    this.mobileDragActive = false;
+                    this.mobileDragSuppressClickUntil = Date.now() + 350;
+                    document.body.classList.remove('mobile-task-dragging');
                 },
 
                 openProjectDrawer() {
@@ -1213,11 +1396,43 @@
                         delay: variant === 'mobile' ? 120 : 50,
                         delayOnTouchOnly: true,
                         touchStartThreshold: 4,
+                        forceFallback: variant === 'mobile',
+                        fallbackOnBody: variant === 'mobile',
+                        fallbackTolerance: variant === 'mobile' ? 4 : 0,
+                        scroll: variant !== 'mobile',
+                        bubbleScroll: variant !== 'mobile',
+                        scrollSensitivity: 72,
+                        scrollSpeed: 14,
+                        onStart(evt) {
+                            if (variant === 'mobile') {
+                                const sourceIndex = self.columns.findIndex(column => column.id === evt.from.id.replace('col-mobile-', ''));
+                                if (sourceIndex >= 0) self.activeColumnIndex = sourceIndex;
+                                self.startMobileDrag();
+                            }
+                        },
+                        onMove(evt, originalEvent) {
+                            if (variant === 'mobile' && originalEvent) {
+                                const touch = originalEvent.touches?.[0] || originalEvent.changedTouches?.[0];
+                                self.handleMobileDragPosition(
+                                    touch?.clientX ?? originalEvent.clientX,
+                                    touch?.clientY ?? originalEvent.clientY,
+                                );
+                            }
+                            return true;
+                        },
                         onEnd(evt) {
                             const taskId = Number(evt.item.getAttribute('data-id'));
                             const fromColId = evt.from.id.replace(`col-${variant}-`, '');
-                            const toColId = evt.to.id.replace(`col-${variant}-`, '');
-                            self.moveTask(fromColId, toColId, taskId, evt.newIndex);
+                            let toColId = evt.to.id.replace(`col-${variant}-`, '');
+                            let newIndex = evt.newIndex;
+                            if (variant === 'mobile') {
+                                toColId = self.columns[self.activeColumnIndex]?.id || fromColId;
+                                if (toColId !== fromColId) {
+                                    newIndex = self.mobileDropIndex(toColId, self.mobileDragLastY);
+                                }
+                                self.endMobileDrag();
+                            }
+                            self.moveTask(fromColId, toColId, taskId, newIndex, evt.oldIndex);
                         }
                     });
                     this.sortableInstances.push({ instance, columnId, variant });
@@ -1228,21 +1443,49 @@
                     this.sortableInstances = [];
                 },
 
-                moveTask(fromColId, toColId, taskId, newIndex) {
+                async moveTask(fromColId, toColId, taskId, newIndex, oldIndex = null) {
                     if (!this.canEdit) return;
                     const fromCol = this.columns.find(c => c.id === fromColId);
                     const toCol = this.columns.find(c => c.id === toColId);
                     if (!fromCol || !toCol) return;
                     const idx = fromCol.tasks.findIndex(t => t.dbId === taskId);
                     if (idx === -1) return;
-                    const [task] = fromCol.tasks.splice(idx, 1);
-                    toCol.tasks.splice(newIndex, 0, task);
+                    if (fromColId === toColId && Number(oldIndex) === Number(newIndex)) return;
 
-                    fetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                        body: JSON.stringify({ column_id: parseInt(toColId), position: newIndex }),
-                    });
+                    const snapshot = this.columns.map(column => ({
+                        id: column.id,
+                        tasks: [...column.tasks],
+                    }));
+                    const [task] = fromCol.tasks.splice(idx, 1);
+                    const safeIndex = Math.max(0, Math.min(Number(newIndex) || 0, toCol.tasks.length));
+                    toCol.tasks.splice(safeIndex, 0, task);
+                    this.activeColumnIndex = this.columns.findIndex(column => column.id === toColId);
+                    this.taskMovePending = true;
+
+                    try {
+                        const response = await fetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                            body: JSON.stringify({ column_id: parseInt(toColId), position: safeIndex }),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'انتقال وظیفه انجام نشد.');
+                        this.showToast(fromColId === toColId ? 'ترتیب وظیفه ذخیره شد' : 'وظیفه به ستون جدید منتقل شد');
+                    } catch (error) {
+                        snapshot.forEach(savedColumn => {
+                            const column = this.columns.find(item => item.id === savedColumn.id);
+                            if (column) column.tasks = [...savedColumn.tasks];
+                        });
+                        this.showToast(error.message || 'انتقال وظیفه انجام نشد.');
+                        this.destroySortables();
+                        this.$nextTick(() => {
+                            this.columns.forEach(column => {
+                                this.initSortable(column.id, this.boardMediaQuery?.matches ? 'mobile' : 'desktop');
+                            });
+                        });
+                    } finally {
+                        this.taskMovePending = false;
+                    }
                 },
 
                 openAddModal(columnId) {
