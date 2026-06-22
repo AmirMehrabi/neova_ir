@@ -621,7 +621,7 @@
                     const [task] = fromCol.tasks.splice(idx, 1);
                     toCol.tasks.splice(newIndex, 0, task);
 
-                    fetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), {
+                    fetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                         body: JSON.stringify({ column_id: parseInt(toColId), position: newIndex }),
@@ -669,7 +669,7 @@
                         const task = col?.tasks.find(t => t.dbId === this.editingTask);
                         if (task) {
                             const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId) };
-                            await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
+                            await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
                             Object.assign(task, { id: this.form.title, title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: [...this.form.assignees], dueDate: this.form.dueDate, tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
                         }
                         this.showToast('تغییرات ذخیره شد');
@@ -677,7 +677,7 @@
                         const col = this.columns.find(c => c.id === this.form.columnId);
                         if (col) {
                             const payload = { column_id: parseInt(this.form.columnId), title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments };
-                            const res = await fetch('{{ route("board.task.store", [$workspace->slug, $project->slug]) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
+                            const res = await fetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
                             const data = await res.json();
                             col.tasks.push({ id: data.title, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [] });
                             this.showToast('وظیفه جدید ایجاد شد');
@@ -698,7 +698,7 @@
                     if (col) {
                         const task = col.tasks.find(t => t.dbId === this.deleteTarget.taskId);
                         if (task) {
-                            await fetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
+                            await fetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
                         }
                         col.tasks = col.tasks.filter(t => t.dbId !== this.deleteTarget.taskId);
                         this.showToast('وظیفه حذف شد');

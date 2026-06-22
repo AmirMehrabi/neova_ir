@@ -35,7 +35,7 @@
             this.searchLoading = true;
             this.selectedIdx = -1;
             try {
-                const res = await fetch('{{ route('dashboard.search') }}?q=' + encodeURIComponent(this.searchQuery), {
+                const res = await fetch('{{ route('dashboard.search', [], false) }}?q=' + encodeURIComponent(this.searchQuery), {
                     headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                 });
                 this.searchResults = await res.json();
@@ -190,12 +190,13 @@
             </button>
         </div>
 
+        <div class="overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_12px_30px_rgba(7,27,51,0.06)]">
         @forelse ($workspaces as $workspace)
             @php
                 $role = $workspace->getAttribute('user_role');
                 $canManage = in_array($role, ['owner', 'admin'], true);
             @endphp
-            <section class="mb-8 last:mb-0 overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_10px_26px_rgba(7,27,51,0.05)]">
+            <section class="border-b border-[#D8E0EB] last:border-b-0">
                 <div class="flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 border-b border-[#E6EBF2]">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-10 h-10 rounded-[10px] bg-[#EAF1FF] text-[#1668FF] flex items-center justify-center text-sm font-black shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
@@ -318,6 +319,7 @@
                 <button @click="modalType = 'workspace'; showModal = true" class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] px-4 py-2.5 rounded-lg transition-colors">ایجاد فضای کاری</button>
             </div>
         @endforelse
+        </div>
     </main>
 
     {{-- Modals --}}

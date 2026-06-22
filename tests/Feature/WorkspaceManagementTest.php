@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Jobs\SendWorkspaceInvitationSms;
 use App\Models\Project;
+use App\Models\Task;
 use App\Models\User;
 use App\Models\Workspace;
 use App\Models\WorkspaceInvitation;
@@ -135,5 +136,38 @@ class WorkspaceManagementTest extends TestCase
                 'title' => 'کار جدید',
             ])
             ->assertForbidden();
+    }
+
+    public function test_workspace_editor_can_move_a_task_between_project_columns(): void
+    {
+        $owner = User::factory()->create();
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'Product Team']);
+        $project = Project::create([
+            'workspace_id' => $workspace->id,
+            'name' => 'First Project',
+            'key' => 'PRJ',
+        ]);
+        $source = $project->columns()->create(['title' => 'پس‌زمینه', 'position' => 0]);
+        $target = $project->columns()->create(['title' => 'در حال انجام', 'position' => 1]);
+        $task = Task::create([
+            'column_id' => $source->id,
+            'title' => 'PRJ-001 کار نمونه',
+            'priority' => 'متوسط',
+            'position' => 1,
+        ]);
+
+        $this->actingAs($owner)
+            ->postJson(route('board.task.move', [$workspace->slug, $project->slug, $task->id]), [
+                'column_id' => $target->id,
+                'position' => 0,
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertDatabaseHas('tasks', [
+            'id' => $task->id,
+            'column_id' => $target->id,
+            'position' => 1,
+        ]);
     }
 }

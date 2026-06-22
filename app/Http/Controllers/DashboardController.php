@@ -141,7 +141,7 @@ class DashboardController extends Controller
         $memberIds = $user->workspaces()->pluck('workspaces.id');
         $workspaceIds = $ownedIds->merge($memberIds)->unique();
 
-        $results = [];
+        $results = collect();
 
         $workspaces = Workspace::whereIn('id', $workspaceIds)
             ->where('name', 'LIKE', "%{$query}%")
@@ -151,7 +151,7 @@ class DashboardController extends Controller
                 'type' => 'workspace',
                 'name' => $ws->name,
                 'subtitle' => $ws->projects_count ?? $ws->projects()->count().' پروژه',
-                'url' => route('dashboard', ['workspace' => $ws->slug]),
+                'url' => route('dashboard', ['workspace' => $ws->slug], false),
             ]);
         $results = $results->merge($workspaces);
 
@@ -164,7 +164,7 @@ class DashboardController extends Controller
                 'type' => 'project',
                 'name' => $p->name,
                 'subtitle' => $p->workspace->name.' · '.$p->key,
-                'url' => route('board', [$p->workspace->slug, $p->slug]),
+                'url' => route('board', [$p->workspace->slug, $p->slug], false),
             ]);
         $results = $results->merge($projects);
 
@@ -179,7 +179,7 @@ class DashboardController extends Controller
                 'type' => 'task',
                 'name' => $t->title,
                 'subtitle' => $t->column->project->workspace->name.' · '.$t->column->project->name,
-                'url' => route('board', [$t->column->project->workspace->slug, $t->column->project->slug]),
+                'url' => route('board', [$t->column->project->workspace->slug, $t->column->project->slug], false),
             ]);
         $results = $results->merge($tasks);
 

@@ -91,7 +91,7 @@ class BoardController extends Controller
         return response()->json($task);
     }
 
-    public function updateTask(Request $request, string $task)
+    public function updateTask(Request $request, string $workspace, string $project, string $task)
     {
         $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
@@ -105,7 +105,7 @@ class BoardController extends Controller
         return response()->json($task);
     }
 
-    public function destroyTask(Request $request, string $task)
+    public function destroyTask(Request $request, string $workspace, string $project, string $task)
     {
         $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
@@ -114,7 +114,7 @@ class BoardController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function moveTask(Request $request, string $task)
+    public function moveTask(Request $request, string $workspace, string $project, string $task)
     {
         $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
@@ -200,7 +200,7 @@ class BoardController extends Controller
         return response()->json($column);
     }
 
-    public function destroyColumn(Request $request, ProjectColumn $column)
+    public function destroyColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
     {
         $this->ensureColumnInCurrentProject($request, $column);
         $column->tasks()->delete();

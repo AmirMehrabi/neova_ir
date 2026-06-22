@@ -5,13 +5,8 @@ use App\Http\Controllers\BoardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\NotificationController;
-use App\Models\Task;
 use App\Http\Controllers\WorkspaceManagementController;
 use Illuminate\Support\Facades\Route;
-
-Route::bind('task', function (string $value) {
-    return Task::query()->findOrFail($value);
-});
 
 Route::get('/', function () {
     return view('welcome');
