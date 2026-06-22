@@ -10,6 +10,7 @@ use App\Services\WorkspaceInvitationService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -39,6 +40,23 @@ class WorkspaceManagementController extends Controller
             'invitations' => $invitations,
             'actorRole' => $workspace->roleFor($request->user()),
         ]);
+    }
+
+    public function update(Request $request, string $workspace): RedirectResponse
+    {
+        $workspace = $this->workspace($request, $workspace);
+
+        if (! $workspace->isOwnedBy($request->user())) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+        ]);
+
+        $workspace->update(['name' => $validated['name']]);
+
+        return back()->with('success', 'نام فضای کاری به‌روزرسانی شد.');
     }
 
     public function invite(

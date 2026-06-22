@@ -6,6 +6,7 @@ use App\Models\WorkspaceInvitation;
 use App\Services\KavenegarVerifyLookupService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 
 class SendWorkspaceInvitationSms implements ShouldQueue
 {
@@ -28,7 +29,16 @@ class SendWorkspaceInvitationSms implements ShouldQueue
             return;
         }
 
-        $kavenegar->sendWorkspaceInvitation($invitation, $this->code);
-        $invitation->update(['sent_at' => now()]);
+        try {
+            $kavenegar->sendWorkspaceInvitation($invitation, $this->code);
+            $invitation->update(['sent_at' => now()]);
+        } catch (\Throwable $e) {
+            Log::error('Failed to send workspace invitation SMS', [
+                'invitation_id' => $this->invitationId,
+                'phone' => $invitation->phone,
+                'error' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
     }
 }

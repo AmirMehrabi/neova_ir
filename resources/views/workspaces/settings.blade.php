@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="min-h-screen bg-[#F5F7FA]" x-data="{ tab: 'members' }">
+<div class="min-h-screen bg-[#F5F7FA]" x-data="{ tab: 'general' }">
     <x-app-page-header
         title="مدیریت {{ $workspace->name }}"
         :back-url="route('dashboard', ['workspace' => $workspace->slug])"
@@ -21,10 +21,32 @@
         </div>
 
         <div class="flex gap-1 border-b border-[#DCE3ED] mb-6 overflow-x-auto">
+            <button @click="tab = 'general'" :class="tab === 'general' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">تنظیمات</button>
             <button @click="tab = 'members'" :class="tab === 'members' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">اعضا</button>
             <button @click="tab = 'invitations'" :class="tab === 'invitations' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">دعوت‌نامه‌ها</button>
             <button @click="tab = 'projects'" :class="tab === 'projects' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">تیم پروژه‌ها</button>
         </div>
+
+        <section x-show="tab === 'general'" x-cloak>
+            @if ($actorRole === 'owner')
+                <div class="bg-white border border-[#DFE5EF] rounded-xl p-5 max-w-lg">
+                    <h3 class="text-sm font-bold text-[#172B4D] mb-1">نام فضای کاری</h3>
+                    <p class="text-[10px] text-[#94A3B8] mb-4">نامی که برای این فضای کاری نمایش داده می‌شود.</p>
+                    <form method="POST" action="{{ route('workspaces.settings.update', $workspace->slug) }}" class="flex items-center gap-3">
+                        @csrf
+                        @method('PATCH')
+                        <input name="name" value="{{ old('name', $workspace->name) }}" class="flex-1 text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0069FF]" required>
+                        <button class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-lg px-4 py-2.5 shrink-0">ذخیره</button>
+                    </form>
+                </div>
+            @else
+                <div class="bg-white border border-[#DFE5EF] rounded-xl p-5 max-w-lg">
+                    <h3 class="text-sm font-bold text-[#172B4D] mb-1">نام فضای کاری</h3>
+                    <p class="text-[13px] text-[#475569] mt-2">{{ $workspace->name }}</p>
+                    <p class="text-[10px] text-[#94A3B8] mt-2">فقط مالک می‌تواند نام فضای کاری را تغییر دهد.</p>
+                </div>
+            @endif
+        </section>
 
         <section x-show="tab === 'members'" x-cloak>
             <div class="bg-white border border-[#DFE5EF] rounded-xl overflow-hidden">

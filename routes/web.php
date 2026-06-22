@@ -39,6 +39,7 @@ Route::middleware('auth')->group(function () {
 
     Route::prefix('workspaces/{workspace}')->name('workspaces.')->group(function () {
         Route::get('/settings', [WorkspaceManagementController::class, 'index'])->name('settings');
+        Route::patch('/settings', [WorkspaceManagementController::class, 'update'])->name('settings.update');
         Route::post('/invitations', [WorkspaceManagementController::class, 'invite'])->name('invitations.store');
         Route::post('/invitations/{invitation}/resend', [WorkspaceManagementController::class, 'resend'])->name('invitations.resend');
         Route::delete('/invitations/{invitation}', [WorkspaceManagementController::class, 'revoke'])->name('invitations.revoke');

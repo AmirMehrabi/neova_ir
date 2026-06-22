@@ -227,7 +227,7 @@
                     </div>
                 </div>
 
-                <div class="flex items-center gap-2.5 shrink-0">
+                <div class="flex items-center gap-2.5 shrink-0 ml-auto">
                     {{-- New Project Button --}}
                     @if ($activeWorkspace && in_array($activeWorkspaceRole, ['owner', 'admin'], true))
                         <button
