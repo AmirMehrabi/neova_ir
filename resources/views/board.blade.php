@@ -1403,8 +1403,12 @@
                         bubbleScroll: variant !== 'mobile',
                         scrollSensitivity: 72,
                         scrollSpeed: 14,
+                        onClone(evt) {
+                            if (variant === 'mobile') evt.clone.setAttribute('x-ignore', '');
+                        },
                         onStart(evt) {
                             if (variant === 'mobile') {
+                                window.Sortable.ghost?.setAttribute('x-ignore', '');
                                 const sourceIndex = self.columns.findIndex(column => column.id === evt.from.id.replace('col-mobile-', ''));
                                 if (sourceIndex >= 0) self.activeColumnIndex = sourceIndex;
                                 self.startMobileDrag();
@@ -1443,8 +1447,12 @@
                     this.sortableInstances = [];
                 },
 
+                setSortablesDisabled(disabled) {
+                    this.sortableInstances.forEach(item => item.instance.option('disabled', disabled));
+                },
+
                 async moveTask(fromColId, toColId, taskId, newIndex, oldIndex = null) {
-                    if (!this.canEdit) return;
+                    if (!this.canEdit || this.taskMovePending) return;
                     const fromCol = this.columns.find(c => c.id === fromColId);
                     const toCol = this.columns.find(c => c.id === toColId);
                     if (!fromCol || !toCol) return;
@@ -1461,6 +1469,7 @@
                     toCol.tasks.splice(safeIndex, 0, task);
                     this.activeColumnIndex = this.columns.findIndex(column => column.id === toColId);
                     this.taskMovePending = true;
+                    this.setSortablesDisabled(true);
 
                     try {
                         const response = await fetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), {
@@ -1485,6 +1494,7 @@
                         });
                     } finally {
                         this.taskMovePending = false;
+                        this.setSortablesDisabled(false);
                     }
                 },
 

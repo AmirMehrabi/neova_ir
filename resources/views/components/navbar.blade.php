@@ -24,7 +24,7 @@
         </div>
 
         {{-- Right actions --}}
-        <div class="flex items-center gap-0.5 sm:gap-2 shrink-0 ml-auto">
+        <div class="flex items-center gap-0.5 sm:gap-2 shrink-0 {{ isset($mobile) && $mobile->isNotEmpty() ? 'flex-1 justify-end md:flex-none md:justify-start md:ml-auto' : 'ml-auto' }}">
             {{ $actions ?? '' }}
 
             {{-- Notification Bell --}}
