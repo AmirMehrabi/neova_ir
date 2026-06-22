@@ -49,7 +49,7 @@
                     x-show="notificationsOpen"
                     x-cloak
                     x-transition
-                    class="absolute left-0 top-full mt-2 w-[min(340px,calc(100vw-2rem))] bg-white rounded-xl border border-[#E2E8F0] shadow-xl shadow-[#031B4E]/10 overflow-hidden z-50"
+                    class="fixed left-3 right-3 top-14 mt-2 w-auto md:absolute md:left-0 md:right-auto md:top-full md:w-[min(340px,calc(100vw-2rem))] bg-white rounded-xl border border-[#E2E8F0] shadow-xl shadow-[#031B4E]/10 overflow-hidden z-50"
                 >
                     <div class="flex items-center justify-between px-4 py-3 border-b border-[#F1F5F9]">
                         <span class="text-[13px] font-bold text-[#172B4D]">اعلان‌ها</span>

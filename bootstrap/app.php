@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsureProject;
 use App\Http\Middleware\EnsureWorkspace;
 use App\Http\Middleware\EnsureWorkspaceEditor;
@@ -16,6 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
+            'auth' => Authenticate::class,
             'workspace' => EnsureWorkspace::class,
             'project' => EnsureProject::class,
             'workspace.editor' => EnsureWorkspaceEditor::class,
