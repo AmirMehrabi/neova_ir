@@ -2,10 +2,13 @@
 
 @section('body')
 <div class="min-h-screen bg-[#F5F7FA]" x-data="{ tab: 'general' }">
-    <x-app-page-header
-        title="مدیریت {{ $workspace->name }}"
-        :back-url="route('dashboard', ['workspace' => $workspace->slug])"
-    />
+    <x-navbar>
+        <x-breadcrumb :items="collect([
+            ['label' => 'داشبورد', 'url' => route('dashboard')],
+            ['label' => $workspace->name, 'url' => route('dashboard', ['workspace' => $workspace->slug])],
+            ['label' => 'تنظیمات'],
+        ])" />
+    </x-navbar>
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 py-7">
         @if (session('success'))

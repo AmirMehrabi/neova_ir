@@ -2,7 +2,12 @@
 
 @section('body')
 <div class="min-h-screen bg-[#F5F7FA]">
-    <x-app-page-header title="اعلان‌ها" :back-url="route('dashboard')" />
+    <x-navbar>
+        <x-breadcrumb :items="collect([
+            ['label' => 'داشبورد', 'url' => route('dashboard')],
+            ['label' => 'اعلان‌ها'],
+        ])" />
+    </x-navbar>
 
     <main class="max-w-4xl mx-auto px-4 sm:px-6 py-7">
         @if (session('success'))

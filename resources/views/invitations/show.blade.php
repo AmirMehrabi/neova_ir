@@ -2,7 +2,12 @@
 
 @section('body')
 <div class="min-h-screen bg-[#F5F7FA]">
-    <x-app-page-header title="دعوت به فضای کاری" :back-url="route('dashboard')" />
+    <x-navbar>
+        <x-breadcrumb :items="collect([
+            ['label' => 'داشبورد', 'url' => route('dashboard')],
+            ['label' => 'دعوت به فضای کاری'],
+        ])" />
+    </x-navbar>
 
     <main class="max-w-xl mx-auto px-4 py-12">
         <div class="bg-white border border-[#DFE5EF] rounded-2xl p-6 sm:p-8 text-center">

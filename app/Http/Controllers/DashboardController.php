@@ -26,46 +26,32 @@ class DashboardController extends Controller
         $workspaceIds = $ownedIds->merge($memberIds)->unique();
 
         $workspaces = Workspace::with(['projects' => function ($q) {
-            $q->withCount('columns');
+            $q->with([
+                'columns' => fn ($query) => $query->withCount('tasks'),
+            ])->withCount('members');
         }])
             ->withCount('projects')
             ->whereIn('workspaces.id', $workspaceIds)
-            ->get();
+            ->get()
+            ->each(function (Workspace $workspace) use ($user) {
+                $workspace->setAttribute('user_role', $workspace->roleFor($user));
 
-        $activeSlug = $request->query('workspace');
-        $activeWorkspace = $workspaces->firstWhere('slug', $activeSlug) ?? $workspaces->first();
+                foreach ($workspace->projects as $project) {
+                    $totalTasks = (int) $project->columns->sum('tasks_count');
+                    $doneTasks = (int) $project->columns
+                        ->where('title', 'انجام شده')
+                        ->sum('tasks_count');
 
-        $projects = collect();
-        $stats = ['total_projects' => 0, 'total_tasks' => 0, 'done_tasks' => 0];
-        $activeWorkspaceRole = $activeWorkspace?->roleFor($user);
+                    $project->setAttribute('total_tasks', $totalTasks);
+                    $project->setAttribute('done_tasks', $doneTasks);
+                    $project->setAttribute(
+                        'progress_percentage',
+                        $totalTasks > 0 ? (int) round(($doneTasks / $totalTasks) * 100) : 0
+                    );
+                }
+            });
 
-        if ($activeWorkspace) {
-            $projects = Project::with([
-                'columns' => fn ($query) => $query->withCount('tasks'),
-            ])
-                ->where('workspace_id', $activeWorkspace->id)
-                ->get();
-
-            foreach ($projects as $project) {
-                $totalTasks = (int) $project->columns->sum('tasks_count');
-                $doneTasks = (int) $project->columns
-                    ->where('title', 'انجام شده')
-                    ->sum('tasks_count');
-
-                $project->setAttribute('total_tasks', $totalTasks);
-                $project->setAttribute('done_tasks', $doneTasks);
-                $project->setAttribute(
-                    'progress_percentage',
-                    $totalTasks > 0 ? (int) round(($doneTasks / $totalTasks) * 100) : 0
-                );
-
-                $stats['total_projects']++;
-                $stats['total_tasks'] += $totalTasks;
-                $stats['done_tasks'] += $doneTasks;
-            }
-        }
-
-        return view('dashboard', compact('workspaces', 'activeWorkspace', 'activeWorkspaceRole', 'projects', 'stats'));
+        return view('dashboard', compact('workspaces'));
     }
 
     public function storeWorkspace(Request $request)

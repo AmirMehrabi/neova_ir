@@ -24,42 +24,37 @@
 <body class="bg-[#F0F4F8] min-h-screen" x-data="board()" x-cloak>
 
     {{-- Top Navigation Bar --}}
-    <header class="sticky top-0 z-40 border-b border-white/10 bg-[#031B4E]/95 shadow-lg shadow-[#031B4E]/25 backdrop-blur-xl">
-        <div class="max-w-[1600px] mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-3 min-w-0">
-                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-9 h-9 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white/85 hover:text-white hover:bg-white/15 transition-colors shrink-0" aria-label="بازگشت">
-                    <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </a>
-                <a href="{{ route('dashboard') }}" class="w-9 h-9 rounded-xl bg-[#0069FF] flex items-center justify-center shadow-md shadow-[#0069FF]/25 shrink-0" aria-label="داشبورد">
-                    <img src="{{ asset('assets/logo/logo-white.png') }}" alt="نئووا" class="w-5 h-5 object-contain">
-                </a>
-                <div class="min-w-0">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-white/10 border border-white/10 text-[10px] font-bold text-white/90 shrink-0">{{ $project->key }}</span>
-                        <span class="text-white font-bold text-[15px] truncate">{{ $project->name }}</span>
-                    </div>
-                    <span class="block text-blue-200/80 text-[10px] mt-0.5 truncate">{{ $workspace->name }}</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-                <span class="hidden sm:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
-                <x-notification-menu dark />
-                @if ($canEdit)
-                    <button
-                        @click="openAddModal(columns[0]?.id)"
-                        class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
-                    >
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                        وظیفه جدید
-                    </button>
-                @else
-                    <span class="text-[10px] font-bold text-blue-100 bg-white/10 rounded-md px-2.5 py-1.5">فقط مشاهده</span>
+    <x-navbar dark fluid>
+        <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-white/85 hover:text-white hover:bg-white/15 transition-colors shrink-0" aria-label="بازگشت">
+            <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </a>
+        <div class="min-w-0">
+            <div class="flex items-center gap-2 min-w-0">
+                @if ($project->key)
+                    <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-white/10 border border-white/10 text-[10px] font-bold text-white/90 shrink-0">{{ $project->key }}</span>
                 @endif
+                <span class="text-white font-bold text-[15px] truncate">{{ $project->name }}</span>
             </div>
+            <span class="block text-blue-200/80 text-[10px] mt-0.5 truncate">{{ $workspace->name }}</span>
         </div>
-    </header>
+
+        @slot('actions')
+            <span class="hidden sm:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
+            @if ($canEdit)
+                <button
+                    @click="openAddModal(columns[0]?.id)"
+                    class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
+                >
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    وظیفه جدید
+                </button>
+            @else
+                <span class="text-[10px] font-bold text-blue-100 bg-white/10 rounded-md px-2.5 py-1.5">فقط مشاهده</span>
+            @endif
+        @endslot
+    </x-navbar>
 
     {{-- Board --}}
     <main class="max-w-[1600px] mx-auto px-5 py-5">
