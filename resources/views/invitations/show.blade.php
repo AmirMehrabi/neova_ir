@@ -11,7 +11,7 @@
 
     <main class="max-w-xl mx-auto px-4 py-12">
         <div class="bg-white border border-[#DFE5EF] rounded-2xl p-6 sm:p-8 text-center">
-            <img src="{{ asset('assets/logo/logo-white.png') }}" alt="نئووا" class="w-14 h-14 object-contain rounded-2xl bg-[#E8F0FE] p-2 mx-auto mb-5">
+            <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-12 w-auto object-contain mx-auto mb-6">
             <h2 class="text-xl font-black text-[#172B4D]">دعوت به {{ $invitation->workspace->name }}</h2>
             <p class="text-sm text-[#64748B] leading-7 mt-3">{{ $invitation->inviter->full_name }} شما را برای همکاری در این فضای کاری دعوت کرده است.</p>
 

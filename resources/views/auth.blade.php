@@ -1,6 +1,6 @@
 @extends('layouts.app')
 @section('body')
-<div x-data="auth()" x-cloak class="flex items-center justify-center min-h-screen p-4">
+<div x-data="auth()" x-cloak class="flex items-center justify-center min-h-screen bg-[#EEF2F7] p-4">
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
         <div class="absolute -top-40 -right-40 w-80 h-80 bg-[#0069FF]/5 rounded-full blur-3xl"></div>
         <div class="absolute -bottom-40 -left-40 w-80 h-80 bg-[#003B8E]/5 rounded-full blur-3xl"></div>
@@ -8,7 +8,9 @@
 
     <div class="relative w-full max-w-[420px]">
         <div class="text-center mb-8">
-            <img src="{{ asset('assets/logo/logo-black.png') }}" alt="نئووا" class="w-22 h-22 object-cover rounded-2xl  p-1 mx-auto mb-4 ">
+            <a href="{{ url('/') }}" class="inline-flex mb-5" aria-label="صفحه اصلی نئووا">
+                <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-12 sm:h-14 w-auto object-contain">
+            </a>
             <h1 class="text-xl font-black text-[#1A1D21]" x-text="step === 'phone' ? 'ورود به تخته اسکرام' : 'تایید شماره تلفن'"></h1>
             <p class="text-sm text-[#64748B] mt-1.5" x-text="step === 'phone' ? 'شماره تلفن خود را وارد کنید' : 'کد ۶ رقمی ارسال شده را وارد کنید'"></p>
         </div>

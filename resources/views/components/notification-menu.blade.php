@@ -4,14 +4,14 @@
     <button
         type="button"
         @click="notificationsOpen = !notificationsOpen"
-        class="relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors {{ $dark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-[#64748B] hover:text-[#0069FF] hover:bg-[#F1F5F9]' }}"
+        class="relative w-8 h-8 rounded-lg flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
         aria-label="اعلان‌ها"
     >
         <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0m6 0H9"/>
         </svg>
         @if (($navbarUnreadCount ?? 0) > 0)
-            <span class="absolute -top-1 -left-1 min-w-4 h-4 px-1 rounded-full bg-[#EF4444] text-white text-[8px] font-bold flex items-center justify-center ring-2 ring-white">
+            <span class="absolute -top-1 -left-1 min-w-4 h-4 px-1 rounded-full bg-[#EF4444] text-white text-[8px] font-bold flex items-center justify-center ring-2 ring-[#071B33]">
                 {{ $navbarUnreadCount > 9 ? '۹+' : $navbarUnreadCount }}
             </span>
         @endif

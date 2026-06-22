@@ -1,35 +1,189 @@
 @extends('layouts.app')
 @section('body')
 <div
-    class="min-h-screen bg-[#F5F7FA]"
-    x-data="{ showModal: false, modalType: 'workspace', targetWorkspace: null, userDropdown: false }"
+    class="min-h-screen bg-[#EEF2F7]"
+    x-data="{
+        showModal: false,
+        modalType: 'workspace',
+        targetWorkspace: null,
+        userDropdown: false,
+        searchOpen: false,
+        searchQuery: '',
+        searchResults: [],
+        searchLoading: false,
+        recentSearches: [],
+        selectedIdx: -1,
+
+        init() {
+            try { this.recentSearches = JSON.parse(localStorage.getItem('neova_search') || '[]'); } catch { this.recentSearches = []; }
+        },
+
+        saveRecentSearch(item) {
+            let s = this.recentSearches.filter(x => x.url !== item.url);
+            s.unshift(item);
+            this.recentSearches = s.slice(0, 8);
+            localStorage.setItem('neova_search', JSON.stringify(this.recentSearches));
+        },
+
+        clearRecentSearches() {
+            this.recentSearches = [];
+            localStorage.removeItem('neova_search');
+        },
+
+        async doSearch() {
+            if (!this.searchQuery.trim()) { this.searchResults = []; this.init(); return; }
+            this.searchLoading = true;
+            this.selectedIdx = -1;
+            try {
+                const res = await fetch('{{ route('dashboard.search') }}?q=' + encodeURIComponent(this.searchQuery), {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                });
+                this.searchResults = await res.json();
+            } catch { this.searchResults = []; } finally { this.searchLoading = false; }
+        },
+
+        navigateResults(dir) {
+            const items = this.searchQuery ? this.searchResults : this.recentSearches;
+            if (!items.length) return;
+            this.selectedIdx = Math.max(-1, Math.min(items.length - 1, this.selectedIdx + dir));
+        },
+
+        selectResult() {
+            const items = this.searchQuery ? this.searchResults : this.recentSearches;
+            if (this.selectedIdx >= 0 && items[this.selectedIdx]) window.location.href = items[this.selectedIdx].url;
+        }
+    }"
 >
     <style>
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
-        .project-card { transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease; }
-        .project-card:hover { border-color: rgba(0, 105, 255, 0.28); box-shadow: 0 8px 24px rgba(3, 27, 78, 0.06); transform: translateY(-1px); }
+        .project-card { transition: background-color 0.18s ease, box-shadow 0.18s ease; }
+        .project-card:hover { background: #F7FAFF; box-shadow: inset -3px 0 0 #1668FF; }
         @media (prefers-reduced-motion: reduce) {
             .project-card { transition: none; }
         }
     </style>
 
-    <x-navbar />
+    <x-navbar>
+        @slot('search')
+            <div class="relative" @click.away="searchOpen = false; searchQuery = ''">
+                <div class="relative">
+                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input
+                        x-model="searchQuery"
+                        @input.debounce.300ms="doSearch()"
+                        @focus="searchOpen = true; if (!searchQuery) init()"
+                        @keydown.escape="searchOpen = false; searchQuery = ''"
+                        @keydown.arrow-down.prevent="navigateResults(1)"
+                        @keydown.arrow-up.prevent="navigateResults(-1)"
+                        @keydown.enter.prevent="selectResult()"
+                        type="text"
+                        class="w-full text-[12px] font-medium text-white bg-white/8 border border-white/10 rounded-lg pr-9 pl-3 py-2.5 focus:outline-none focus:bg-white/12 focus:border-white/25 transition-all placeholder:text-white/45"
+                        placeholder="جستجوی پروژه یا وظیفه…"
+                    >
+                </div>
+
+                <div
+                    x-show="searchOpen && (searchResults.length > 0 || recentSearches.length > 0 || searchQuery.length > 0)"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-[#E2E8F0] overflow-hidden z-50"
+                >
+                    <template x-if="!searchQuery && recentSearches.length > 0">
+                        <div>
+                            <div class="flex items-center justify-between px-3 py-2 border-b border-[#F1F5F9]">
+                                <span class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">اخیراً جستجو شده</span>
+                                <button @click="clearRecentSearches()" class="text-[9px] text-[#94A3B8] hover:text-[#1A1D21]">پاک کردن</button>
+                            </div>
+                            <template x-for="(item, idx) in recentSearches" :key="idx">
+                                <a :href="item.url" class="flex items-center gap-3 px-3 py-2 hover:bg-[#F8FAFC] transition-colors" :class="selectedIdx === idx ? 'bg-[#F1F5F9]' : ''">
+                                    <span class="w-5 h-5 rounded-md flex items-center justify-center shrink-0" :class="{
+                                        'bg-[#0069FF]/10 text-[#0069FF]': item.type === 'workspace',
+                                        'bg-[#22C55E]/10 text-[#22C55E]': item.type === 'project',
+                                        'bg-[#F59E0B]/10 text-[#F59E0B]': item.type === 'task',
+                                    }">
+                                        <svg x-show="item.type === 'workspace'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                                        <svg x-show="item.type === 'project'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                        <svg x-show="item.type === 'task'" class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2m-6 0h6"/></svg>
+                                    </span>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[11px] font-semibold text-[#1A1D21] truncate" x-text="item.name"></p>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="searchQuery && searchResults.length > 0">
+                        <div class="max-h-[300px] overflow-y-auto">
+                            <template x-if="searchResults.filter(r => r.type === 'workspace').length > 0">
+                                <div>
+                                    <div class="px-3 py-1.5 border-b border-[#F1F5F9]"><span class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">فضاهای کاری</span></div>
+                                    <template x-for="(item, idx) in searchResults.filter(r => r.type === 'workspace')" :key="'ws-'+idx">
+                                        <a :href="item.url" @click="saveRecentSearch(item)" class="flex items-center gap-3 px-3 py-2 hover:bg-[#F8FAFC] transition-colors">
+                                            <span class="w-5 h-5 rounded-md bg-[#0069FF]/10 flex items-center justify-center shrink-0"><svg class="w-2.5 h-2.5 text-[#0069FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></span>
+                                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[#1A1D21] truncate" x-text="item.name"></p><p class="text-[9px] text-[#94A3B8]" x-text="item.subtitle"></p></div>
+                                        </a>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="searchResults.filter(r => r.type === 'project').length > 0">
+                                <div>
+                                    <div class="px-3 py-1.5 border-b border-[#F1F5F9]"><span class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">پروژه‌ها</span></div>
+                                    <template x-for="(item, idx) in searchResults.filter(r => r.type === 'project')" :key="'proj-'+idx">
+                                        <a :href="item.url" @click="saveRecentSearch(item)" class="flex items-center gap-3 px-3 py-2 hover:bg-[#F8FAFC] transition-colors">
+                                            <span class="w-5 h-5 rounded-md bg-[#22C55E]/10 flex items-center justify-center shrink-0"><svg class="w-2.5 h-2.5 text-[#22C55E]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg></span>
+                                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[#1A1D21] truncate" x-text="item.name"></p><p class="text-[9px] text-[#94A3B8]" x-text="item.subtitle"></p></div>
+                                        </a>
+                                    </template>
+                                </div>
+                            </template>
+                            <template x-if="searchResults.filter(r => r.type === 'task').length > 0">
+                                <div>
+                                    <div class="px-3 py-1.5 border-b border-[#F1F5F9]"><span class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">وظایف</span></div>
+                                    <template x-for="(item, idx) in searchResults.filter(r => r.type === 'task')" :key="'task-'+idx">
+                                        <a :href="item.url" @click="saveRecentSearch(item)" class="flex items-center gap-3 px-3 py-2 hover:bg-[#F8FAFC] transition-colors">
+                                            <span class="w-5 h-5 rounded-md bg-[#F59E0B]/10 flex items-center justify-center shrink-0"><svg class="w-2.5 h-2.5 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2m-6 0h6"/></svg></span>
+                                            <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[#1A1D21] truncate" x-text="item.name"></p><p class="text-[9px] text-[#94A3B8]" x-text="item.subtitle"></p></div>
+                                        </a>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="searchQuery && searchResults.length === 0 && !searchLoading">
+                        <div class="px-3 py-4 text-center"><p class="text-[11px] text-[#94A3B8]">نتیجه‌ای یافت نشد</p></div>
+                    </template>
+
+                    <template x-if="searchLoading">
+                        <div class="px-3 py-4 text-center">
+                            <div class="inline-flex items-center gap-2 text-[11px] text-[#94A3B8]">
+                                <svg class="animate-spin w-3 h-3" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                در حال جستجو...
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+        @endslot
+    </x-navbar>
 
     {{-- Content --}}
-    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         @if (session('success'))
             <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl px-4 py-3">{{ session('success') }}</div>
         @endif
 
-        <div class="flex items-center justify-between gap-4 mb-7">
+        <div class="flex items-center justify-between gap-5 mb-8 sm:mb-10">
             <div>
-                <h1 class="text-xl sm:text-2xl font-black text-[#172B4D]">داشبورد</h1>
-                <p class="text-xs text-[#64748B] mt-1">{{ $workspaces->sum('projects_count') }} پروژه در {{ $workspaces->count() }} فضای کاری</p>
+                <h1 class="text-2xl sm:text-[32px] leading-tight font-black tracking-[-0.035em] text-[#071B33]">داشبورد</h1>
+                <p class="text-[12px] sm:text-[13px] font-medium text-[#64748B] mt-2">{{ $workspaces->sum('projects_count') }} پروژه در {{ $workspaces->count() }} فضای کاری</p>
             </div>
             <button
                 @click="modalType = 'workspace'; showModal = true"
-                class="flex items-center gap-2 bg-[#0069FF] hover:bg-[#0057D9] text-white text-[12px] font-bold px-4 py-2.5 rounded-lg transition-all active:scale-[0.98] shrink-0"
+                class="flex items-center gap-2 border border-[#B8C4D4] bg-white hover:border-[#071B33] hover:text-[#071B33] text-[#42526A] text-[12px] font-bold px-4 py-2.5 rounded-[10px] shadow-sm transition-all active:scale-[0.98] shrink-0"
             >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 <span class="hidden sm:inline">فضای کاری جدید</span>
@@ -41,74 +195,109 @@
                 $role = $workspace->getAttribute('user_role');
                 $canManage = in_array($role, ['owner', 'admin'], true);
             @endphp
-            <section class="mb-8 last:mb-0">
-                <div class="flex items-center justify-between gap-3 mb-3">
+            <section class="mb-8 last:mb-0 overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_10px_26px_rgba(7,27,51,0.05)]">
+                <div class="flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 border-b border-[#E6EBF2]">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-9 h-9 rounded-lg bg-[#031B4E] text-white flex items-center justify-center text-xs font-bold shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
+                        <div class="w-10 h-10 rounded-[10px] bg-[#EAF1FF] text-[#1668FF] flex items-center justify-center text-sm font-black shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
                         <div class="min-w-0">
-                            <h2 class="text-[15px] font-bold text-[#172B4D] truncate">{{ $workspace->name }}</h2>
-                            <p class="text-[10px] text-[#94A3B8]">{{ $workspace->projects_count }} پروژه · {{ $workspace->members_count ?? 0 }} عضو</p>
+                            <h2 class="text-[15px] sm:text-[17px] font-black text-[#071B33] truncate">{{ $workspace->name }}</h2>
+                            <p class="text-[10px] sm:text-[11px] font-medium text-[#7C899B] mt-0.5">{{ $workspace->projects_count }} پروژه · {{ $workspace->members_count ?? 0 }} عضو</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-2 shrink-0">
                         @if ($canManage)
-                            <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="text-[11px] font-semibold text-[#64748B] border border-[#DCE3ED] bg-white rounded-lg px-3 py-2 hover:bg-[#F8FAFC] transition-colors">مدیریت</a>
+                            <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="sm:hidden w-9 h-9 inline-flex items-center justify-center text-[#64748B] border border-[#D8E0EB] bg-white rounded-[9px] hover:border-[#AEB9C8] hover:text-[#071B33] transition-colors" aria-label="مدیریت فضای کاری">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
+                            </a>
+                            <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="hidden sm:inline-flex text-[11px] font-bold text-[#64748B] border border-[#D8E0EB] bg-white rounded-[9px] px-3 py-2.5 hover:border-[#AEB9C8] hover:text-[#071B33] transition-colors">مدیریت فضا</a>
                             <button
                                 @click="targetWorkspace = '{{ $workspace->slug }}'; modalType = 'project'; showModal = true"
-                                class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#0057D9] text-white text-[11px] font-bold px-3 py-2 rounded-lg transition-all active:scale-[0.98]"
+                                class="flex items-center gap-1.5 bg-[#1668FF] hover:bg-[#0E57DB] text-white text-[11px] font-black px-3.5 py-2.5 rounded-[9px] shadow-[0_5px_14px_rgba(22,104,255,0.3)] transition-all active:scale-[0.98]"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                پروژه
+                                پروژه جدید
                             </button>
                         @endif
                     </div>
                 </div>
 
                 @if ($workspace->projects->count())
-                    <div class="space-y-2.5">
+                    <div class="divide-y divide-[#E6EBF2]">
                         @foreach ($workspace->projects as $project)
                             <a
                                 href="{{ route('board', [$workspace->slug, $project->slug]) }}"
-                                class="project-card flex items-center gap-3 sm:gap-5 bg-white rounded-xl border border-[#DFE5EF] px-4 py-4 sm:px-5"
+                                class="project-card group flex items-center gap-3 sm:gap-5 bg-white px-4 py-4 sm:px-5 sm:py-5 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#1668FF]/15"
                             >
-                                <div class="w-11 h-11 sm:w-12 sm:h-12 rounded-lg bg-[#E8F0FE] flex items-center justify-center shrink-0">
-                                    <span class="text-[#0069FF] font-black text-[11px] sm:text-xs">{{ $project->key ?: mb_substr($project->name, 0, 2) }}</span>
+                                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-[11px] bg-[#071B33] flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
+                                    <span class="text-white font-black text-[11px] sm:text-[12px] tracking-wide">{{ $project->key ?: mb_substr($project->name, 0, 2) }}</span>
                                 </div>
 
                                 <div class="flex-1 min-w-0">
-                                    <h3 class="text-[14px] sm:text-[15px] font-bold text-[#172B4D] truncate">{{ $project->name }}</h3>
+                                    <h3 class="text-[15px] sm:text-[17px] font-black text-[#071B33] truncate">{{ $project->name }}</h3>
                                     @if ($project->description)
-                                        <p class="hidden sm:block text-[12px] text-[#64748B] truncate mt-1">{{ $project->description }}</p>
+                                        <p class="hidden sm:block text-[11px] sm:text-[12px] font-medium text-[#64748B] truncate mt-1.5">{{ $project->description }}</p>
                                     @else
-                                        <p class="hidden sm:block text-[12px] text-[#94A3B8] mt-1">تخته وظایف و روند اجرای پروژه</p>
+                                        <p class="hidden sm:block text-[11px] sm:text-[12px] text-[#8A98AA] mt-1.5">تخته وظایف و روند اجرای پروژه</p>
+                                    @endif
+                                    <div class="lg:hidden flex items-center gap-2 mt-2 text-[9px] font-bold">
+                                        @if ($project->total_tasks > 0)
+                                            <span class="text-[#64748B]">{{ $project->done_tasks }} از {{ $project->total_tasks }} وظیفه</span>
+                                            <span class="text-[#1668FF]">{{ $project->progress_percentage }}٪</span>
+                                        @else
+                                            <span class="text-[#94A3B8]">بدون وظیفه</span>
+                                        @endif
+                                    </div>
+                                </div>
+
+                                <div class="hidden lg:block w-48 xl:w-56 shrink-0">
+                                    <div class="flex items-center justify-between gap-3 mb-2">
+                                        @if ($project->total_tasks > 0)
+                                            <span class="text-[10px] font-semibold text-[#64748B]">{{ $project->done_tasks }} از {{ $project->total_tasks }} وظیفه</span>
+                                            <span class="text-[10px] font-black text-[#1668FF]">{{ $project->progress_percentage }}٪</span>
+                                        @else
+                                            <span class="text-[10px] font-semibold text-[#94A3B8]">هنوز وظیفه‌ای ثبت نشده</span>
+                                        @endif
+                                    </div>
+                                    <div class="h-2 bg-[#E8EDF4] rounded-full overflow-hidden">
+                                        <div class="h-full bg-[#1668FF] rounded-full" style="width: {{ $project->progress_percentage }}%"></div>
+                                    </div>
+                                </div>
+
+                                <div class="hidden md:flex items-center shrink-0">
+                                    @php $members = $project->members->take(3); @endphp
+                                    @if ($members->count())
+                                        <div class="flex items-center">
+                                            @foreach ($members as $member)
+                                                <div class="relative group/tooltip {{ ! $loop->first ? '-mr-2' : '' }}">
+                                                    <div class="w-8 h-8 rounded-full bg-[#1668FF] flex items-center justify-center text-[10px] text-white font-bold ring-2 ring-white">
+                                                        {{ mb_substr($member->name, 0, 1) }}
+                                                    </div>
+                                                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-[#1A1D21] text-white text-[10px] font-medium rounded-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10">
+                                                        {{ $member->name }}
+                                                        <div class="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-[#1A1D21]"></div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                            @if ($project->members_count > 3)
+                                                <div class="w-8 h-8 rounded-full bg-[#E8F0FE] text-[#0069FF] flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
+                                                    +{{ $project->members_count - 3 }}
+                                                </div>
+                                            @endif
+                                        </div>
                                     @endif
                                 </div>
 
-                                <div class="hidden md:block w-52 shrink-0">
-                                    <div class="flex items-center justify-between gap-3 mb-2">
-                                        @if ($project->total_tasks > 0)
-                                            <span class="text-[11px] text-[#64748B]">
-                                                {{ $project->done_tasks }} از {{ $project->total_tasks }} وظیفه انجام شده
-                                            </span>
-                                            <span class="text-[10px] font-bold text-[#0069FF]">{{ $project->progress_percentage }}٪</span>
-                                        @else
-                                            <span class="text-[11px] text-[#94A3B8]">هنوز وظیفه‌ای ثبت نشده</span>
-                                        @endif
-                                    </div>
-                                    <div class="h-1.5 bg-[#E9EEF5] rounded-full overflow-hidden">
-                                        <div class="h-full bg-[#0069FF] rounded-full" style="width: {{ $project->progress_percentage }}%"></div>
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center gap-2 shrink-0 text-[#0069FF]">
-                                    <span class="hidden lg:inline text-[12px] font-bold">ورود به تخته</span>
-                                    <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/></svg>
+                                <div class="flex items-center gap-2 shrink-0 text-[#1668FF]">
+                                    <span class="hidden xl:inline text-[11px] font-black">ورود به تخته</span>
+                                    <span class="w-9 h-9 rounded-[9px] bg-[#EAF1FF] group-hover:bg-[#1668FF] group-hover:text-white flex items-center justify-center transition-colors">
+                                        <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/></svg>
+                                    </span>
                                 </div>
                             </a>
                         @endforeach
                     </div>
                 @else
-                    <div class="bg-white border border-dashed border-[#DFE5EF] rounded-xl flex flex-col items-center justify-center py-10 px-5 text-center">
+                    <div class="flex flex-col items-center justify-center py-10 px-5 text-center">
                         <p class="text-[13px] text-[#94A3B8] mb-3">هنوز پروژه‌ای ساخته نشده</p>
                         @if ($canManage)
                             <button
@@ -136,36 +325,36 @@
         <div x-show="showModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 bg-[#0A1628]/60 backdrop-blur-sm" @click="showModal = false"></div>
         <div x-show="showModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 overflow-y-auto" @keydown.escape.window="showModal = false">
             <div class="min-h-screen flex items-center justify-center p-4">
-                <div class="relative bg-white w-full max-w-sm rounded-2xl border border-[#E2E8F0] p-6" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" @click.stop>
+                <div class="relative bg-white w-full max-w-md rounded-2xl border border-[#D8E0EB] shadow-[0_28px_70px_rgba(7,27,51,0.28)] p-6 sm:p-7" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" @click.stop>
                     <template x-if="modalType === 'workspace'">
                         <div>
-                            <h3 class="text-sm font-bold text-[#1A1D21] mb-4">فضای کاری جدید</h3>
+                            <h3 class="text-lg font-black text-[#071B33] mb-5">فضای کاری جدید</h3>
                             <form action="{{ route('dashboard.workspace.store') }}" method="POST">
                                 @csrf
-                                <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#E2E8F0] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#0069FF] transition-colors mb-4 placeholder:text-[#CBD5E1]" placeholder="نام فضای کاری">
+                                <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1668FF] focus:ring-4 focus:ring-[#1668FF]/10 transition-colors mb-5 placeholder:text-[#AAB5C4]" placeholder="نام فضای کاری">
                                 <div class="flex gap-2 justify-end">
                                     <button type="button" @click="showModal = false" class="text-xs font-semibold text-[#64748B] px-4 py-2 rounded-xl border border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">انصراف</button>
-                                    <button type="submit" class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#4D99FF] px-4 py-2 rounded-xl transition-all">ایجاد</button>
+                                    <button type="submit" class="text-xs font-black text-white bg-[#071B33] hover:bg-[#0B2545] px-4 py-2.5 rounded-xl transition-all">ایجاد فضای کاری</button>
                                 </div>
                             </form>
                         </div>
                     </template>
                     <template x-if="modalType === 'project'">
                         <div>
-                            <h3 class="text-sm font-bold text-[#1A1D21] mb-4">پروژه جدید</h3>
+                            <h3 class="text-lg font-black text-[#071B33] mb-5">پروژه جدید</h3>
                             <form :action="'{{ route('dashboard.project.store', ':slug') }}'.replace(':slug', targetWorkspace)" method="POST">
                                 @csrf
                                 <div class="mb-3">
                                     <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">نام پروژه</label>
-                                    <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#E2E8F0] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#0069FF] transition-colors placeholder:text-[#CBD5E1]" placeholder="نام پروژه">
+                                    <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1668FF] focus:ring-4 focus:ring-[#1668FF]/10 transition-colors placeholder:text-[#AAB5C4]" placeholder="نام پروژه">
                                 </div>
                                 <div class="mb-4">
                                     <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">کلید پروژه <span class="text-[#CBD5E1]">(اختیاری)</span></label>
-                                    <input name="key" type="text" maxlength="10" class="w-full text-sm font-semibold border-2 border-[#E2E8F0] rounded-xl px-4 py-2.5 focus:outline-none focus:border-[#0069FF] transition-colors uppercase placeholder:text-[#CBD5E1]" placeholder="مثلاً SCR">
+                                    <input name="key" type="text" maxlength="10" class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1668FF] focus:ring-4 focus:ring-[#1668FF]/10 transition-colors uppercase placeholder:text-[#AAB5C4]" placeholder="مثلاً SCR">
                                 </div>
                                 <div class="flex gap-2 justify-end">
                                     <button type="button" @click="showModal = false" class="text-xs font-semibold text-[#64748B] px-4 py-2 rounded-xl border border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">انصراف</button>
-                                    <button type="submit" class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#4D99FF] px-4 py-2 rounded-xl transition-all">ایجاد</button>
+                                    <button type="submit" class="text-xs font-black text-white bg-[#1668FF] hover:bg-[#0E57DB] px-4 py-2.5 rounded-xl shadow-[0_5px_14px_rgba(22,104,255,0.24)] transition-all">ایجاد پروژه</button>
                                 </div>
                             </form>
                         </div>

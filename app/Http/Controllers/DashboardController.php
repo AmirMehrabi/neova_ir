@@ -28,6 +28,7 @@ class DashboardController extends Controller
         $workspaces = Workspace::with(['projects' => function ($q) {
             $q->with([
                 'columns' => fn ($query) => $query->withCount('tasks'),
+                'members' => fn ($m) => $m->select('users.id', 'users.name')->limit(3),
             ])->withCount('members');
         }])
             ->withCount('projects')
