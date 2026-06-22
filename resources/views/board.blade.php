@@ -24,31 +24,32 @@
 <body class="bg-[#F0F4F8] min-h-screen" x-data="board()" x-cloak>
 
     {{-- Top Navigation Bar --}}
-    <header class="bg-[#003B8E] shadow-lg shadow-[#003B8E]/20 sticky top-0 z-40">
-        <div class="max-w-[1600px] mx-auto px-5 h-14 flex items-center justify-between">
-            <div class="flex items-center gap-4">
-                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="text-blue-200 hover:text-white transition-colors">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+    <header class="sticky top-0 z-40 border-b border-white/10 bg-[#031B4E]/95 shadow-lg shadow-[#031B4E]/25 backdrop-blur-xl">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-5 h-16 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3 min-w-0">
+                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-9 h-9 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white/85 hover:text-white hover:bg-white/15 transition-colors shrink-0" aria-label="بازگشت">
+                    <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
                 </a>
-                <div class="h-5 w-px bg-white/20"></div>
-                <div class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 rounded-lg bg-[#0069FF] flex items-center justify-center shadow-md shadow-[#0069FF]/30">
-                        <span class="text-white font-bold text-xs">{{ $project->key }}</span>
+                <a href="{{ route('dashboard') }}" class="w-9 h-9 rounded-xl bg-[#0069FF] flex items-center justify-center shadow-md shadow-[#0069FF]/25 shrink-0" aria-label="داشبورد">
+                    <img src="{{ asset('assets/logo/logo-white.png') }}" alt="نئووا" class="w-5 h-5 object-contain">
+                </a>
+                <div class="min-w-0">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-white/10 border border-white/10 text-[10px] font-bold text-white/90 shrink-0">{{ $project->key }}</span>
+                        <span class="text-white font-bold text-[15px] truncate">{{ $project->name }}</span>
                     </div>
-                    <div>
-                        <span class="text-white font-bold text-[15px]">{{ $project->name }}</span>
-                        <span class="text-blue-200 text-[10px] mr-2">{{ $workspace->name }}</span>
-                    </div>
+                    <span class="block text-blue-200/80 text-[10px] mt-0.5 truncate">{{ $workspace->name }}</span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <span class="text-blue-200 text-xs" x-text="totalTasks() + ' وظیفه'"></span>
-                <div class="h-5 w-px bg-white/20"></div>
-                <x-notification-menu />
+            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                <span class="hidden sm:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
+                <x-notification-menu dark />
                 @if ($canEdit)
                     <button
                         @click="openAddModal(columns[0]?.id)"
-                        class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-1.5 rounded-lg transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
+                        class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
                     >
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                         وظیفه جدید
@@ -79,8 +80,8 @@
                     </div>
 
                     <div class="flex flex-col gap-2.5 min-h-[200px] max-h-[calc(100vh-11rem)] overflow-y-auto rounded-xl p-2 bg-[#E2E8F0]/50 border border-[#CBD5E1]/40" :id="'col-' + column.id" x-init="$nextTick(() => initSortable(column.id))">
-                        <template x-for="task in column.tasks" :key="task.id">
-                            <div class="bg-white rounded-xl border border-[#E2E8F0] p-3.5 cursor-grab active:cursor-grabbing hover:border-[#0069FF]/30 hover:shadow-md hover:shadow-[#0069FF]/8 transition-all duration-150 group relative" :data-id="task.id" :data-column="column.id" @click="openEditModal(task, column.id)">
+                        <template x-for="task in column.tasks" :key="task.dbId">
+                            <div class="bg-white rounded-xl border border-[#E2E8F0] p-3.5 cursor-grab active:cursor-grabbing hover:border-[#0069FF]/30 hover:shadow-md hover:shadow-[#0069FF]/8 transition-all duration-150 group relative" :data-id="task.dbId" :data-column="column.id" @click="openEditModal(task, column.id)">
                                 <div class="absolute top-0 right-0 w-1 h-full rounded-r-xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
                                 <div class="pr-2">
                                     <div class="flex items-center justify-between mb-2">
@@ -110,7 +111,7 @@
                                 </div>
                                 @if ($canEdit)
                                     <div class="absolute top-3 left-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button @click.stop="confirmDelete(column.id, task.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-all" title="حذف">
+                                        <button @click.stop="confirmDelete(column.id, task.dbId)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-all" title="حذف">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>
                                     </div>
@@ -606,7 +607,7 @@
                     const instance = new Sortable(el, {
                         group: 'tasks', animation: 200, ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', dragClass: 'sortable-drag', direction: 'rtl', draggable: '[data-id]', delay: 50, delayOnTouchOnly: true,
                         onEnd(evt) {
-                            const taskId = evt.item.getAttribute('data-id');
+                            const taskId = Number(evt.item.getAttribute('data-id'));
                             const fromColId = evt.from.id.replace('col-', '');
                             const toColId = evt.to.id.replace('col-', '');
                             self.moveTask(fromColId, toColId, taskId, evt.newIndex);
@@ -620,7 +621,7 @@
                     const fromCol = this.columns.find(c => c.id === fromColId);
                     const toCol = this.columns.find(c => c.id === toColId);
                     if (!fromCol || !toCol) return;
-                    const idx = fromCol.tasks.findIndex(t => t.id === taskId);
+                    const idx = fromCol.tasks.findIndex(t => t.dbId === taskId);
                     if (idx === -1) return;
                     const [task] = fromCol.tasks.splice(idx, 1);
                     toCol.tasks.splice(newIndex, 0, task);
@@ -643,7 +644,7 @@
                 },
 
                 openEditModal(task, columnId) {
-                    this.editingTask = task.id;
+                    this.editingTask = task.dbId;
                     this.editingDescription = false;
                     const taskAssignees = task.assignees || (task.assignee ? [task.assignee] : []);
                     this.form = {
@@ -670,12 +671,11 @@
 
                     if (this.editingTask) {
                         const col = this.columns.find(c => c.id === this.form.columnId);
-                        const task = col?.tasks.find(t => t.id === this.editingTask);
+                        const task = col?.tasks.find(t => t.dbId === this.editingTask);
                         if (task) {
                             const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId) };
-                            const res = await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
-                            const data = await res.json();
-                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: [...this.form.assignees], dueDate: this.form.dueDate, tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
+                            await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
+                            Object.assign(task, { id: this.form.title, title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: [...this.form.assignees], dueDate: this.form.dueDate, tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
                         }
                         this.showToast('تغییرات ذخیره شد');
                     } else {
@@ -701,11 +701,11 @@
                     if (!this.canEdit) return;
                     const col = this.columns.find(c => c.id === this.deleteTarget.columnId);
                     if (col) {
-                        const task = col.tasks.find(t => t.id === this.deleteTarget.taskId);
+                        const task = col.tasks.find(t => t.dbId === this.deleteTarget.taskId);
                         if (task) {
                             await fetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"]) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
                         }
-                        col.tasks = col.tasks.filter(t => t.id !== this.deleteTarget.taskId);
+                        col.tasks = col.tasks.filter(t => t.dbId !== this.deleteTarget.taskId);
                         this.showToast('وظیفه حذف شد');
                     }
                     this.showDeleteModal = false;

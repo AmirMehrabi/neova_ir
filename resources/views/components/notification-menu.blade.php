@@ -1,8 +1,10 @@
+@props(['dark' => false])
+
 <div class="relative" x-data="{ notificationsOpen: false }" @click.away="notificationsOpen = false">
     <button
         type="button"
         @click="notificationsOpen = !notificationsOpen"
-        class="relative w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#0069FF] hover:bg-[#F1F5F9] transition-colors"
+        class="relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors {{ $dark ? 'text-white/80 hover:text-white hover:bg-white/10' : 'text-[#64748B] hover:text-[#0069FF] hover:bg-[#F1F5F9]' }}"
         aria-label="اعلان‌ها"
     >
         <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

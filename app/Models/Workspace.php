@@ -16,7 +16,13 @@ class Workspace extends Model
     {
         static::creating(function (Workspace $workspace) {
             if (empty($workspace->slug)) {
-                $workspace->slug = Str::slug($workspace->name);
+                $slug = Str::slug($workspace->name);
+                $original = $slug;
+                $i = 1;
+                while (static::where('slug', $slug)->exists()) {
+                    $slug = $original . '-' . $i++;
+                }
+                $workspace->slug = $slug;
             }
         });
     }

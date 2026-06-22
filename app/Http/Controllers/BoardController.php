@@ -91,8 +91,9 @@ class BoardController extends Controller
         return response()->json($task);
     }
 
-    public function updateTask(Request $request, Task $task)
+    public function updateTask(Request $request, string $task)
     {
+        $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
         $this->validateAssignees($request, $task);
 
@@ -104,16 +105,18 @@ class BoardController extends Controller
         return response()->json($task);
     }
 
-    public function destroyTask(Request $request, Task $task)
+    public function destroyTask(Request $request, string $task)
     {
+        $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
         $task->delete();
 
         return response()->json(['success' => true]);
     }
 
-    public function moveTask(Request $request, Task $task)
+    public function moveTask(Request $request, string $task)
     {
+        $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
         $request->validate([
             'column_id' => 'required|exists:project_columns,id',
@@ -123,22 +126,56 @@ class BoardController extends Controller
         $this->ensureColumnInCurrentProject($request, $targetColumn);
 
         DB::transaction(function () use ($request, $task) {
-            $oldColumnId = $task->column_id;
-            $newColumnId = $request->column_id;
-            $newPosition = $request->position;
+            $oldColumnId = (int) $task->column_id;
+            $newColumnId = (int) $request->column_id;
+            $newIndex = max(0, (int) $request->position);
 
-            Task::where('column_id', $oldColumnId)
-                ->where('position', '>', $task->position)
-                ->decrement('position');
+            $columnIds = collect([$oldColumnId, $newColumnId])->unique()->values();
+            $columns = Task::whereIn('column_id', $columnIds)
+                ->orderBy('position')
+                ->orderBy('id')
+                ->lockForUpdate()
+                ->get()
+                ->groupBy('column_id');
 
-            Task::where('column_id', $newColumnId)
-                ->where('position', '>=', $newPosition)
-                ->increment('position');
+            $sourceTasks = $columns->get($oldColumnId, collect())
+                ->filter(fn (Task $candidate) => $candidate->id !== $task->id)
+                ->values()
+                ->all();
 
-            $task->update([
-                'column_id' => $newColumnId,
-                'position' => $newPosition,
-            ]);
+            $movingTask = $task;
+            $movingTask->column_id = $newColumnId;
+
+            if ($oldColumnId === $newColumnId) {
+                $insertIndex = min($newIndex, count($sourceTasks));
+                array_splice($sourceTasks, $insertIndex, 0, [$movingTask]);
+
+                foreach ($sourceTasks as $index => $columnTask) {
+                    $columnTask->update([
+                        'column_id' => $oldColumnId,
+                        'position' => $index + 1,
+                    ]);
+                }
+
+                return;
+            }
+
+            $targetTasks = $columns->get($newColumnId, collect())->values()->all();
+            $insertIndex = min($newIndex, count($targetTasks));
+            array_splice($targetTasks, $insertIndex, 0, [$movingTask]);
+
+            foreach ($sourceTasks as $index => $columnTask) {
+                $columnTask->update([
+                    'position' => $index + 1,
+                ]);
+            }
+
+            foreach ($targetTasks as $index => $columnTask) {
+                $columnTask->update([
+                    'column_id' => $newColumnId,
+                    'position' => $index + 1,
+                ]);
+            }
         });
 
         return response()->json(['success' => true]);
@@ -176,6 +213,14 @@ class BoardController extends Controller
     {
         $task->loadMissing('column');
         abort_unless($task->column->project_id === $request->attributes->get('project')->id, 403);
+    }
+
+    private function findTaskInCurrentProject(Request $request, string $taskId): Task
+    {
+        $task = Task::query()->findOrFail($taskId);
+        $this->ensureTaskInCurrentProject($request, $task);
+
+        return $task;
     }
 
     private function ensureColumnInCurrentProject(Request $request, ProjectColumn $column): void
