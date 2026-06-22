@@ -19,9 +19,19 @@
         .checklist-bar { height: 6px; border-radius: 3px; background: #E2E8F0; overflow: hidden; }
         .checklist-bar-fill { height: 100%; border-radius: 3px; background: #0069FF; transition: width 0.3s ease; }
         .check-item input[type="checkbox"]:checked + span { text-decoration: line-through; color: #94A3B8; }
+        .mobile-board-track { scrollbar-width: none; scroll-padding-inline: 1rem; overscroll-behavior-inline: contain; }
+        .mobile-board-track::-webkit-scrollbar { display: none; }
+        .mobile-column-tabs { scrollbar-width: none; }
+        .mobile-column-tabs::-webkit-scrollbar { display: none; }
+        .mobile-board-column { scroll-snap-align: center; scroll-snap-stop: always; }
+        .mobile-task-list { touch-action: pan-y; }
+        .task-drag-handle { touch-action: none; }
+        @media (prefers-reduced-motion: reduce) {
+            .mobile-board-track { scroll-behavior: auto !important; }
+        }
     </style>
 </head>
-<body class="bg-[#F0F4F8] min-h-screen" x-data="board()" x-cloak>
+<body class="bg-[#F0F4F8] min-h-screen overflow-x-hidden" x-data="board()" x-init="init()" x-cloak>
 
     {{-- Top Navigation Bar --}}
     <x-navbar dark fluid>
@@ -41,12 +51,12 @@
         </div>
 
         @slot('actions')
-            <span class="hidden sm:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
+            <span class="hidden md:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
             @if ($canManageProject)
                 <button
                     @click="openProjectDrawer()"
                     aria-label="مدیریت پروژه"
-                    class="flex items-center gap-1.5 text-white/85 hover:text-white bg-white/8 hover:bg-white/12 border border-white/10 text-[11px] font-bold px-3 py-2 rounded-xl transition-colors"
+                    class="hidden md:flex items-center gap-1.5 text-white/85 hover:text-white bg-white/8 hover:bg-white/12 border border-white/10 text-[11px] font-bold px-3 py-2 rounded-xl transition-colors"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
                     <span class="hidden sm:inline">مدیریت پروژه</span>
@@ -54,21 +64,65 @@
             @endif
             @if ($canEdit)
                 <button
-                    @click="openAddModal(columns[0]?.id)"
-                    class="flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
+                    @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)"
+                    class="hidden md:flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     وظیفه جدید
                 </button>
             @else
-                <span class="text-[10px] font-bold text-blue-100 bg-white/10 rounded-md px-2.5 py-1.5">فقط مشاهده</span>
+                <span class="hidden md:inline-flex text-[10px] font-bold text-blue-100 bg-white/10 rounded-md px-2.5 py-1.5">فقط مشاهده</span>
             @endif
+        @endslot
+
+        @slot('mobile')
+            <div class="max-w-[1600px] mx-auto px-3 py-2.5 flex items-center gap-2.5">
+                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-11 h-11 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white shrink-0 active:bg-white/20" aria-label="بازگشت">
+                    <svg class="w-4.5 h-4.5 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </a>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <span class="text-white font-black text-[13px] truncate">{{ $project->name }}</span>
+                        @if ($project->key)
+                            <span class="px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-[9px] font-bold text-blue-100 shrink-0">{{ $project->key }}</span>
+                        @endif
+                    </div>
+                    <span class="block text-blue-200/75 text-[9px] mt-0.5 truncate">{{ $workspace->name }}</span>
+                </div>
+                @if ($canEdit)
+                    <button @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)" class="h-11 px-3 rounded-xl bg-[#0069FF] text-white flex items-center gap-1.5 text-[10px] font-black shadow-lg shadow-black/10 active:scale-[0.97] shrink-0">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                        وظیفه جدید
+                    </button>
+                @else
+                    <span class="text-[9px] font-bold text-blue-100 bg-white/10 rounded-lg px-2.5 py-2">فقط مشاهده</span>
+                @endif
+                <div class="relative shrink-0" @click.away="mobileActionsOpen = false">
+                    <button @click="mobileActionsOpen = !mobileActionsOpen" class="w-11 h-11 rounded-xl border border-white/10 text-white/80 flex items-center justify-center active:bg-white/10" aria-label="گزینه‌های پروژه" :aria-expanded="mobileActionsOpen">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
+                    </button>
+                    <div x-show="mobileActionsOpen" x-transition class="absolute left-0 top-full mt-2 w-48 rounded-xl bg-white border border-[#E2E8F0] shadow-xl overflow-hidden z-50">
+                        <div class="px-3 py-2.5 text-[10px] font-bold text-[#64748B] border-b border-[#F1F5F9]">
+                            <span x-text="totalTasks()"></span> وظیفه
+                        </div>
+                        @if ($canManageProject)
+                            <button @click="mobileActionsOpen = false; openProjectDrawer()" class="w-full min-h-11 px-3 flex items-center gap-2 text-right text-[11px] font-bold text-[#334155] hover:bg-[#F8FAFC]">
+                                <svg class="w-4 h-4 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
+                                مدیریت پروژه
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
         @endslot
     </x-navbar>
 
     {{-- Board --}}
-    <main class="max-w-[1600px] mx-auto px-5 py-5">
-        <div class="grid grid-cols-4 gap-4 items-start" style="direction: rtl;">
+    <main class="max-w-[1600px] mx-auto md:px-5 md:py-5">
+        {{-- Desktop board --}}
+        <div class="hidden md:grid grid-cols-4 gap-4 items-start" style="direction: rtl;">
             <template x-for="(column, colIdx) in columns" :key="column.id">
                 <div class="flex flex-col">
                     <div class="flex items-center justify-between mb-3 px-1">
@@ -84,7 +138,7 @@
                         @endif
                     </div>
 
-                    <div class="flex flex-col gap-2.5 min-h-[200px] max-h-[calc(100vh-11rem)] overflow-y-auto rounded-xl p-2 bg-[#E2E8F0]/50 border border-[#CBD5E1]/40" :id="'col-' + column.id" x-init="$nextTick(() => initSortable(column.id))">
+                    <div class="flex flex-col gap-2.5 min-h-[200px] max-h-[calc(100vh-11rem)] overflow-y-auto rounded-xl p-2 bg-[#E2E8F0]/50 border border-[#CBD5E1]/40" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
                         <template x-for="task in column.tasks" :key="task.dbId">
                             <div class="bg-white rounded-xl border border-[#E2E8F0] p-3.5 cursor-grab active:cursor-grabbing hover:border-[#0069FF]/30 hover:shadow-md hover:shadow-[#0069FF]/8 transition-all duration-150 group relative" :data-id="task.dbId" :data-column="column.id" @click="openEditModal(task, column.id)">
                                 <div class="absolute top-0 right-0 w-1 h-full rounded-r-xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
@@ -133,6 +187,122 @@
                 </div>
             </template>
         </div>
+
+        {{-- Mobile column navigator --}}
+        <section class="md:hidden bg-white border-b border-[#DCE4EE] shadow-[0_5px_18px_rgba(7,27,51,0.05)] sticky top-[116px] z-20">
+            <div class="mobile-column-tabs flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2" role="tablist" aria-label="ستون‌های تخته">
+                <template x-for="(column, index) in columns" :key="'tab-' + column.id">
+                    <button
+                        @click="scrollToColumn(index)"
+                        class="min-h-11 px-3 rounded-xl border flex items-center gap-1.5 whitespace-nowrap text-[10px] font-black transition-colors"
+                        :class="activeColumnIndex === index ? 'bg-[#EAF2FF] border-[#9FC1FF] text-[#005CE6]' : 'bg-white border-[#E2E8F0] text-[#64748B]'"
+                        :aria-current="activeColumnIndex === index ? 'true' : 'false'"
+                        :aria-selected="activeColumnIndex === index ? 'true' : 'false'"
+                        role="tab"
+                    >
+                        <span x-text="column.title"></span>
+                        <span class="min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[9px]" :class="activeColumnIndex === index ? 'bg-[#0069FF] text-white' : 'bg-[#F1F5F9] text-[#64748B]'" x-text="toPersianDigits(column.tasks.length)"></span>
+                    </button>
+                </template>
+            </div>
+            <div class="px-4 pb-2.5 flex items-center justify-between">
+                <span class="text-[9px] font-bold text-[#64748B]" x-text="toPersianDigits(activeColumnIndex + 1) + ' از ' + toPersianDigits(columns.length)"></span>
+                <div class="flex items-center gap-1.5" aria-hidden="true">
+                    <template x-for="(_, index) in columns" :key="'dot-' + index">
+                        <button tabindex="-1" @click="scrollToColumn(index)" class="h-1.5 rounded-full transition-all" :class="activeColumnIndex === index ? 'w-5 bg-[#0069FF]' : 'w-1.5 bg-[#CBD5E1]'"></button>
+                    </template>
+                </div>
+                <span class="text-[9px] font-bold text-[#94A3B8] flex items-center gap-1">
+                    ورق بزنید
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7l-5 5 5 5m8-10l5 5-5 5M3 12h18"/></svg>
+                </span>
+            </div>
+        </section>
+
+        {{-- Mobile one-column swipe board --}}
+        <div
+            x-ref="mobileBoardTrack"
+            @scroll.passive="handleMobileBoardScroll()"
+            class="mobile-board-track md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pt-4 pb-8"
+            style="direction: rtl;"
+            aria-label="تخته پروژه"
+        >
+            <template x-for="(column, colIdx) in columns" :key="'mobile-' + column.id">
+                <section
+                    class="mobile-board-column flex-none w-[calc(100%_-_32px)] min-w-[calc(100%_-_32px)]"
+                    :data-column-index="colIdx"
+                    :aria-label="column.title"
+                >
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-2.5 h-2.5 rounded-full shadow-sm" :class="column.dotColor"></span>
+                            <h2 class="text-[14px] font-black text-[#172B4D]" x-text="column.title"></h2>
+                            <span class="text-[10px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span>
+                        </div>
+                        @if ($canEdit)
+                            <button @click="openAddModal(column.id)" class="w-11 h-11 rounded-xl flex items-center justify-center text-[#0069FF] bg-[#E8F0FE] active:bg-[#D7E6FF]" :aria-label="'افزودن وظیفه به ' + column.title">
+                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                            </button>
+                        @endif
+                    </div>
+                    <div class="mobile-task-list flex flex-col gap-3 min-h-[calc(100dvh-18rem)] rounded-2xl p-2.5 bg-[#E2E8F0]/55 border border-[#CBD5E1]/50" :id="'col-mobile-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'mobile'))">
+                        <template x-for="task in column.tasks" :key="'mobile-task-' + task.dbId">
+                            <article class="bg-white rounded-2xl border border-[#DDE5EF] p-4 hover:border-[#AFCBFF] transition-colors group relative shadow-[0_3px_12px_rgba(7,27,51,0.05)]" :data-id="task.dbId" :data-column="column.id" @click="openEditModal(task, column.id)">
+                                <div class="absolute top-0 right-0 w-1 h-full rounded-r-2xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
+                                <div class="pr-2">
+                                    <div class="flex items-start justify-between gap-2 mb-2.5">
+                                        <div class="flex flex-wrap gap-1">
+                                            <template x-for="tag in task.tags" :key="tag">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
+                                            </template>
+                                        </div>
+                                        @if ($canEdit)
+                                            <button @click.stop class="task-drag-handle w-11 h-11 -mt-2.5 -ml-2.5 rounded-xl text-[#94A3B8] flex items-center justify-center active:bg-[#F1F5F9] cursor-grab" aria-label="جابجایی وظیفه">
+                                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
+                                            </button>
+                                        @endif
+                                    </div>
+                                    <span class="block text-[9px] font-bold text-[#94A3B8] mb-1.5" x-text="task.id"></span>
+                                    <p class="text-[13px] font-black text-[#172B4D] leading-6" x-text="task.title"></p>
+                                    <p x-show="task.description" class="text-[11px] text-[#64748B] leading-6 line-clamp-2 mt-1.5" x-text="task.description"></p>
+                                    <div class="flex items-center justify-between mt-3 pt-3 border-t border-[#EEF2F6]">
+                                        <div class="flex items-center -space-x-1.5 space-x-reverse">
+                                            <template x-for="(a, ai) in (task.assignees || []).slice(0, 3)" :key="ai">
+                                                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-[#0069FF] to-[#003B8E] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
+                                                    <span class="text-[8px] text-white font-bold" x-text="a.charAt(0)"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                        <div class="flex items-center gap-1" x-show="task.dueDate">
+                                            <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            <span class="text-[10px] font-bold" :class="isOverdue(task.dueDate) ? 'text-red-500' : 'text-[#64748B]'" x-text="formatDate(task.dueDate)"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </article>
+                        </template>
+                        <div x-show="column.tasks.length === 0" class="flex flex-col items-center justify-center min-h-52 text-center">
+                            <div class="w-12 h-12 rounded-2xl bg-white text-[#0069FF]/55 flex items-center justify-center mb-3 shadow-sm">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            </div>
+                            <p class="text-[11px] font-bold text-[#94A3B8]">وظیفه‌ای در این ستون نیست</p>
+                        </div>
+                    </div>
+                </section>
+            </template>
+        </div>
+
+        <div
+            x-show="swipeHintVisible"
+            x-transition.opacity
+            class="md:hidden fixed bottom-[max(1rem,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-20 w-[calc(100%_-_2rem)] max-w-sm"
+        >
+            <button @click="dismissSwipeHint()" class="w-full min-h-11 px-4 py-2.5 rounded-xl bg-[#071B33] text-white shadow-xl flex items-center justify-center gap-2 text-[10px] font-bold">
+                <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7l-5 5 5 5m8-10l5 5-5 5M3 12h18"/></svg>
+                برای جابه‌جایی بین ستون‌ها ورق بزنید
+            </button>
+        </div>
+        <p class="sr-only" aria-live="polite" x-text="'ستون ' + (columns[activeColumnIndex]?.title || '')"></p>
     </main>
 
     {{-- Project management drawer --}}
@@ -615,6 +785,12 @@
             return {
                 canEdit: @json($canEdit),
                 canManageProject: @json($canManageProject),
+                mobileActionsOpen: false,
+                activeColumnIndex: 0,
+                swipeHintVisible: false,
+                mobileBoardObserver: null,
+                mobileScrollTimer: null,
+                boardMediaQuery: null,
                 showModal: false,
                 showDeleteModal: false,
                 projectDrawerOpen: false,
@@ -660,6 +836,94 @@
                 sortableInstances: [],
 
                 totalTasks() { return this.columns.reduce((sum, col) => sum + col.tasks.length, 0); },
+
+                init() {
+                    try {
+                        this.swipeHintVisible = window.innerWidth < 768 && localStorage.getItem('neova-board-swipe-hint') !== 'dismissed';
+                    } catch (error) {
+                        this.swipeHintVisible = window.innerWidth < 768;
+                    }
+
+                    this.boardMediaQuery = window.matchMedia('(max-width: 767px)');
+                    this.boardMediaQuery.addEventListener('change', () => {
+                        this.destroySortables();
+                        this.$nextTick(() => {
+                            this.columns.forEach(column => {
+                                this.initSortable(column.id, this.boardMediaQuery.matches ? 'mobile' : 'desktop');
+                            });
+                            if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
+                            else this.destroyMobileBoardObserver();
+                        });
+                    });
+
+                    this.$nextTick(() => {
+                        if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
+                    });
+                },
+
+                toPersianDigits(value) {
+                    return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
+                },
+
+                dismissSwipeHint() {
+                    this.swipeHintVisible = false;
+                    try {
+                        localStorage.setItem('neova-board-swipe-hint', 'dismissed');
+                    } catch (error) {
+                        // Storage can be unavailable in private browsing.
+                    }
+                },
+
+                scrollToColumn(index) {
+                    const track = this.$refs.mobileBoardTrack;
+                    const target = track?.querySelector(`[data-column-index="${index}"]`);
+                    if (!target) return;
+                    target.scrollIntoView({
+                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                        block: 'nearest',
+                        inline: 'center',
+                    });
+                    this.activeColumnIndex = index;
+                },
+
+                handleMobileBoardScroll() {
+                    window.clearTimeout(this.mobileScrollTimer);
+                    this.mobileScrollTimer = window.setTimeout(() => {
+                        const track = this.$refs.mobileBoardTrack;
+                        if (!track) return;
+                        const center = track.getBoundingClientRect().left + (track.clientWidth / 2);
+                        let closestIndex = this.activeColumnIndex;
+                        let closestDistance = Number.POSITIVE_INFINITY;
+                        track.querySelectorAll('[data-column-index]').forEach(column => {
+                            const rect = column.getBoundingClientRect();
+                            const distance = Math.abs((rect.left + rect.width / 2) - center);
+                            if (distance < closestDistance) {
+                                closestDistance = distance;
+                                closestIndex = Number(column.dataset.columnIndex);
+                            }
+                        });
+                        this.activeColumnIndex = closestIndex;
+                        this.dismissSwipeHint();
+                    }, 80);
+                },
+
+                initMobileBoardObserver() {
+                    this.destroyMobileBoardObserver();
+                    const track = this.$refs.mobileBoardTrack;
+                    if (!track || !window.IntersectionObserver) return;
+                    this.mobileBoardObserver = new IntersectionObserver(entries => {
+                        const visible = entries
+                            .filter(entry => entry.isIntersecting)
+                            .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+                        if (visible) this.activeColumnIndex = Number(visible.target.dataset.columnIndex);
+                    }, { root: track, threshold: [0.55, 0.7, 0.9] });
+                    track.querySelectorAll('[data-column-index]').forEach(column => this.mobileBoardObserver.observe(column));
+                },
+
+                destroyMobileBoardObserver() {
+                    if (this.mobileBoardObserver) this.mobileBoardObserver.disconnect();
+                    this.mobileBoardObserver = null;
+                },
 
                 openProjectDrawer() {
                     if (!this.canManageProject) return;
@@ -929,21 +1193,39 @@
                     return new Date(dateStr) < new Date();
                 },
 
-                initSortable(columnId) {
+                initSortable(columnId, variant = 'desktop') {
                     if (!this.canEdit) return;
-                    const el = document.getElementById('col-' + columnId);
+                    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+                    if ((variant === 'mobile') !== isMobile) return;
+                    if (this.sortableInstances.some(item => item.columnId === columnId && item.variant === variant)) return;
+                    const el = document.getElementById(`col-${variant}-${columnId}`);
                     if (!el) return;
                     const self = this;
                     const instance = new Sortable(el, {
-                        group: 'tasks', animation: 200, ghostClass: 'sortable-ghost', chosenClass: 'sortable-chosen', dragClass: 'sortable-drag', direction: 'rtl', draggable: '[data-id]', delay: 50, delayOnTouchOnly: true,
+                        group: variant === 'mobile' ? false : 'tasks',
+                        animation: 200,
+                        ghostClass: 'sortable-ghost',
+                        chosenClass: 'sortable-chosen',
+                        dragClass: 'sortable-drag',
+                        direction: 'vertical',
+                        draggable: '[data-id]',
+                        handle: variant === 'mobile' ? '.task-drag-handle' : undefined,
+                        delay: variant === 'mobile' ? 120 : 50,
+                        delayOnTouchOnly: true,
+                        touchStartThreshold: 4,
                         onEnd(evt) {
                             const taskId = Number(evt.item.getAttribute('data-id'));
-                            const fromColId = evt.from.id.replace('col-', '');
-                            const toColId = evt.to.id.replace('col-', '');
+                            const fromColId = evt.from.id.replace(`col-${variant}-`, '');
+                            const toColId = evt.to.id.replace(`col-${variant}-`, '');
                             self.moveTask(fromColId, toColId, taskId, evt.newIndex);
                         }
                     });
-                    this.sortableInstances.push(instance);
+                    this.sortableInstances.push({ instance, columnId, variant });
+                },
+
+                destroySortables() {
+                    this.sortableInstances.forEach(item => item.instance.destroy());
+                    this.sortableInstances = [];
                 },
 
                 moveTask(fromColId, toColId, taskId, newIndex) {
@@ -1000,12 +1282,19 @@
                     const headers = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
 
                     if (this.editingTask) {
-                        const col = this.columns.find(c => c.id === this.form.columnId);
-                        const task = col?.tasks.find(t => t.dbId === this.editingTask);
+                        const sourceCol = this.columns.find(c => c.tasks.some(t => t.dbId === this.editingTask));
+                        const targetCol = this.columns.find(c => c.id === this.form.columnId);
+                        const task = sourceCol?.tasks.find(t => t.dbId === this.editingTask);
                         if (task) {
                             const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId) };
                             await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
                             Object.assign(task, { id: this.form.title, title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: [...this.form.assignees], dueDate: this.form.dueDate, tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
+                            if (sourceCol && targetCol && sourceCol.id !== targetCol.id) {
+                                sourceCol.tasks = sourceCol.tasks.filter(item => item.dbId !== task.dbId);
+                                targetCol.tasks.push(task);
+                                this.activeColumnIndex = this.columns.findIndex(column => column.id === targetCol.id);
+                                this.$nextTick(() => this.scrollToColumn(this.activeColumnIndex));
+                            }
                         }
                         this.showToast('تغییرات ذخیره شد');
                     } else {

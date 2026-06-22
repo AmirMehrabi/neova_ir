@@ -6,14 +6,14 @@
 @endphp
 
 <header class="sticky top-0 z-30 border-b border-white/10 bg-[#071B33]/96 shadow-[0_8px_30px_rgba(7,27,51,0.18)] backdrop-blur-xl">
-    <div class="{{ $fluid ? 'max-w-[1600px] mx-auto' : 'max-w-7xl mx-auto' }} px-4 sm:px-6 h-16 flex items-center gap-4">
+    <div class="{{ $fluid ? 'max-w-[1600px] mx-auto' : 'max-w-7xl mx-auto' }} px-3 sm:px-6 h-14 md:h-16 flex items-center gap-3 md:gap-4">
         {{-- Logo --}}
         <a href="{{ route('dashboard') }}" class="shrink-0 inline-flex items-center" aria-label="داشبورد نئووا">
             <img src="{{ asset('assets/logo/horizental-logo-white-transparent.png') }}" alt="نئووا" class="h-7 sm:h-8 w-auto object-contain">
         </a>
 
         {{-- Content area: slot + search --}}
-        <div class="flex items-center gap-3 min-w-0 flex-1">
+        <div class="items-center gap-3 min-w-0 flex-1 {{ isset($mobile) && $mobile->isNotEmpty() ? 'hidden md:flex' : 'flex' }}">
             {{ $slot }}
 
             @if (isset($search) && $search->isNotEmpty())
@@ -24,7 +24,7 @@
         </div>
 
         {{-- Right actions --}}
-        <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 ml-auto">
+        <div class="flex items-center gap-0.5 sm:gap-2 shrink-0 ml-auto">
             {{ $actions ?? '' }}
 
             {{-- Notification Bell --}}
@@ -32,7 +32,7 @@
                 <button
                     type="button"
                     @click="notificationsOpen = !notificationsOpen"
-                    class="relative w-9 h-9 rounded-lg flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
+                    class="relative w-11 h-11 md:w-9 md:h-9 rounded-xl md:rounded-lg flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
                     aria-label="اعلان‌ها"
                 >
                     <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,13 +81,13 @@
             <div class="relative" x-data="{ userDropdown: false }" @click.away="userDropdown = false">
                 <button
                     @click="userDropdown = !userDropdown"
-                    class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-white/10 transition-colors"
+                    class="min-w-11 min-h-11 flex items-center justify-center gap-2 px-1.5 sm:px-2 py-1.5 rounded-xl sm:rounded-lg hover:bg-white/10 transition-colors"
                 >
                     <div class="w-8 h-8 rounded-full bg-[#1668FF] flex items-center justify-center ring-1 ring-white/20">
                         <span class="text-[9px] text-white font-bold">{{ substr(auth()->user()->first_name ?? auth()->user()->name, 0, 1) }}</span>
                     </div>
                     <span class="text-[11px] font-semibold text-white/85 hidden sm:block">{{ auth()->user()->full_name }}</span>
-                    <svg class="w-3 h-3 text-white/50 transition-transform" :class="userDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <svg class="hidden sm:block w-3 h-3 text-white/50 transition-transform" :class="userDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div
@@ -120,4 +120,9 @@
             </div>
         </div>
     </div>
+    @if (isset($mobile) && $mobile->isNotEmpty())
+        <div class="md:hidden border-t border-white/8">
+            {{ $mobile }}
+        </div>
+    @endif
 </header>
