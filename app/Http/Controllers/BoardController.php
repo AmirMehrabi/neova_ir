@@ -46,7 +46,7 @@ class BoardController extends Controller
             'dotColor' => $colColors[$c->title] ?? 'bg-[#94A3B8]',
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
             'tasks' => $c->tasks->map(fn ($t) => [
-                'id' => $t->title,
+                'id' => $t->display_id,
                 'dbId' => $t->id,
                 'title' => $t->title,
                 'description' => $t->description ?? '',
@@ -106,17 +106,15 @@ class BoardController extends Controller
         $maxNum = DB::table('tasks')
             ->join('project_columns', 'tasks.column_id', '=', 'project_columns.id')
             ->where('project_columns.project_id', $project->id)
-            ->pluck('tasks.title')
-            ->map(function (string $title) use ($project): int {
-                preg_match('/^'.preg_quote($project->key, '/').'-(\d+)/u', $title, $matches);
-
-                return (int) ($matches[1] ?? 0);
-            })
+            ->pluck('tasks.task_number')
             ->max() ?? 0;
+
+        $taskNumber = $maxNum + 1;
 
         $task = Task::create([
             'column_id' => $request->column_id,
-            'title' => $project->key.'-'.str_pad($maxNum + 1, 3, '0', STR_PAD_LEFT).' '.$request->title,
+            'task_number' => $taskNumber,
+            'title' => $request->title,
             'description' => $request->input('description', ''),
             'priority' => $request->input('priority', 'متوسط'),
             'due_date' => $request->input('due_date'),

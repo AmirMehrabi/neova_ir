@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Task extends Model
 {
     protected $fillable = [
-        'column_id', 'title', 'description', 'priority',
+        'column_id', 'task_number', 'title', 'description', 'priority',
         'due_date', 'assignees', 'tags', 'checklist', 'comments', 'position',
     ];
 
@@ -21,6 +21,14 @@ class Task extends Model
             'comments' => 'array',
             'due_date' => 'date',
         ];
+    }
+
+    public function getDisplayIdAttribute(): string
+    {
+        $key = $this->column?->project?->key ?? '';
+        $num = str_pad($this->task_number ?? 0, 3, '0', STR_PAD_LEFT);
+
+        return $key !== '' ? $key.'-'.$num : '-'.$num;
     }
 
     public function column(): BelongsTo
