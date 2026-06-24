@@ -82,6 +82,53 @@
             <span class="block text-blue-200/80 text-[10px] mt-0.5 truncate">{{ $workspace->name }}</span>
         </div>
 
+
+        @slot('search')
+            <div class="relative hidden md:block" @click.away="boardSearchOpen = false">
+                <div class="relative">
+                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <input
+                        x-model="boardSearchQuery"
+                        @input.debounce.200ms="boardSearchOpen = boardSearchQuery.length > 0"
+                        @focus="boardSearchOpen = boardSearchQuery.length > 0"
+                        @keydown.escape="boardSearchQuery = ''; boardSearchOpen = false"
+                        type="text"
+                        class="w-full text-[12px] font-medium text-white bg-white/8 border border-white/10 rounded-lg pr-9 pl-3 py-2.5 focus:outline-none focus:bg-white/12 focus:border-white/25 transition-all placeholder:text-white/45"
+                        placeholder="جستجوی وظیفه…"
+                    >
+                </div>
+                <div
+                    x-show="boardSearchOpen && boardSearchQuery.length > 0"
+                    x-transition:enter="transition ease-out duration-150"
+                    x-transition:enter-start="opacity-0 translate-y-1"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-[#E2E8F0] shadow-xl overflow-hidden z-50"
+                >
+                    <div class="px-3 py-2 border-b border-[#F1F5F9]">
+                        <span class="text-[10px] font-bold text-[#94A3B8]"><span x-text="boardSearchResultCount()"></span> نتیجه یافت شد</span>
+                    </div>
+                    <div class="max-h-64 overflow-y-auto">
+                        <template x-for="col in columns" :key="col.id">
+                            <template x-for="task in filteredTasks(col)" :key="task.dbId">
+                                <div class="px-3 py-2.5 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] cursor-pointer transition-colors"
+                                     @click="boardSearchOpen = false; boardSearchQuery = ''">
+                                    <div class="flex items-center gap-2 mb-0.5">
+                                        <span class="w-2 h-2 rounded-full shrink-0" :class="col.dotColor"></span>
+                                        <span class="text-[9px] font-bold text-[#94A3B8]" x-text="task.id"></span>
+                                        <span class="text-[9px] text-[#94A3B8]" x-text="col.title"></span>
+                                    </div>
+                                    <p class="text-[12px] font-bold text-[#1A1D21] truncate" x-html="highlightText(task.title, boardSearchQuery)"></p>
+                                </div>
+                            </template>
+                        </template>
+                        <div x-show="boardSearchResultCount() === 0" class="px-3 py-6 text-center">
+                            <p class="text-[11px] text-[#94A3B8]">نتیجه‌ای یافت نشد</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        @endslot
+
         @slot('actions')
             <span class="hidden md:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
             @if ($canManageProject)
@@ -159,6 +206,24 @@
 
     {{-- Board --}}
     <main class="max-w-[1600px] mx-auto md:px-5 md:py-5">
+        {{-- Assignee filter bar --}}
+        <div x-show="projectMembers.length > 0" class="hidden md:flex items-center gap-2 mb-4 px-1 flex-wrap">
+            <span class="text-[11px] font-bold text-[#64748B] shrink-0">فیلتر:</span>
+            <template x-for="member in projectMembers" :key="member.id">
+                <button
+                    @click="toggleAssigneeFilter(member.name)"
+                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all"
+                    :class="isAssigneeFilterActive(member.name) ? 'border-[#1668FF] bg-[#EAF1FF] text-[#1668FF]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'"
+                >
+                    <span class="w-5 h-5 rounded-full flex items-center justify-center shrink-0" :class="isAssigneeFilterActive(member.name) ? 'bg-[#1668FF] text-white' : 'bg-[#E8F0FE] text-[#0069FF]'">
+                        <span class="text-[8px] font-bold" x-text="member.name.charAt(0)"></span>
+                    </span>
+                    <span x-text="member.name"></span>
+                </button>
+            </template>
+            <button x-show="filterByAssignee.length > 0" @click="clearAssigneeFilter()" class="text-[10px] font-bold text-[#EF4444] hover:text-red-600 px-2 py-1.5 rounded-lg transition-colors">پاک کردن</button>
+        </div>
+
         {{-- Desktop board --}}
         <div class="hidden md:grid grid-cols-4 gap-4 items-start" style="direction: rtl;">
             <template x-for="(column, colIdx) in columns" :key="column.id">
@@ -177,7 +242,7 @@
                     </div>
 
                     <div class="flex flex-col gap-2.5 min-h-[200px] max-h-[calc(100vh-11rem)] overflow-y-auto rounded-xl p-2 bg-[#E2E8F0]/50 border border-[#CBD5E1]/40" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
-                        <template x-for="task in column.tasks" :key="task.dbId">
+                        <template x-for="task in filteredTasks(column)" :key="task.dbId">
                             <div class="bg-white rounded-xl border border-[#E2E8F0] p-3.5 cursor-grab active:cursor-grabbing hover:border-[#0069FF]/30 hover:shadow-md hover:shadow-[#0069FF]/8 transition-all duration-150 group relative" :data-id="task.dbId" :data-column="column.id" @click="openEditModal(task, column.id)">
                                 <div class="absolute top-0 right-0 w-1 h-full rounded-r-xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
                                 <div class="pr-2">
@@ -189,8 +254,8 @@
                                             </template>
                                         </div>
                                     </div>
-                                    <p class="text-[13px] font-bold text-[#1A1D21] mb-1.5 leading-relaxed" x-text="task.title"></p>
-                                    <p x-show="task.description" class="text-[11px] text-[#64748B] leading-relaxed line-clamp-2 mb-2.5" x-text="task.description"></p>
+                                    <p class="text-[13px] font-bold text-[#1A1D21] mb-1.5 leading-relaxed" x-html="highlightText(task.title, boardSearchQuery)"></p>
+                                    <p x-show="task.description" class="text-[11px] text-[#64748B] leading-relaxed line-clamp-2 mb-2.5" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="flex items-center justify-between mt-2 pt-2 border-t border-[#F1F5F9]">
                                         <div class="flex items-center -space-x-1.5 space-x-reverse">
                                             <template x-for="(a, ai) in (task.assignees || []).slice(0, 3)" :key="ai">
@@ -289,7 +354,7 @@
                         :id="'col-mobile-' + column.id"
                         x-init="$nextTick(() => initSortable(column.id, 'mobile'))"
                     >
-                        <template x-for="task in column.tasks" :key="'mobile-task-' + task.dbId">
+                        <template x-for="task in filteredTasks(column)" :key="'mobile-task-' + task.dbId">
                             <article class="bg-white rounded-2xl border border-[#DDE5EF] p-4 hover:border-[#AFCBFF] transition-colors group relative shadow-[0_3px_12px_rgba(7,27,51,0.05)]" :data-id="task.dbId" :data-column="column.id" @click="if (canOpenTaskFromCard()) openEditModal(task, column.id)">
                                 <div class="absolute top-0 right-0 w-1 h-full rounded-r-2xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
                                 <div class="pr-2">
@@ -306,8 +371,8 @@
                                         @endif
                                     </div>
                                     <span class="block text-[9px] font-bold text-[#94A3B8] mb-1.5" x-text="task.id"></span>
-                                    <p class="text-[13px] font-black text-[#172B4D] leading-6" x-text="task.title"></p>
-                                    <p x-show="task.description" class="text-[11px] text-[#64748B] leading-6 line-clamp-2 mt-1.5" x-text="task.description"></p>
+                                    <p class="text-[13px] font-black text-[#172B4D] leading-6" x-html="highlightText(task.title, boardSearchQuery)"></p>
+                                    <p x-show="task.description" class="text-[11px] text-[#64748B] leading-6 line-clamp-2 mt-1.5" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-[#EEF2F6]">
                                         <div class="flex items-center -space-x-1.5 space-x-reverse">
                                             <template x-for="(a, ai) in (task.assignees || []).slice(0, 3)" :key="ai">
@@ -407,6 +472,7 @@
             <div class="flex border-b border-[#E2E8F0] px-5">
                 <button @click="projectDrawerTab = 'members'" class="px-1 py-3.5 ml-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'members' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">اعضای پروژه</button>
                 <button @click="projectDrawerTab = 'settings'" class="px-1 py-3.5 text-xs font-black border-b-2" :class="projectDrawerTab === 'settings' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">تنظیمات</button>
+                <button @click="projectDrawerTab = 'activity'; if (activityItems.length === 0) loadActivity()" class="px-1 py-3.5 ml-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'activity' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">فعالیت‌ها</button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5">
@@ -452,6 +518,45 @@
                     <div>
                         <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">توضیحات پروژه</label>
                         <textarea x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#1668FF] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
+                    </div>
+                </section>
+                <section x-show="projectDrawerTab === 'activity'" class="space-y-4">
+                    <div>
+                        <h3 class="text-sm font-black text-[#071B33]">فعالیت‌های پروژه</h3>
+                        <p class="text-[11px] leading-5 text-[#64748B] mt-1">تمام تغییرات وظایف در این پروژه</p>
+                    </div>
+                    <div class="relative">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input x-model="activitySearch" class="w-full text-xs border-2 border-[#E2E8F0] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#1668FF]" placeholder="جستجو در فعالیت‌ها…">
+                    </div>
+                    <div x-show="activityLoading" class="py-8 text-center">
+                        <svg class="animate-spin w-5 h-5 text-[#1668FF] mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        <p class="text-[11px] text-[#94A3B8] mt-2">در حال بارگذاری…</p>
+                    </div>
+                    <div x-show="!activityLoading" class="space-y-2">
+                        <template x-for="(item, idx) in filteredActivity()" :key="idx">
+                            <div class="flex gap-3 p-3 rounded-xl border border-[#E2E8F0] hover:border-[#CBD5E1] transition-colors">
+                                <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+                                     :class="{
+                                         'bg-[#DCFCE7] text-[#16A34A]': item.kind === 'task_assigned',
+                                         'bg-[#E8F0FE] text-[#0069FF]': item.kind === 'task_updated',
+                                         'bg-[#FEF3C7] text-[#D97706]': item.kind === 'task_moved',
+                                         'bg-[#F3E8FF] text-[#9333EA]': item.kind === 'task_mentioned',
+                                     }">
+                                    <svg x-show="item.kind === 'task_assigned'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    <svg x-show="item.kind === 'task_updated'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    <svg x-show="item.kind === 'task_moved'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                    <svg x-show="item.kind === 'task_mentioned'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-[12px] leading-5 text-[#334155]" x-html="highlightText(item.message || '', activitySearch)"></p>
+                                    <p class="text-[9px] text-[#94A3B8] mt-1" x-text="item.time || ''"></p>
+                                </div>
+                            </div>
+                        </template>
+                        <div x-show="filteredActivity().length === 0 && !activityLoading" class="py-8 text-center">
+                            <p class="text-[11px] text-[#94A3B8]">فعالیتی یافت نشد</p>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -880,6 +985,13 @@
                 projectDrawerOpen: false,
                 projectDrawerTab: 'members',
                 projectMemberSearch: '',
+                boardSearchQuery: '',
+                boardSearchOpen: false,
+                filterByAssignee: [],
+                activityTab: 'members',
+                activitySearch: '',
+                activityItems: [],
+                activityLoading: false,
                 projectMemberSaving: null,
                 projectSettingsSaving: false,
                 editingTask: null,
@@ -920,6 +1032,73 @@
                 sortableInstances: [],
 
                 totalTasks() { return this.columns.reduce((sum, col) => sum + col.tasks.length, 0); },
+
+                filteredTasks(column) {
+                    return column.tasks.filter(task => {
+                        const matchesAssignee = this.filterByAssignee.length === 0 ||
+                            (task.assignees || []).some(a => this.filterByAssignee.includes(a));
+                        const q = this.boardSearchQuery.trim().toLowerCase();
+                        const matchesSearch = !q ||
+                            (task.title || '').toLowerCase().includes(q) ||
+                            (task.description || '').toLowerCase().includes(q);
+                        return matchesAssignee && matchesSearch;
+                    });
+                },
+
+                highlightText(text, query) {
+                    if (!query || !text) return text || '';
+                    const q = query.trim();
+                    if (!q) return text;
+                    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    const regex = new RegExp('(' + escaped + ')', 'gi');
+                    return text.replace(regex, '<mark style="background:#FEF3C7;padding:0 2px;border-radius:3px">$1</mark>');
+                },
+
+                toggleAssigneeFilter(name) {
+                    const idx = this.filterByAssignee.indexOf(name);
+                    if (idx === -1) {
+                        this.filterByAssignee.push(name);
+                    } else {
+                        this.filterByAssignee.splice(idx, 1);
+                    }
+                },
+
+                isAssigneeFilterActive(name) {
+                    return this.filterByAssignee.includes(name);
+                },
+
+                clearAssigneeFilter() {
+                    this.filterByAssignee = [];
+                },
+
+                boardSearchResultCount() {
+                    let count = 0;
+                    this.columns.forEach(col => { count += this.filteredTasks(col).length; });
+                    return count;
+                },
+
+                async loadActivity() {
+                    if (this.activityLoading) return;
+                    this.activityLoading = true;
+                    try {
+                        const res = await fetch('{{ route("board.activity", [$workspace->slug, $project->slug], false) }}', {
+                            headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        });
+                        this.activityItems = await res.json();
+                    } catch (e) {
+                        this.activityItems = [];
+                    } finally {
+                        this.activityLoading = false;
+                    }
+                },
+
+                filteredActivity() {
+                    const q = this.activitySearch.trim().toLowerCase();
+                    if (!q) return this.activityItems;
+                    return this.activityItems.filter(item =>
+                        (item.message || '').toLowerCase().includes(q)
+                    );
+                },
 
                 init() {
                     try {

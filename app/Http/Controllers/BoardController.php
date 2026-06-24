@@ -413,4 +413,23 @@ class BoardController extends Controller
 
         abort_if($invalid !== [], 422, 'یک یا چند مسئول انتخاب‌شده عضو تیم پروژه نیستند.');
     }
+
+    public function activity(Request $request, string $workspace, string $project)
+    {
+        $projectModel = $request->attributes->get('project');
+
+        $notifications = \App\Models\Notification::query()
+            ->where('type', 'App\\Notifications\\ProjectActivityNotification')
+            ->whereRaw("JSON_EXTRACT(data, '$.project_id') = ?", [$projectModel->id])
+            ->orderByDesc('created_at')
+            ->limit(100)
+            ->get()
+            ->map(fn ($n) => [
+                'kind' => $n->data['kind'] ?? '',
+                'message' => $n->data['message'] ?? '',
+                'time' => $n->created_at->diffForHumans(),
+            ]);
+
+        return response()->json($notifications);
+    }
 }

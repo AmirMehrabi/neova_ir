@@ -71,6 +71,7 @@ Route::middleware('auth')->group(function () {
                     Route::patch('/{workspace}/{project}/settings', [BoardController::class, 'updateProject'])->name('board.project.update');
                     Route::post('/{workspace}/{project}/members', [BoardController::class, 'addProjectMember'])->name('board.project.members.store');
                     Route::delete('/{workspace}/{project}/members/{user}', [BoardController::class, 'removeProjectMember'])->name('board.project.members.destroy');
+                    Route::get('/{workspace}/{project}/activity', [BoardController::class, 'activity'])->name('board.activity');
                 });
             });
         });
