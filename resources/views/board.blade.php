@@ -453,7 +453,7 @@
             <div class="flex border-b border-[#E2E8F0] px-5">
                 <button @click="projectDrawerTab = 'members'" class="px-1 py-3.5 ml-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'members' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">اعضای پروژه</button>
                 <button @click="projectDrawerTab = 'settings'" class="px-1 py-3.5 text-xs font-black border-b-2" :class="projectDrawerTab === 'settings' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">تنظیمات</button>
-                <button @click="projectDrawerTab = 'activity'; if (activityItems.length === 0) loadActivity()" class="px-1 py-3.5 ml-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'activity' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">فعالیت‌ها</button>
+                <button @click="projectDrawerTab = 'activity'; if (activityItems.length === 0) loadActivity()" class="px-1 py-3.5 mr-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'activity' ? 'text-[#1668FF] border-[#1668FF]' : 'text-[#64748B] border-transparent'">فعالیت‌ها</button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5">
