@@ -216,6 +216,27 @@ class WorkspaceManagementController extends Controller
         return back()->with('success', 'عضو از تیم پروژه حذف شد.');
     }
 
+    public function updateProjectVisibility(
+        Request $request,
+        string $workspace,
+        Project $project,
+    ): RedirectResponse {
+        $workspace = $this->workspace($request, $workspace);
+        $this->ensureProjectBelongsTo($workspace, $project);
+
+        if (! $workspace->canManageMembers($request->user())) {
+            abort(403);
+        }
+
+        $validated = $request->validate([
+            'visibility' => ['required', 'in:public,private'],
+        ]);
+
+        $project->update(['visibility' => $validated['visibility']]);
+
+        return back()->with('success', 'visibility_updated');
+    }
+
     private function workspace(Request $request, string $slug): Workspace
     {
         $workspace = Workspace::where('slug', $slug)->firstOrFail();

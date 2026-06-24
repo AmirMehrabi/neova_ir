@@ -8,6 +8,7 @@ use App\Models\Task;
 use App\Models\Workspace;
 use App\Models\WorkspaceInvitation;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -38,7 +39,13 @@ class DashboardController extends Controller
             ->each(function (Workspace $workspace) use ($user) {
                 $workspace->setAttribute('user_role', $workspace->roleFor($user));
 
-                foreach ($workspace->projects as $project) {
+                $visibleProjects = $workspace->projects->filter(
+                    fn ($project) => $project->canUserView($user, $workspace)
+                )->values();
+                $workspace->setRelation('projects', $visibleProjects);
+                $workspace->setAttribute('projects_count', $visibleProjects->count());
+
+                foreach ($visibleProjects as $project) {
                     $totalTasks = (int) $project->columns->sum('tasks_count');
                     $doneTasks = (int) $project->columns
                         ->where('title', 'انجام شده')
@@ -167,6 +174,17 @@ class DashboardController extends Controller
 
         $projects = Project::whereIn('workspace_id', $workspaceIds)
             ->where('name', 'LIKE', "%{$query}%")
+            ->where(function ($q) use ($user) {
+                $q->where('visibility', 'public')
+                    ->orWhere(function ($s) use ($user) {
+                        $s->where('visibility', 'private')
+                            ->where(function ($ss) use ($user) {
+                                $ss->where(fn ($sss) => $sss->whereIn('workspace_id', $user->ownedWorkspaces()->select('id')))
+                                    ->orWhere(fn ($sss) => $sss->whereIn('workspace_id', $user->workspaces()->wherePivot('role', 'admin')->select('id')))
+                                    ->orWhere(fn ($sss) => $sss->whereIn('id', DB::table('project_members')->where('user_id', $user->id)->select('project_id')));
+                            });
+                    });
+            })
             ->with('workspace')
             ->limit(5)
             ->get()
@@ -178,7 +196,20 @@ class DashboardController extends Controller
             ]);
         $results = $results->merge($projects);
 
-        $projectIds = Project::whereIn('workspace_id', $workspaceIds)->pluck('id');
+        $visibleProjectIds = Project::whereIn('workspace_id', $workspaceIds)
+            ->where(function ($q) use ($user) {
+                $q->where('visibility', 'public')
+                    ->orWhere(function ($s) use ($user) {
+                        $s->where('visibility', 'private')
+                            ->where(function ($ss) use ($user) {
+                                $ss->where(fn ($sss) => $sss->whereIn('workspace_id', $user->ownedWorkspaces()->select('id')))
+                                    ->orWhere(fn ($sss) => $sss->whereIn('workspace_id', $user->workspaces()->wherePivot('role', 'admin')->select('id')))
+                                    ->orWhere(fn ($sss) => $sss->whereIn('id', DB::table('project_members')->where('user_id', $user->id)->select('project_id')));
+                            });
+                    });
+            })
+            ->pluck('id');
+        $columnIds = ProjectColumn::whereIn('project_id', $visibleProjectIds)->pluck('id');
         $columnIds = ProjectColumn::whereIn('project_id', $projectIds)->pluck('id');
         $tasks = Task::whereIn('column_id', $columnIds)
             ->where('title', 'LIKE', "%{$query}%")

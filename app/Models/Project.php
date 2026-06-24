@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Project extends Model
 {
-    protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'key', 'is_active'];
+    protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'key', 'is_active', 'visibility'];
 
     protected static function booted(): void
     {
@@ -44,5 +44,22 @@ class Project extends Model
     public function tasks()
     {
         return Task::whereIn('column_id', $this->columns()->pluck('id'));
+    }
+
+    public function canUserView(User $user, Workspace $workspace): bool
+    {
+        if ($this->visibility === 'public') {
+            return true;
+        }
+
+        if ($workspace->isOwnedBy($user)) {
+            return true;
+        }
+
+        if ($workspace->roleFor($user) === 'admin') {
+            return true;
+        }
+
+        return $this->members()->where('user_id', $user->id)->exists();
     }
 }

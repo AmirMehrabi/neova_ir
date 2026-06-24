@@ -44,24 +44,27 @@ Route::middleware('auth')->group(function () {
         Route::post('/leave', [WorkspaceManagementController::class, 'leave'])->name('leave');
         Route::post('/projects/{project}/members', [WorkspaceManagementController::class, 'addProjectMember'])->name('projects.members.store');
         Route::delete('/projects/{project}/members/{user}', [WorkspaceManagementController::class, 'removeProjectMember'])->name('projects.members.destroy');
+        Route::patch('/projects/{project}/visibility', [WorkspaceManagementController::class, 'updateProjectVisibility'])->name('projects.visibility');
     });
 
     Route::middleware('workspace')->group(function () {
         Route::middleware('project')->group(function () {
-            Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
-            Route::middleware('workspace.editor')->group(function () {
-                Route::post('/{workspace}/{project}/task', [BoardController::class, 'storeTask'])->name('board.task.store');
-                Route::put('/{workspace}/{project}/task/{task}', [BoardController::class, 'updateTask'])->name('board.task.update');
-                Route::post('/{workspace}/{project}/task/{task}/comments', [BoardController::class, 'addComment'])->name('board.task.comments.store');
-                Route::delete('/{workspace}/{project}/task/{task}', [BoardController::class, 'destroyTask'])->name('board.task.destroy');
-                Route::post('/{workspace}/{project}/task/{task}/move', [BoardController::class, 'moveTask'])->name('board.task.move');
-                Route::post('/{workspace}/{project}/column', [BoardController::class, 'storeColumn'])->name('board.column.store');
-                Route::delete('/{workspace}/{project}/column/{column}', [BoardController::class, 'destroyColumn'])->name('board.column.destroy');
-            });
-            Route::middleware('workspace.editor')->group(function () {
-                Route::patch('/{workspace}/{project}/settings', [BoardController::class, 'updateProject'])->name('board.project.update');
-                Route::post('/{workspace}/{project}/members', [BoardController::class, 'addProjectMember'])->name('board.project.members.store');
-                Route::delete('/{workspace}/{project}/members/{user}', [BoardController::class, 'removeProjectMember'])->name('board.project.members.destroy');
+            Route::middleware('project.access')->group(function () {
+                Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
+                Route::middleware('workspace.editor')->group(function () {
+                    Route::post('/{workspace}/{project}/task', [BoardController::class, 'storeTask'])->name('board.task.store');
+                    Route::put('/{workspace}/{project}/task/{task}', [BoardController::class, 'updateTask'])->name('board.task.update');
+                    Route::post('/{workspace}/{project}/task/{task}/comments', [BoardController::class, 'addComment'])->name('board.task.comments.store');
+                    Route::delete('/{workspace}/{project}/task/{task}', [BoardController::class, 'destroyTask'])->name('board.task.destroy');
+                    Route::post('/{workspace}/{project}/task/{task}/move', [BoardController::class, 'moveTask'])->name('board.task.move');
+                    Route::post('/{workspace}/{project}/column', [BoardController::class, 'storeColumn'])->name('board.column.store');
+                    Route::delete('/{workspace}/{project}/column/{column}', [BoardController::class, 'destroyColumn'])->name('board.column.destroy');
+                });
+                Route::middleware('workspace.editor')->group(function () {
+                    Route::patch('/{workspace}/{project}/settings', [BoardController::class, 'updateProject'])->name('board.project.update');
+                    Route::post('/{workspace}/{project}/members', [BoardController::class, 'addProjectMember'])->name('board.project.members.store');
+                    Route::delete('/{workspace}/{project}/members/{user}', [BoardController::class, 'removeProjectMember'])->name('board.project.members.destroy');
+                });
             });
         });
     });

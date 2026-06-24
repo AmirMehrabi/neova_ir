@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EnsureProject;
+use App\Http\Middleware\EnsureProjectAccess;
 use App\Http\Middleware\EnsureWorkspace;
 use App\Http\Middleware\EnsureWorkspaceEditor;
 use Illuminate\Foundation\Application;
@@ -20,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'auth' => Authenticate::class,
             'workspace' => EnsureWorkspace::class,
             'project' => EnsureProject::class,
+            'project.access' => EnsureProjectAccess::class,
             'workspace.editor' => EnsureWorkspaceEditor::class,
         ]);
     })

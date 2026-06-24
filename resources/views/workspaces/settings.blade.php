@@ -164,20 +164,37 @@
                 <div class="bg-white border border-[#DFE5EF] rounded-xl p-4 sm:p-5">
                     <div class="flex flex-col sm:flex-row sm:items-center gap-4">
                         <div class="flex-1">
-                            <h3 class="text-sm font-bold text-[#172B4D]">{{ $project->name }}</h3>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-bold text-[#172B4D]">{{ $project->name }}</h3>
+                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md {{ $project->visibility === 'public' ? 'bg-[#DCFCE7] text-[#16A34A]' : 'bg-[#FEF3C7] text-[#D97706]' }}">
+                                    {{ $project->visibility === 'public' ? 'عمومی' : 'خصوصی' }}
+                                </span>
+                            </div>
                             <p class="text-[10px] text-[#94A3B8] mt-1">{{ $project->members->count() }} عضو در تیم پروژه</p>
                         </div>
-                        <form method="POST" action="{{ route('workspaces.projects.members.store', [$workspace->slug, $project]) }}" class="flex gap-2">
-                            @csrf
-                            <select name="user_id" class="min-w-44 text-[11px] border border-[#DCE3ED] rounded-lg px-2.5 py-2 bg-white">
-                                @forelse ($availablePeople as $person)
-                                    <option value="{{ $person->id }}">{{ $person->full_name }}</option>
-                                @empty
-                                    <option value="">همه اعضا اضافه شده‌اند</option>
-                                @endforelse
-                            </select>
-                            <button @disabled($availablePeople->isEmpty()) class="text-[11px] font-bold text-white bg-[#0069FF] disabled:bg-[#CBD5E1] rounded-lg px-3 py-2">افزودن</button>
-                        </form>
+                        <div class="flex items-center gap-2">
+                            @if ($actorRole === 'owner' || $actorRole === 'admin')
+                                <form method="POST" action="{{ route('workspaces.projects.visibility', [$workspace->slug, $project]) }}">
+                                    @csrf
+                                    @method('PATCH')
+                                    <input type="hidden" name="visibility" value="{{ $project->visibility === 'public' ? 'private' : 'public' }}">
+                                    <button class="text-[10px] font-bold text-[#0069FF] hover:underline">
+                                        {{ $project->visibility === 'public' ? 'خصوصی کردن' : 'عمومی کردن' }}
+                                    </button>
+                                </form>
+                            @endif
+                            <form method="POST" action="{{ route('workspaces.projects.members.store', [$workspace->slug, $project]) }}" class="flex gap-2">
+                                @csrf
+                                <select name="user_id" class="min-w-44 text-[11px] border border-[#DCE3ED] rounded-lg px-2.5 py-2 bg-white">
+                                    @forelse ($availablePeople as $person)
+                                        <option value="{{ $person->id }}">{{ $person->full_name }}</option>
+                                    @empty
+                                        <option value="">همه اعضا اضافه شده‌اند</option>
+                                    @endforelse
+                                </select>
+                                <button @disabled($availablePeople->isEmpty()) class="text-[11px] font-bold text-white bg-[#0069FF] disabled:bg-[#CBD5E1] rounded-lg px-3 py-2">افزودن</button>
+                            </form>
+                        </div>
                     </div>
                     <div class="flex flex-wrap gap-2 mt-4">
                         @forelse ($project->members as $member)

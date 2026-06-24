@@ -286,7 +286,15 @@
                                 </div>
 
                                 <div class="flex-1 min-w-0">
-                                    <h3 class="text-[15px] sm:text-[17px] font-black text-[#071B33] truncate">{{ $project->name }}</h3>
+                                    <div class="flex items-center gap-2">
+                                        <h3 class="text-[15px] sm:text-[17px] font-black text-[#071B33] truncate">{{ $project->name }}</h3>
+                                        @if ($project->visibility === 'private')
+                                            <span class="inline-flex items-center gap-1 text-[9px] font-bold text-[#D97706] bg-[#FEF3C7] px-1.5 py-0.5 rounded-md shrink-0">
+                                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                                خصوصی
+                                            </span>
+                                        @endif
+                                    </div>
                                     @if ($project->description)
                                         <p class="hidden sm:block text-[11px] sm:text-[12px] font-medium text-[#64748B] truncate mt-1.5">{{ $project->description }}</p>
                                     @else
