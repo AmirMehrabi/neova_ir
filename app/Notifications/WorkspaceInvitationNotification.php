@@ -2,12 +2,11 @@
 
 namespace App\Notifications;
 
+use App\Mail\NeovaNotificationMail;
 use App\Models\User;
 use App\Models\WorkspaceInvitation;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\View;
 
 class WorkspaceInvitationNotification extends Notification
 {
@@ -26,20 +25,20 @@ class WorkspaceInvitationNotification extends Notification
         return $channels;
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(object $notifiable): NeovaNotificationMail
     {
-        $html = View::make('emails.workspace-invitation', [
-            'user' => $notifiable,
-            'inviter' => $this->invitation->inviter->full_name,
-            'workspace' => $this->invitation->workspace,
-            'role' => $this->invitation->role,
-            'invitationCode' => $this->invitation->code_hash,
-            'expiresAt' => $this->invitation->expires_at->format('Y/m/d'),
-        ])->render();
-
-        return (new MailMessage())
-            ->subject("{$this->invitation->inviter->full_name} شما را به «{$this->invitation->workspace->name}» دعوت کرد")
-            ->html($html);
+        return new NeovaNotificationMail(
+            neovaSubject: "{$this->invitation->inviter->full_name} شما را به «{$this->invitation->workspace->name}» دعوت کرد",
+            neovaTemplate: 'emails.workspace-invitation',
+            neovaData: [
+                'user' => $notifiable,
+                'inviter' => $this->invitation->inviter->full_name,
+                'workspace' => $this->invitation->workspace,
+                'role' => $this->invitation->role,
+                'invitationCode' => $this->invitation->code_hash,
+                'expiresAt' => $this->invitation->expires_at->format('Y/m/d'),
+            ],
+        );
     }
 
     public function toArray(object $notifiable): array

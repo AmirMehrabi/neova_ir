@@ -2,11 +2,10 @@
 
 namespace App\Notifications;
 
+use App\Mail\NeovaNotificationMail;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\View;
 
 class DailyDigestNotification extends Notification
 {
@@ -27,16 +26,16 @@ class DailyDigestNotification extends Notification
         return ['mail'];
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(object $notifiable): NeovaNotificationMail
     {
-        $html = View::make('emails.daily-digest', [
-            'user' => $notifiable,
-            'activities' => $this->activities,
-        ])->render();
-
-        return (new MailMessage())
-            ->subject('خلاصه فعالیت امروز شما')
-            ->html($html);
+        return new NeovaNotificationMail(
+            neovaSubject: 'خلاصه فعالیت امروز شما',
+            neovaTemplate: 'emails.daily-digest',
+            neovaData: [
+                'user' => $notifiable,
+                'activities' => $this->activities,
+            ],
+        );
     }
 
     public function toArray(object $notifiable): array
