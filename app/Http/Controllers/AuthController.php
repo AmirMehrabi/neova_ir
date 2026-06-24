@@ -111,6 +111,7 @@ class AuthController extends Controller
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'national_code' => ['nullable', 'string', 'size:10'],
+            'email' => ['nullable', 'email', 'max:255'],
         ]);
 
         $phone = session('otp_verified_phone');
@@ -125,7 +126,14 @@ class AuthController extends Controller
             'last_name' => $request->last_name,
             'name' => $request->first_name.' '.$request->last_name,
             'national_code' => $request->national_code,
+            'email' => $request->email,
             'password' => bcrypt(Str::random(32)),
+            'notification_preferences' => [
+                'task_activity' => true,
+                'invitations' => true,
+                'project_updates' => true,
+                'digest' => false,
+            ],
         ]);
 
         Workspace::create([

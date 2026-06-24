@@ -72,6 +72,22 @@
                     @enderror
                 </div>
 
+                <div>
+                    <label class="block text-[10px] font-bold text-[#94A3B8] mb-2 uppercase tracking-widest">ایمیل <span class="text-[#CBD5E1]">(اختیاری)</span></label>
+                    <input
+                        name="email"
+                        type="email"
+                        value="{{ old('email') }}"
+                        class="w-full text-sm font-bold text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-4 py-3 focus:outline-none focus:border-[#0069FF] focus:ring-2 focus:ring-[#0069FF]/10 transition-all placeholder:text-[#CBD5E1]"
+                        placeholder="email@example.com"
+                        dir="ltr"
+                    >
+                    <p class="text-[10px] text-[#94A3B8] mt-1.5">ایمیل برای ارسال اعلان‌ها استفاده می‌شود.</p>
+                    @error('email')
+                        <p class="text-[11px] text-red-500 font-semibold mt-1.5">{{ $message }}</p>
+                    @enderror
+                </div>
+
                 <button
                     type="submit"
                     class="w-full text-sm font-bold text-white bg-gradient-to-l from-[#003B8E] to-[#0069FF] hover:from-[#004BAA] hover:to-[#4D99FF] px-5 py-3.5 rounded-xl shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 transition-all active:scale-[0.98] flex items-center justify-center gap-2"

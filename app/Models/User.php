@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['phone', 'first_name', 'last_name', 'national_code', 'name', 'password', 'avatar', 'is_active'])]
+#[Fillable(['phone', 'email', 'first_name', 'last_name', 'national_code', 'name', 'password', 'avatar', 'notification_preferences', 'is_active'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -23,6 +23,7 @@ class User extends Authenticatable
         return [
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'notification_preferences' => 'array',
         ];
     }
 
@@ -31,9 +32,26 @@ class User extends Authenticatable
         return trim(($this->first_name ?? '').' '.($this->last_name ?? '')) ?: $this->name;
     }
 
+    public function getInitialsAttribute(): string
+    {
+        return mb_substr($this->first_name ?? $this->name, 0, 1);
+    }
+
     public function isProfileComplete(): bool
     {
         return ! empty($this->first_name) && ! empty($this->last_name);
+    }
+
+    public function hasNotificationPreference(string $key): bool
+    {
+        $prefs = $this->notification_preferences ?? [
+            'task_activity' => true,
+            'invitations' => true,
+            'project_updates' => true,
+            'digest' => false,
+        ];
+
+        return $prefs[$key] ?? false;
     }
 
     public function ownedWorkspaces(): HasMany
