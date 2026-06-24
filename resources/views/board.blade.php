@@ -225,7 +225,7 @@
                     <div class="flex flex-col gap-2.5 min-h-[200px] max-h-[calc(100vh-11rem)] overflow-y-auto rounded-xl p-2 bg-[#E2E8F0]/50 border border-[#CBD5E1]/40" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
                         <template x-for="task in filteredTasks(column)" :key="task.dbId">
                             <div class="bg-white rounded-xl border border-[#E2E8F0] p-3.5 cursor-grab active:cursor-grabbing hover:border-[#0069FF]/30 hover:shadow-md hover:shadow-[#0069FF]/8 transition-all duration-150 group relative" :data-id="task.dbId" :data-column="column.id" @click="openEditModal(task, column.id)">
-                                <div class="absolute top-0 right-0 w-1 h-full rounded-r-xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
+                                <div class="absolute top-0 right-0 w-1 h-full rounded-r-xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#8B5CF6]': task.priority === 'متوسط', 'bg-[#64748B]': task.priority === 'پایین' }"></div>
                                 <div class="pr-2">
                                     <div class="flex items-center justify-between mb-2">
                                         <span class="text-[10px] font-bold text-[#94A3B8] tracking-wider" x-text="task.id"></span>
@@ -337,7 +337,7 @@
                     >
                         <template x-for="task in filteredTasks(column)" :key="'mobile-task-' + task.dbId">
                             <article class="bg-white rounded-2xl border border-[#DDE5EF] p-4 hover:border-[#AFCBFF] transition-colors group relative shadow-[0_3px_12px_rgba(7,27,51,0.05)]" :data-id="task.dbId" :data-column="column.id" @click="if (canOpenTaskFromCard()) openEditModal(task, column.id)">
-                                <div class="absolute top-0 right-0 w-1 h-full rounded-r-2xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#F59E0B]': task.priority === 'متوسط', 'bg-[#22C55E]': task.priority === 'پایین' }"></div>
+                                <div class="absolute top-0 right-0 w-1 h-full rounded-r-2xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#8B5CF6]': task.priority === 'متوسط', 'bg-[#64748B]': task.priority === 'پایین' }"></div>
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2.5">
                                         <div class="flex flex-wrap gap-1">
