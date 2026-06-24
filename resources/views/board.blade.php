@@ -777,7 +777,7 @@
                         <div>
                             <label class="block text-[9px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">اولویت</label>
                             <div class="flex flex-col gap-1">
-                                <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-amber-500'}, {name:'پایین', color:'bg-green-500'}]" :key="p.name">
+                                <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-violet-500'}, {name:'پایین', color:'bg-slate-400'}]" :key="p.name">
                                     <label class="flex items-center gap-2 text-[11px] cursor-pointer px-2.5 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#0069FF] bg-[#E8F0FE]' : 'border-transparent hover:bg-white'">
                                         <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEdit" class="hidden">
                                         <span class="w-2 h-2 rounded-full" :class="p.color"></span>
