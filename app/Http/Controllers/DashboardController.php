@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\ProjectColumn;
 use App\Models\Task;
 use App\Models\Workspace;
+use App\Models\WorkspaceInvitation;
 use Illuminate\Http\Request;
 
 class DashboardController extends Controller
@@ -52,7 +53,16 @@ class DashboardController extends Controller
                 }
             });
 
-        return view('dashboard', compact('workspaces'));
+        $invitations = WorkspaceInvitation::query()
+            ->with(['workspace', 'inviter'])
+            ->where('phone', $user->phone)
+            ->where('status', 'pending')
+            ->where('expires_at', '>', now())
+            ->get()
+            ->each->markExpiredIfNeeded()
+            ->filter->isPending();
+
+        return view('dashboard', compact('workspaces', 'invitations'));
     }
 
     public function storeWorkspace(Request $request)

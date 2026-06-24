@@ -190,6 +190,58 @@
             </button>
         </div>
 
+        @if ($invitations->count())
+            <div class="mb-6 sm:mb-8 space-y-3">
+                <h2 class="text-[13px] font-bold text-[#071B33] flex items-center gap-2">
+                    <svg class="w-4 h-4 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0m6 0H9"/></svg>
+                    دعوت‌نامه‌های در انتظار
+                </h2>
+                @foreach ($invitations as $invitation)
+                    <div class="bg-white border border-[#FDE68A] rounded-2xl p-4 sm:p-5 shadow-[0_4px_16px_rgba(245,158,11,0.1)]" x-data="{ processing: false }">
+                        <div class="flex items-start gap-4">
+                            <div class="w-11 h-11 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center text-sm font-black shrink-0">
+                                {{ mb_substr($invitation->inviter->full_name, 0, 1) }}
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <p class="text-[13px] font-bold text-[#071B33]">
+                                    <span class="text-[#D97706]">{{ $invitation->inviter->full_name }}</span>
+                                    شما را به فضای کاری
+                                    <span class="text-[#D97706]">{{ $invitation->workspace->name }}</span>
+                                    دعوت کرده است
+                                </p>
+                                <div class="flex items-center gap-3 mt-2 text-[10px] text-[#94A3B8]">
+                                    <span class="flex items-center gap-1">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                        نقش: {{ $invitation->role === 'admin' ? 'مدیر' : 'کاربر' }}
+                                    </span>
+                                    <span>•</span>
+                                    <span>{{ $invitation->created_at->diffForHumans() }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 mt-4" x-show="!processing">
+                                    <form method="POST" action="{{ route('invitations.accept', $invitation) }}" class="flex-1 sm:flex-none">
+                                        @csrf
+                                        <button type="submit" @click="processing = true" class="w-full sm:w-auto text-[11px] font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-xl px-5 py-2.5 transition-all active:scale-[0.98] shadow-[0_4px_12px_rgba(0,105,255,0.25)]">
+                                            پذیرش دعوت
+                                        </button>
+                                    </form>
+                                    <form method="POST" action="{{ route('invitations.decline', $invitation) }}" class="flex-1 sm:flex-none">
+                                        @csrf
+                                        <button type="submit" @click="processing = true" class="w-full sm:w-auto text-[11px] font-bold text-[#64748B] border border-[#DCE3ED] rounded-xl px-5 py-2.5 hover:bg-[#F8FAFC] transition-colors">
+                                            رد دعوت
+                                        </button>
+                                    </form>
+                                </div>
+                                <div x-show="processing" x-cloak class="flex items-center gap-2 mt-4 text-[11px] text-[#94A3B8]">
+                                    <svg class="animate-spin w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                    در حال پردازش...
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+
         <div class="overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_12px_30px_rgba(7,27,51,0.06)]">
         @forelse ($workspaces as $workspace)
             @php
