@@ -31,7 +31,7 @@
         <div class="email-container">
             <div class="email-header">
                 <a href="{{ url('/') }}" style="text-decoration: none; direction: rtl;">
-                    <img src="{{ url('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" width="140" style="display: inline-block; height: auto; direction: rtl;">
+                    <img src="https://neova.ir/assets/logo/horizental-logo-black-transparent.png" alt="نئووا" width="140" style="display: inline-block; height: auto; direction: rtl;">
                 </a>
             </div>
             <div class="email-body">
