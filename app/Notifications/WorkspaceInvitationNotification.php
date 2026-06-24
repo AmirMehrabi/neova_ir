@@ -7,6 +7,7 @@ use App\Models\WorkspaceInvitation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\View;
 
 class WorkspaceInvitationNotification extends Notification
 {
@@ -27,17 +28,18 @@ class WorkspaceInvitationNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = new MailMessage();
-        $mail->subject("{$this->invitation->inviter->full_name} شما را به «{$this->invitation->workspace->name}}» دعوت کرد");
-
-        return $mail->view('emails.workspace-invitation', [
+        $html = View::make('emails.workspace-invitation', [
             'user' => $notifiable,
             'inviter' => $this->invitation->inviter->full_name,
             'workspace' => $this->invitation->workspace,
             'role' => $this->invitation->role,
             'invitationCode' => $this->invitation->code_hash,
             'expiresAt' => $this->invitation->expires_at->format('Y/m/d'),
-        ]);
+        ])->render();
+
+        return (new MailMessage())
+            ->subject("{$this->invitation->inviter->full_name} شما را به «{$this->invitation->workspace->name}» دعوت کرد")
+            ->html($html);
     }
 
     public function toArray(object $notifiable): array

@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\View;
 
 class DailyDigestNotification extends Notification
 {
@@ -28,12 +29,14 @@ class DailyDigestNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        $html = View::make('emails.daily-digest', [
+            'user' => $notifiable,
+            'activities' => $this->activities,
+        ])->render();
+
         return (new MailMessage())
             ->subject('خلاصه فعالیت امروز شما')
-            ->view('emails.daily-digest', [
-                'user' => $notifiable,
-                'activities' => $this->activities,
-            ]);
+            ->html($html);
     }
 
     public function toArray(object $notifiable): array

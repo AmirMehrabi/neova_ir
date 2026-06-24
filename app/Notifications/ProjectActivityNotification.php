@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\View;
 
 class ProjectActivityNotification extends Notification
 {
@@ -40,9 +41,6 @@ class ProjectActivityNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
-        $mail = new MailMessage();
-        $mail->subject($this->getSubject());
-
         $templateMap = [
             'task_assigned' => 'emails.task-assigned',
             'task_updated' => 'emails.task-updated',
@@ -52,7 +50,7 @@ class ProjectActivityNotification extends Notification
 
         $template = $templateMap[$this->kind] ?? 'emails.task-updated';
 
-        return $mail->view($template, [
+        $html = View::make($template, [
             'user' => $notifiable,
             'actor' => $this->actor,
             'task' => $this->task,
@@ -61,7 +59,11 @@ class ProjectActivityNotification extends Notification
             'fromColumn' => $this->fromColumn,
             'toColumn' => $this->toColumn,
             'place' => $this->place,
-        ]);
+        ])->render();
+
+        return (new MailMessage())
+            ->subject($this->getSubject())
+            ->html($html);
     }
 
     public function toArray(object $notifiable): array
