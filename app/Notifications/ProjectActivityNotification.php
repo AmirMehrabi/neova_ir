@@ -2,13 +2,13 @@
 
 namespace App\Notifications;
 
+use App\Mail\NeovaNotificationMail;
 use App\Models\Project;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Mail;
 
 class ProjectActivityNotification extends Notification
 {
@@ -39,7 +39,7 @@ class ProjectActivityNotification extends Notification
         return $channels;
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(object $notifiable): NeovaNotificationMail
     {
         $templateMap = [
             'task_assigned' => 'emails.task-assigned',
@@ -50,20 +50,20 @@ class ProjectActivityNotification extends Notification
 
         $template = $templateMap[$this->kind] ?? 'emails.task-updated';
 
-        $html = View::make($template, [
-            'user' => $notifiable,
-            'actor' => $this->actor,
-            'task' => $this->task,
-            'project' => $this->project,
-            'url' => $this->url,
-            'fromColumn' => $this->fromColumn,
-            'toColumn' => $this->toColumn,
-            'place' => $this->place,
-        ])->render();
-
-        return (new MailMessage())
-            ->subject($this->getSubject())
-            ->html($html);
+        return new NeovaNotificationMail(
+            neovaSubject: $this->getSubject(),
+            neovaTemplate: $template,
+            neovaData: [
+                'user' => $notifiable,
+                'actor' => $this->actor,
+                'task' => $this->task,
+                'project' => $this->project,
+                'url' => $this->url,
+                'fromColumn' => $this->fromColumn,
+                'toColumn' => $this->toColumn,
+                'place' => $this->place,
+            ],
+        );
     }
 
     public function toArray(object $notifiable): array
