@@ -2,8 +2,10 @@
 
 namespace App\Notifications;
 
+use App\Models\User;
 use App\Models\WorkspaceInvitation;
 use Illuminate\Bus\Queueable;
+use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
 class WorkspaceInvitationNotification extends Notification
@@ -14,7 +16,28 @@ class WorkspaceInvitationNotification extends Notification
 
     public function via(object $notifiable): array
     {
-        return ['database'];
+        $channels = ['database'];
+
+        if ($this->shouldSendEmail($notifiable)) {
+            $channels[] = 'mail';
+        }
+
+        return $channels;
+    }
+
+    public function toMail(object $notifiable): MailMessage
+    {
+        $mail = new MailMessage();
+        $mail->subject("{$this->invitation->inviter->full_name} شما را به «{$this->invitation->workspace->name}}» دعوت کرد");
+
+        return $mail->view('emails.workspace-invitation', [
+            'user' => $notifiable,
+            'inviter' => $this->invitation->inviter->full_name,
+            'workspace' => $this->invitation->workspace,
+            'role' => $this->invitation->role,
+            'invitationCode' => $this->invitation->code_hash,
+            'expiresAt' => $this->invitation->expires_at->format('Y/m/d'),
+        ]);
     }
 
     public function toArray(object $notifiable): array
@@ -27,5 +50,18 @@ class WorkspaceInvitationNotification extends Notification
             'role' => $this->invitation->role,
             'message' => $this->invitation->inviter->full_name.' شما را به فضای کاری '.$this->invitation->workspace->name.' دعوت کرده است.',
         ];
+    }
+
+    private function shouldSendEmail(object $notifiable): bool
+    {
+        if (! $notifiable instanceof User) {
+            return false;
+        }
+
+        if (empty($notifiable->email)) {
+            return false;
+        }
+
+        return $notifiable->hasNotificationPreference('invitations');
     }
 }

@@ -21,6 +21,7 @@ class ProjectActivityNotifier
                 "{$actor->full_name} شما را به وظیفه «{$task->title}» در پروژه «{$project->name}» اضافه کرد.",
                 $project,
                 $task,
+                $actor->full_name,
             ));
 
         $this->notifyMentions($task, $actor, [], $task->comments ?? [], '', (string) $task->description);
@@ -42,6 +43,7 @@ class ProjectActivityNotifier
                 "{$actor->full_name} شما را به وظیفه «{$task->title}» در پروژه «{$project->name}» اضافه کرد.",
                 $project,
                 $task,
+                $actor->full_name,
             ));
 
         $mentionedIds = $this->notifyMentions(
@@ -71,6 +73,7 @@ class ProjectActivityNotifier
                 "{$actor->full_name} وظیفه «{$task->title}» در پروژه «{$project->name}» را تغییر داد.",
                 $project,
                 $task,
+                $actor->full_name,
             ));
     }
 
@@ -85,6 +88,9 @@ class ProjectActivityNotifier
                 "{$actor->full_name} وظیفه «{$task->title}» را به ستون «{$columnTitle}» منتقل کرد.",
                 $project,
                 $task,
+                $actor->full_name,
+                fromColumn: null,
+                toColumn: $columnTitle,
             ));
     }
 
@@ -118,6 +124,8 @@ class ProjectActivityNotifier
                 "{$actor->full_name} در {$place} وظیفه «{$task->title}» از شما نام برد.",
                 $project,
                 $task,
+                $actor->full_name,
+                place: $place,
             );
         }
 
@@ -148,14 +156,29 @@ class ProjectActivityNotifier
         return $task->loadMissing('column.project.workspace')->column->project;
     }
 
-    private function notify(User $user, string $kind, string $message, Project $project, Task $task): void
-    {
+    private function notify(
+        User $user,
+        string $kind,
+        string $message,
+        Project $project,
+        Task $task,
+        ?string $actor = null,
+        ?string $fromColumn = null,
+        ?string $toColumn = null,
+        ?string $place = null,
+    ): void {
         $user->notify(new ProjectActivityNotification(
-            $kind,
-            $message,
-            route('board', [$project->workspace->slug, $project->slug], false),
-            $project->id,
-            $task->id,
+            kind: $kind,
+            message: $message,
+            url: route('board', [$project->workspace->slug, $project->slug], false),
+            projectId: $project->id,
+            taskId: $task->id,
+            project: $project,
+            task: $task,
+            actor: $actor,
+            fromColumn: $fromColumn,
+            toColumn: $toColumn,
+            place: $place,
         ));
     }
 }
