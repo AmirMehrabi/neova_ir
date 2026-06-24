@@ -135,19 +135,17 @@
                 <button
                     @click="openProjectDrawer()"
                     aria-label="مدیریت پروژه"
-                    class="hidden md:flex items-center gap-1.5 text-white/85 hover:text-white bg-white/8 hover:bg-white/12 border border-white/10 text-[11px] font-bold px-3 py-2 rounded-xl transition-colors"
+                    class="hidden md:flex items-center justify-center w-9 h-9 text-white/85 hover:text-white bg-white/8 hover:bg-white/12 border border-white/10 rounded-xl transition-colors"
                 >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
-                    <span class="hidden sm:inline">مدیریت پروژه</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
                 </button>
             @endif
             @if ($canEdit)
                 <button
                     @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)"
-                    class="hidden md:flex items-center gap-1.5 bg-[#0069FF] hover:bg-[#4D99FF] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
+                    class="hidden md:flex items-center justify-center w-9 h-9 bg-[#0069FF] hover:bg-[#4D99FF] text-white rounded-xl transition-all duration-150 shadow-md shadow-[#0069FF]/25 hover:shadow-lg hover:shadow-[#0069FF]/30 active:scale-[0.97]"
                 >
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    وظیفه جدید
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 </button>
             @else
                 <span class="hidden md:inline-flex text-[10px] font-bold text-blue-100 bg-white/10 rounded-md px-2.5 py-1.5">فقط مشاهده</span>
@@ -206,23 +204,6 @@
 
     {{-- Board --}}
     <main class="max-w-[1600px] mx-auto md:px-5 md:py-5">
-        {{-- Assignee filter bar --}}
-        <div x-show="projectMembers.length > 0" class="hidden md:flex items-center gap-2 mb-4 px-1 flex-wrap">
-            <span class="text-[11px] font-bold text-[#64748B] shrink-0">فیلتر:</span>
-            <template x-for="member in projectMembers" :key="member.id">
-                <button
-                    @click="toggleAssigneeFilter(member.name)"
-                    class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-bold transition-all"
-                    :class="isAssigneeFilterActive(member.name) ? 'border-[#1668FF] bg-[#EAF1FF] text-[#1668FF]' : 'border-[#E2E8F0] text-[#64748B] hover:border-[#CBD5E1]'"
-                >
-                    <span class="w-5 h-5 rounded-full flex items-center justify-center shrink-0" :class="isAssigneeFilterActive(member.name) ? 'bg-[#1668FF] text-white' : 'bg-[#E8F0FE] text-[#0069FF]'">
-                        <span class="text-[8px] font-bold" x-text="member.name.charAt(0)"></span>
-                    </span>
-                    <span x-text="member.name"></span>
-                </button>
-            </template>
-            <button x-show="filterByAssignee.length > 0" @click="clearAssigneeFilter()" class="text-[10px] font-bold text-[#EF4444] hover:text-red-600 px-2 py-1.5 rounded-lg transition-colors">پاک کردن</button>
-        </div>
 
         {{-- Desktop board --}}
         <div class="hidden md:grid grid-cols-4 gap-4 items-start" style="direction: rtl;">
@@ -503,6 +484,28 @@
                                 </span>
                             </button>
                         </template>
+                    </div>
+                    <div x-show="projectMembers.length > 0" class="mt-5 pt-5 border-t border-[#E2E8F0]">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-[11px] font-bold text-[#071B33]">فیلتر وظایف</h4>
+                            <button x-show="filterByAssignee.length > 0" @click="clearAssigneeFilter()" class="text-[9px] font-bold text-[#EF4444] hover:text-red-600">پاک کردن</button>
+                        </div>
+                        <div class="space-y-1.5">
+                            <template x-for="member in projectMembers" :key="member.id">
+                                <button
+                                    @click="toggleAssigneeFilter(member.name)"
+                                    class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-right transition-all"
+                                    :class="isAssigneeFilterActive(member.name) ? 'bg-[#EAF1FF] border border-[#BBD1FF]' : 'hover:bg-[#F8FAFC]'"
+                                >
+                                    <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" :class="isAssigneeFilterActive(member.name) ? 'bg-[#1668FF] text-white' : 'bg-[#E8F0FE] text-[#0069FF]'">
+                                        <span class="text-[8px] font-bold" x-text="member.name.charAt(0)"></span>
+                                    </div>
+                                    <span class="text-[11px] font-bold" :class="isAssigneeFilterActive(member.name) ? 'text-[#1668FF]' : 'text-[#475569]'" x-text="member.name"></span>
+                                    <svg x-show="isAssigneeFilterActive(member.name)" class="w-3.5 h-3.5 text-[#1668FF] mr-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                </button>
+                            </template>
+                        </div>
+                        <p x-show="filterByAssignee.length > 0" class="text-[9px] text-[#94A3B8] mt-2 text-center">نمایش وظایف <span x-text="filterByAssignee.length"></span> عضو</p>
                     </div>
                 </section>
 
