@@ -27,7 +27,7 @@ class WorkspaceInvitationNotification extends Notification
 
     public function toMail(object $notifiable): NeovaNotificationMail
     {
-        return new NeovaNotificationMail(
+        return (new NeovaNotificationMail(
             neovaSubject: "{$this->invitation->inviter->full_name} شما را به «{$this->invitation->workspace->name}» دعوت کرد",
             neovaTemplate: 'emails.workspace-invitation',
             neovaData: [
@@ -38,7 +38,7 @@ class WorkspaceInvitationNotification extends Notification
                 'invitationCode' => $this->invitation->code_hash,
                 'expiresAt' => $this->invitation->expires_at->format('Y/m/d'),
             ],
-        );
+        ))->to($notifiable->email);
     }
 
     public function toArray(object $notifiable): array

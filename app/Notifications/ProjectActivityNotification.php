@@ -8,7 +8,6 @@ use App\Models\Task;
 use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
-use Illuminate\Support\Facades\Mail;
 
 class ProjectActivityNotification extends Notification
 {
@@ -50,7 +49,7 @@ class ProjectActivityNotification extends Notification
 
         $template = $templateMap[$this->kind] ?? 'emails.task-updated';
 
-        return new NeovaNotificationMail(
+        return (new NeovaNotificationMail(
             neovaSubject: $this->getSubject(),
             neovaTemplate: $template,
             neovaData: [
@@ -63,7 +62,7 @@ class ProjectActivityNotification extends Notification
                 'toColumn' => $this->toColumn,
                 'place' => $this->place,
             ],
-        );
+        ))->to($notifiable->email);
     }
 
     public function toArray(object $notifiable): array

@@ -28,14 +28,14 @@ class DailyDigestNotification extends Notification
 
     public function toMail(object $notifiable): NeovaNotificationMail
     {
-        return new NeovaNotificationMail(
+        return (new NeovaNotificationMail(
             neovaSubject: 'خلاصه فعالیت امروز شما',
             neovaTemplate: 'emails.daily-digest',
             neovaData: [
                 'user' => $notifiable,
                 'activities' => $this->activities,
             ],
-        );
+        ))->to($notifiable->email);
     }
 
     public function toArray(object $notifiable): array
