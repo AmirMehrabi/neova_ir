@@ -109,16 +109,17 @@
 
 
         @slot('search')
-            <div class="relative hidden" @click.away="boardSearchOpen = false">
+            <div class="relative w-full" @click.away="boardSearchOpen = false">
                 <div class="relative">
-                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input
                         x-model="boardSearchQuery"
                         @input.debounce.200ms="boardSearchOpen = boardSearchQuery.length > 0"
                         @focus="boardSearchOpen = boardSearchQuery.length > 0"
                         @keydown.escape="boardSearchQuery = ''; boardSearchOpen = false"
                         type="text"
-                        class="w-full text-[12px] font-medium text-white bg-white/8 border border-white/10 rounded-lg pr-9 pl-3 py-2.5 focus:outline-none focus:bg-white/12 focus:border-white/25 transition-all placeholder:text-white/45"
+                        data-board-search
+                        class="w-full h-10 text-[12px] font-medium text-[#18212B] bg-[#F8FAF8] border border-[#E2E8E0] rounded-xl pr-9 pl-3 py-2 focus:outline-none focus:bg-white focus:border-[#AEB8B2] focus:ring-4 focus:ring-[#18212B]/10 transition-all placeholder:text-[#94A3B8]"
                         placeholder="جستجوی وظیفه…"
                     >
                 </div>
@@ -230,30 +231,8 @@
     {{-- Board --}}
     <main class="w-full max-w-none">
 
-        {{-- Primary board search and commands --}}
-        <section class="px-3 pt-2 md:px-4 md:pt-2 mb-2">
-            <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
-                <div class="relative flex-1" @click.away="boardSearchOpen = false">
-                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-                    <input x-ref="boardSearch" x-model="boardSearchQuery" @input="boardSearchOpen = boardSearchQuery.length > 0" @focus="boardSearchOpen = boardSearchQuery.length > 0" @keydown.escape="clearBoardSearch()" type="search" class="w-full h-11 md:h-12 rounded-xl border border-[#DDD8CE] bg-white pr-11 pl-14 text-sm font-bold text-[#18212B] shadow-[0_4px_14px_rgba(24,33,43,0.04)] outline-none transition-all placeholder:text-[#A8A39A] focus:border-[#AEB8B2] focus:ring-4 focus:ring-[#18212B]/10" placeholder="جستجوی کارها و پروژه‌ها…">
-                    <kbd class="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-[#DDD8CE] bg-[#FBFAF7] px-1.5 text-[10px] font-black text-[#64748B]">/</kbd>
-                    <div x-show="boardSearchOpen && boardSearchQuery.length > 0" x-transition class="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-[#E7E3DA] shadow-2xl overflow-hidden z-50">
-                        <div class="px-4 py-3 border-b border-[#F1EFEA] flex items-center justify-between"><span class="text-[11px] font-bold text-[#94A3B8]">نتایج جستجو</span><span class="text-[11px] font-black text-[#18212B]" x-text="boardSearchResultCount() + ' نتیجه'"></span></div>
-                        <div class="max-h-72 overflow-y-auto">
-                            <template x-for="col in columns" :key="'search-' + col.id"><template x-for="task in filteredTasks(col)" :key="'result-' + task.dbId"><button type="button" @click="boardSearchOpen = false; boardSearchQuery = ''; openEditModal(task, col.id)" class="w-full text-right px-4 py-3 border-b border-[#F7F5F0] hover:bg-[#FBFAF7] transition-colors"><span class="text-[10px] font-bold text-[#94A3B8]" x-text="col.title + ' · ' + task.id"></span><span class="block mt-1 text-sm font-black text-[#18212B]" x-html="highlightText(task.title, boardSearchQuery)"></span></button></template></template>
-                            <div x-show="boardSearchResultCount() === 0" class="px-4 py-8 text-center text-xs font-bold text-[#94A3B8]">نتیجه‌ای پیدا نشد</div>
-                        </div>
-                    </div>
-                </div>
-                @if ($canEdit)
-                    <button @click="openColumnModal()" class="h-11 md:h-12 px-4 rounded-xl bg-[#18212B] hover:bg-[#253342] text-white text-xs font-black inline-flex items-center justify-center gap-2 shadow-lg shadow-[#18212B]/10 transition-all active:scale-[.98] shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>افزودن ستون</button>
-                @endif
-            </div>
-            <div class="mt-1.5 flex items-center gap-2 text-[10px] font-bold text-[#A8A39A]"><span class="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span><span x-text="totalTasks() + ' وظیفه در ' + columns.length + ' ستون'"></span><span class="mr-auto hidden md:inline">/ جستجو · Ctrl/⌘ K تمرکز روی جستجو</span></div>
-        </section>
-
         {{-- Desktop board --}}
-        <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto px-3 md:px-4 pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
+        <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto px-3 md:px-4 pt-4 md:pt-5 pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
             <template x-for="(column, colIdx) in columns" :key="column.id">
                 <div class="board-column flex flex-col shrink-0 transition-[width] duration-200" :data-column-id="column.id" @click="if (column.collapsed) column.collapsed = false" :class="column.collapsed ? 'w-14 cursor-pointer' : 'w-[280px]'" :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''">
                     <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-2xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
@@ -263,7 +242,7 @@
                         </div>
                         <span class="mt-auto text-[9px] font-bold text-[#64748B]">باز کردن</span>
                     </div>
-                    <div x-show="!column.collapsed" class="relative flex min-h-[44px] items-center justify-between mb-3 px-1">
+                    <div x-show="!column.collapsed" class="relative flex min-h-[44px] items-center justify-between mb-3 pb-1 px-1">
                         <div class="flex items-center gap-2.5 min-w-0">
                             @if ($canEdit)
                                 <button type="button" class="column-drag-handle w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#18212B] hover:bg-white cursor-grab active:cursor-grabbing shrink-0" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
@@ -394,7 +373,7 @@
                     :data-column-index="colIdx"
                     :aria-label="column.title"
                 >
-                    <div class="flex items-center justify-between mb-3 px-1">
+                    <div class="flex items-center justify-between mb-3 pb-1 px-1">
                         <div class="flex items-center gap-2.5">
                             @if ($canEdit)
                                 <button type="button" class="column-drag-handle w-10 h-10 rounded-xl flex items-center justify-center text-[#64748B] bg-[#F1F3F2] active:bg-[#E8EBE9] cursor-grab" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
@@ -1251,7 +1230,11 @@
                         const typing = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
                         if ((event.key === '/' && !typing) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
                             event.preventDefault();
-                            this.$nextTick(() => this.$refs.boardSearch?.focus());
+                            this.$nextTick(() => {
+                                const search = [...document.querySelectorAll('[data-board-search]')]
+                                    .find(input => input.offsetParent !== null);
+                                search?.focus();
+                            });
                         }
                         if (event.key === 'Escape' && !this.showModal && !this.showDeleteModal && !this.showColumnModal && !this.showColumnDeleteModal) this.clearBoardSearch();
                     };
