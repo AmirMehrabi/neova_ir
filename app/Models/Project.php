@@ -12,7 +12,9 @@ class Project extends Model
 {
     public const BOARD_STYLES = ['simple', 'creative'];
 
-    protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'key', 'is_active', 'visibility', 'board_style'];
+    protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'custom_tags', 'key', 'is_active', 'visibility', 'board_style'];
+
+    protected $casts = ['custom_tags' => 'array'];
 
     protected static function booted(): void
     {
