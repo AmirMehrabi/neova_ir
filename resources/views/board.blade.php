@@ -8,7 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         [x-cloak] { display: none !important; }
-        body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
+        body.modal-open { overflow: hidden !important; }
         .sortable-ghost { opacity: 0.4; background: #F1F3F2 !important; border: 2px dashed #18212B !important; box-shadow: none !important; }
         .sortable-chosen { box-shadow: 0 12px 28px rgba(24,33,43,0.16), 0 2px 8px rgba(24,33,43,0.10) !important; transform: rotate(1.5deg); z-index: 50; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
@@ -40,6 +40,8 @@
         .mobile-board-column { scroll-snap-align: center; scroll-snap-stop: always; }
         .mobile-task-list { touch-action: pan-y; }
         .task-drag-handle { touch-action: none; }
+        .column-drag-handle { touch-action: none; }
+        .column-order-dragging { scroll-snap-type: none !important; }
         body.mobile-task-dragging { user-select: none; -webkit-user-select: none; }
         body.mobile-task-dragging .mobile-board-track { scroll-behavior: auto !important; }
         .mobile-drag-edge {
@@ -239,12 +241,18 @@
                 @endif
             </div>
             <div class="mt-2 flex items-center gap-2 text-[10px] font-bold text-[#A8A39A]"><span class="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span><span x-text="totalTasks() + ' وظیفه در ' + columns.length + ' ستون'"></span><span class="mr-auto hidden md:inline">برای جستجوی سریع کلید / یا Ctrl/⌘ K را بزنید</span></div>
+            @if ($canEdit)
+                <div class="mt-3 inline-flex items-center gap-2 rounded-xl border border-dashed border-[#C9D0CB] bg-[#FBFAF7] px-3 py-2 text-[10px] font-bold text-[#64748B]" role="note">
+                    <svg class="h-4 w-4 text-[#18212B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01"/></svg>
+                    ستون‌ها را از دستگیرهٔ کنار نامشان بگیرید و بکشید تا جایشان عوض شود.
+                </div>
+            @endif
         </section>
 
         {{-- Desktop board --}}
-        <div class="hidden md:flex gap-3 items-start overflow-x-auto pb-4" style="direction: rtl;">
+        <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
             <template x-for="(column, colIdx) in columns" :key="column.id">
-                <div @click="if (column.collapsed) column.collapsed = false" class="flex flex-col shrink-0 transition-[width] duration-200" :class="column.collapsed ? 'w-14 cursor-pointer' : 'w-[300px]'" :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''">
+                <div class="board-column flex flex-col shrink-0 transition-[width] duration-200" :data-column-id="column.id" @click="if (column.collapsed) column.collapsed = false" :class="column.collapsed ? 'w-14 cursor-pointer' : 'w-[280px]'" :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''">
                     <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-2xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
                         <div class="flex h-[170px] w-full flex-col items-center rounded-xl border border-white/60 px-1.5 py-3 text-white shadow-sm" :style="collapsedColumnStyle(column)">
                             <span class="text-sm font-black" x-text="column.tasks.length"></span>
@@ -253,7 +261,12 @@
                         <span class="mt-auto text-[9px] font-bold text-[#64748B]">باز کردن</span>
                     </div>
                     <div x-show="!column.collapsed" class="relative flex min-h-[44px] items-center justify-between mb-3 px-1">
-                        <div class="flex items-center gap-2.5">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            @if ($canEdit)
+                                <button type="button" class="column-drag-handle w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#18212B] hover:bg-white cursor-grab active:cursor-grabbing shrink-0" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
+                                </button>
+                            @endif
                             <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="'background-color:' + column.dotHex"></span>
                             <button @click.stop="column.collapsed = true" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all shrink-0" title="جمع کردن ستون" aria-label="جمع کردن ستون"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m9 18 6-6-6-6"/></svg></button>
                             <h2 x-show="!column.collapsed" class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
@@ -358,6 +371,9 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7l-5 5 5 5m8-10l5 5-5 5M3 12h18"/></svg>
                 </span>
             </div>
+            @if ($canEdit)
+                <div class="px-4 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی ستون، دستگیرهٔ آن را بکشید.</div>
+            @endif
         </section>
 
         {{-- Mobile one-column swipe board --}}
@@ -367,6 +383,7 @@
             class="mobile-board-track md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pt-4 pb-8"
             style="direction: rtl;"
             aria-label="تخته پروژه"
+            x-init="$nextTick(() => initColumnSortable('mobile'))"
         >
             <template x-for="(column, colIdx) in columns" :key="'mobile-' + column.id">
                 <section
@@ -376,6 +393,11 @@
                 >
                     <div class="flex items-center justify-between mb-3 px-1">
                         <div class="flex items-center gap-2.5">
+                            @if ($canEdit)
+                                <button type="button" class="column-drag-handle w-10 h-10 rounded-xl flex items-center justify-center text-[#64748B] bg-[#F1F3F2] active:bg-[#E8EBE9] cursor-grab" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
+                                </button>
+                            @endif
                             <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="'background-color:' + column.dotHex"></span>
                             <h2 class="text-[14px] font-black text-[#172B4D]" x-text="column.title"></h2>
                             <span class="text-[10px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span>
@@ -634,44 +656,50 @@
     {{-- Backdrop (fixed, never scrolls) --}}
     <div
         x-show="showModal"
-        x-transition:enter="transition ease-out duration-200"
+        x-cloak
+        x-transition:enter="transition-opacity ease-out duration-100"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave="transition-opacity ease-in duration-75"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 bg-[#0A1628]/60 backdrop-blur-sm"
-        @click="closeModal()"
+        class="fixed inset-0 z-50 bg-[#0A1628]/60"
+        @click="requestCloseModal()"
         x-effect="if (showModal) { document.body.classList.add('modal-open') } else { document.body.classList.remove('modal-open') }"
     ></div>
 
     {{-- Scroll container (fixed, independent of backdrop) --}}
     <div
         x-show="showModal"
-        x-transition:enter="transition ease-out duration-200"
+        x-cloak
+        x-transition:enter="transition-opacity ease-out duration-100"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
-        x-transition:leave="transition ease-in duration-150"
+        x-transition:leave="transition-opacity ease-in duration-75"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 overflow-y-auto"
-        @keydown.escape.window="closeModal()"
+        @keydown.escape.window="requestCloseModal()"
     >
         <div class="min-h-screen flex items-start justify-center p-4 pt-8 pb-8 md:pt-12 md:pb-12">
             <div
                 class="relative bg-white w-full max-w-[820px] rounded-2xl shadow-2xl shadow-black/25 overflow-hidden my-auto"
-                x-transition:enter="transition ease-out duration-200"
-                x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-                x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                x-transition:enter="transition-opacity ease-out duration-100"
+                x-transition:enter-start="opacity-0 translate-y-1"
+                x-transition:enter-end="opacity-100 translate-y-0"
                 @click.stop
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="task-modal-title"
+                @keydown="trapModalFocus($event)"
             >
                 {{-- Header --}}
                 <div class="bg-gradient-to-l from-[#000000] to-[#18212B] px-4 md:px-6 py-3.5 md:py-4 flex items-center justify-between shrink-0">
                     <div class="flex items-center gap-3">
-                        <h3 class="text-white font-bold text-sm" x-text="editingTask ? 'ویرایش وظیفه' : 'وظیفه جدید'"></h3>
+                        <h3 id="task-modal-title" class="text-white font-bold text-sm" x-text="editingTask ? 'ویرایش وظیفه' : 'وظیفه جدید'"></h3>
                         <span x-show="editingTask" class="text-white/70 text-[10px] font-bold bg-white/15 px-2 py-0.5 rounded-md" x-text="form.id"></span>
                     </div>
-                    <button @click="closeModal()" class="text-white/70 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10">
+                    <button @click="requestCloseModal()" class="text-white/70 hover:text-white transition-colors w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10" aria-label="بستن پنجره">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
@@ -684,6 +712,7 @@
                         <div>
                             <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">عنوان</label>
                             <input
+                                x-ref="taskTitle"
                                 x-model="form.title"
                                 type="text"
                                 :disabled="!canEdit"
@@ -695,7 +724,7 @@
                         {{-- Description --}}
                         <div>
                             <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">توضیحات</label>
-                            <div x-show="!editingDescription" @click="if (canEdit) editingDescription = true" class="min-h-[32px]" :class="[(canEdit ? 'cursor-pointer' : 'cursor-default'), form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]']" x-html="form.description ? formatMentionText(form.description) : 'توضیحی ثبت نشده'"></div>
+                            <div x-show="!editingDescription" @click="if (canEdit) { descriptionBeforeEdit = form.description; editingDescription = true }" class="min-h-[32px]" :class="[(canEdit ? 'cursor-pointer' : 'cursor-default'), form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]']" x-html="form.description ? formatMentionText(form.description) : 'توضیحی ثبت نشده'"></div>
                             <div x-show="editingDescription" x-transition class="relative">
                                 <textarea
                                     x-model="form.description"
@@ -720,7 +749,7 @@
                                 <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                                 <div class="flex gap-2 mt-2">
                                     <button @click="editingDescription = false" class="text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#000000] px-3 py-1.5 rounded-lg transition-all">ذخیره</button>
-                                    <button @click="editingDescription = false; form.description = ''" class="text-[11px] font-bold text-[#64748B] hover:text-[#1A1D21] px-3 py-1.5 rounded-lg transition-all">لغو</button>
+                                    <button @click="form.description = descriptionBeforeEdit; editingDescription = false" class="text-[11px] font-bold text-[#64748B] hover:text-[#1A1D21] px-3 py-1.5 rounded-lg transition-all">لغو</button>
                                 </div>
                             </div>
                         </div>
@@ -953,10 +982,11 @@
                         {{-- Actions --}}
                         @if ($canEdit)
                         <div class="space-y-2">
-                            <button type="button" @click="saveTask()" class="w-full text-[11px] font-bold text-white bg-gradient-to-l from-[#000000] to-[#18212B] hover:from-[#000000] hover:to-[#253342] px-4 py-2.5 rounded-xl shadow-md shadow-black/20 hover:shadow-lg transition-all active:scale-[0.97]">
-                                <span x-text="editingTask ? 'ذخیره تغییرات' : 'ایجاد وظیفه'"></span>
+                            <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
+                            <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="w-full text-[11px] font-bold text-white bg-gradient-to-l from-[#000000] to-[#18212B] hover:from-[#000000] hover:to-[#253342] disabled:opacity-60 disabled:cursor-wait px-4 py-2.5 rounded-xl shadow-md shadow-black/20 hover:shadow-lg transition-all active:scale-[0.97]">
+                                <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد وظیفه')"></span>
                             </button>
-                            <button x-show="editingTask" type="button" @click="confirmDelete(form.columnId, editingTask); showModal = false" class="w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#94A3B8] hover:text-red-500 px-4 py-2 rounded-xl border border-[#E2E8F0] hover:border-red-200 hover:bg-red-50 transition-all">
+                            <button x-show="editingTask" type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#94A3B8] hover:text-red-500 disabled:opacity-50 px-4 py-2 rounded-xl border border-[#E2E8F0] hover:border-red-200 hover:bg-red-50 transition-all">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 حذف وظیفه
                             </button>
@@ -971,26 +1001,27 @@
     </div>
 
     {{-- Add Column Modal --}}
-    <div x-show="showColumnModal" x-transition class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="closeColumnModal()">
-        <div class="absolute inset-0 bg-[#18212B]/45 backdrop-blur-sm" @click="closeColumnModal()"></div>
-        <form @submit.prevent="addColumn()" class="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" @click.stop>
-            <div class="p-6 border-b border-[#F1EFEA]"><h4 class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام ستون را برای نمایش بهتر جریان کار تغییر دهید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
-            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">رنگ نشان ستون</label><div class="flex flex-wrap gap-2"><template x-for="color in columnColors" :key="color.hex"><button type="button" @click="columnFormColor = color.hex" class="group inline-flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[10px] font-bold transition-all" :class="columnFormColor === color.hex ? 'border-[#18212B] bg-[#FBFAF7] text-[#18212B] ring-2 ring-[#18212B]/10' : 'border-[#E8EBE9] text-[#64748B] hover:bg-[#FBFAF7]'"><span class="h-4 w-4 rounded-full shadow-sm" :style="'background-color:' + color.hex"></span><span x-text="color.name"></span></button></template></div></div></div>
-            <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B]">انصراف</button><button type="submit" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342]" x-text="columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون'"></button></div>
+    <div x-show="showColumnModal" x-cloak x-transition:enter="transition-opacity ease-out duration-100" x-transition:leave="transition-opacity ease-in duration-75" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="closeColumnModal()">
+        <div class="absolute inset-0 bg-[#18212B]/45" @click="closeColumnModal()"></div>
+        <form @submit.prevent="addColumn()" class="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-labelledby="column-modal-title" @keydown="trapModalFocus($event)">
+            <div class="p-6 border-b border-[#F1EFEA]"><h4 id="column-modal-title" class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام ستون را برای نمایش بهتر جریان کار تغییر دهید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
+            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">رنگ نشان ستون</label><div class="flex flex-wrap gap-2"><template x-for="color in columnColors" :key="color.hex"><button type="button" @click="columnFormColor = color.hex" class="group inline-flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[10px] font-bold transition-all" :class="columnFormColor === color.hex ? 'border-[#18212B] bg-[#FBFAF7] text-[#18212B] ring-2 ring-[#18212B]/10' : 'border-[#E8EBE9] text-[#64748B] hover:bg-[#FBFAF7]'"><span class="h-4 w-4 rounded-full shadow-sm" :style="'background-color:' + color.hex"></span><span x-text="color.name"></span></button></template></div></div><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p></div>
+            <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" :disabled="columnSaving" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button type="submit" :disabled="columnSaving" :aria-busy="columnSaving" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait" x-text="columnSaving ? 'در حال ذخیره…' : (columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون')"></button></div>
         </form>
     </div>
 
     {{-- Delete Column Confirmation Modal --}}
-    <div x-show="showColumnDeleteModal" x-transition class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="showColumnDeleteModal = false">
-        <div class="absolute inset-0 bg-[#18212B]/55 backdrop-blur-sm" @click="showColumnDeleteModal = false"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" @click.stop>
-            <div class="p-6 text-center"><div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M12 9v3m0 4h.01M5.2 19h13.6c1.5 0 2.4-1.6 1.65-2.9L13.65 4.2a1.9 1.9 0 0 0-3.3 0L3.55 16.1C2.8 17.4 3.7 19 5.2 19Z"/></svg></div><h4 class="text-sm font-black text-[#18212B]">حذف ستون «<span x-text="columnDeleteTarget.title"></span>»؟</h4><p class="text-xs leading-6 text-[#64748B] mt-2 mb-5">این ستون و <span class="font-black text-red-500" x-text="columnDeleteTarget.taskCount"></span> وظیفه داخل آن حذف می‌شوند و قابل بازگشت نیستند.</p><div class="flex gap-2.5"><button @click="showColumnDeleteModal = false" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B]">انصراف</button><button @click="deleteColumn()" class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-black">حذف ستون</button></div></div>
+    <div x-show="showColumnDeleteModal" x-cloak x-transition:enter="transition-opacity ease-out duration-100" x-transition:leave="transition-opacity ease-in duration-75" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="showColumnDeleteModal = false">
+        <div class="absolute inset-0 bg-[#18212B]/55" @click="showColumnDeleteModal = false"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-label="تأیید حذف ستون" @keydown="trapModalFocus($event)">
+            <div class="p-6 text-center"><div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M12 9v3m0 4h.01M5.2 19h13.6c1.5 0 2.4-1.6 1.65-2.9L13.65 4.2a1.9 1.9 0 0 0-3.3 0L3.55 16.1C2.8 17.4 3.7 19 5.2 19Z"/></svg></div><h4 class="text-sm font-black text-[#18212B]">حذف ستون «<span x-text="columnDeleteTarget.title"></span>»؟</h4><p class="text-xs leading-6 text-[#64748B] mt-2 mb-5">این ستون و <span class="font-black text-red-500" x-text="columnDeleteTarget.taskCount"></span> وظیفه داخل آن حذف می‌شوند و قابل بازگشت نیستند.</p><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3" role="alert"></p><div class="flex gap-2.5"><button @click="showColumnDeleteModal = false" :disabled="columnDeleting" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button @click="deleteColumn()" :disabled="columnDeleting" :aria-busy="columnDeleting" class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-xs font-black" x-text="columnDeleting ? 'در حال حذف…' : 'حذف ستون'"></button></div></div>
         </div>
     </div>
 
     {{-- Delete Confirmation Modal --}}
     <div
         x-show="showDeleteModal"
+        x-cloak
         x-transition:enter="transition ease-out duration-200"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -1001,7 +1032,7 @@
         @keydown.escape.window="showDeleteModal = false"
     >
         <div class="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-sm" @click="showDeleteModal = false"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl shadow-black/20 overflow-hidden" @click.stop>
+        <div class="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl shadow-black/20 overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-label="تأیید حذف وظیفه" @keydown="trapModalFocus($event)">
             <div class="p-6 text-center">
                 <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
@@ -1010,7 +1041,7 @@
                 <p class="text-xs text-[#64748B] mb-5">آیا از حذف این وظیفه مطمئن هستید؟ این عمل قابل بازگشت نیست.</p>
                 <div class="flex gap-2.5">
                     <button @click="showDeleteModal = false" class="flex-1 text-xs font-semibold text-[#64748B] hover:text-[#1A1D21] px-4 py-2.5 rounded-xl border-2 border-[#E2E8F0] hover:border-[#CBD5E1] transition-all">انصراف</button>
-                    <button @click="deleteTask()" class="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 px-4 py-2.5 rounded-xl shadow-md shadow-red-500/25 transition-all active:scale-[0.97]">حذف</button>
+                    <button @click="deleteTask()" :disabled="taskDeleting" :aria-busy="taskDeleting" class="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-wait px-4 py-2.5 rounded-xl shadow-md shadow-red-500/25 transition-all active:scale-[0.97]" x-text="taskDeleting ? 'در حال حذف…' : 'حذف'"></button>
                 </div>
             </div>
         </div>
@@ -1059,6 +1090,15 @@
                 mobileDragTouchHandler: null,
                 mobileDragSuppressClickUntil: 0,
                 taskMovePending: false,
+                columnMovePending: false,
+                taskSaving: false,
+                taskError: '',
+                columnSaving: false,
+                columnError: '',
+                taskDeleting: false,
+                columnDeleting: false,
+                modalLastFocused: null,
+                modalSnapshot: null,
                 showModal: false,
                 showDeleteModal: false,
                 showColumnModal: false,
@@ -1077,6 +1117,7 @@
                 projectSettingsSaving: false,
                 editingTask: null,
                 editingDescription: false,
+                descriptionBeforeEdit: '',
                 deleteTarget: { columnId: null, taskId: null },
                 columnDeleteTarget: { id: null, title: '', taskCount: 0 },
                 columnFormTitle: '',
@@ -1125,6 +1166,7 @@
 
                 columns: serverColumns.map(column => ({ ...column, collapsed: false })),
                 sortableInstances: [],
+                columnSortableInstances: [],
 
                 totalTasks() { return this.columns.reduce((sum, col) => sum + col.tasks.length, 0); },
 
@@ -1220,10 +1262,12 @@
                     this.boardMediaQuery = window.matchMedia('(max-width: 767px)');
                     this.boardMediaQuery.addEventListener('change', () => {
                         this.destroySortables();
+                        this.destroyColumnSortables();
                         this.$nextTick(() => {
                             this.columns.forEach(column => {
                                 this.initSortable(column.id, this.boardMediaQuery.matches ? 'mobile' : 'desktop');
                             });
+                            this.initColumnSortable(this.boardMediaQuery.matches ? 'mobile' : 'desktop');
                             if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
                             else this.destroyMobileBoardObserver();
                         });
@@ -1682,6 +1726,89 @@
                     return new Date(dateStr) < new Date();
                 },
 
+                initColumnSortable(variant = 'desktop') {
+                    if (!this.canEdit) return;
+                    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+                    if ((variant === 'mobile') !== isMobile) return;
+                    if (this.columnSortableInstances.some(item => item.variant === variant)) return;
+                    const el = variant === 'mobile' ? this.$refs.mobileBoardTrack : document.getElementById('desktop-column-track');
+                    if (!el) return;
+                    const self = this;
+                    const instance = new Sortable(el, {
+                        animation: 220,
+                        ghostClass: 'sortable-ghost',
+                        chosenClass: 'sortable-chosen',
+                        dragClass: 'sortable-drag',
+                        direction: 'horizontal',
+                        draggable: variant === 'mobile' ? '.mobile-board-column' : '.board-column',
+                        handle: '.column-drag-handle',
+                        delay: variant === 'mobile' ? 140 : 50,
+                        delayOnTouchOnly: true,
+                        touchStartThreshold: 4,
+                        forceFallback: variant === 'mobile',
+                        fallbackOnBody: variant === 'mobile',
+                        fallbackTolerance: variant === 'mobile' ? 5 : 0,
+                        scroll: true,
+                        bubbleScroll: true,
+                        scrollSensitivity: 72,
+                        scrollSpeed: 14,
+                        onStart() {
+                            if (variant === 'mobile') {
+                                self.mobileDragSuppressClickUntil = Date.now() + 500;
+                                el.classList.add('column-order-dragging');
+                            }
+                        },
+                        onEnd(evt) {
+                            if (variant === 'mobile') el.classList.remove('column-order-dragging');
+                            if (evt.oldIndex === evt.newIndex || evt.oldIndex == null || evt.newIndex == null) return;
+                            self.reorderColumns(evt.oldIndex, evt.newIndex);
+                        },
+                    });
+                    this.columnSortableInstances.push({ instance, variant });
+                },
+
+                destroyColumnSortables() {
+                    this.columnSortableInstances.forEach(item => item.instance.destroy());
+                    this.columnSortableInstances = [];
+                },
+
+                async reorderColumns(oldIndex, newIndex) {
+                    if (!this.canEdit || this.columnMovePending) return;
+                    const snapshot = [...this.columns];
+                    const [movedColumn] = this.columns.splice(oldIndex, 1);
+                    if (!movedColumn) return;
+                    this.columns.splice(newIndex, 0, movedColumn);
+                    this.activeColumnIndex = this.columns.findIndex(column => column.id === snapshot[this.activeColumnIndex]?.id);
+                    this.columnMovePending = true;
+                    this.setSortablesDisabled(true);
+                    this.setColumnSortablesDisabled(true);
+                    try {
+                        const response = await fetch('{{ route("board.columns.reorder", [$workspace->slug, $project->slug], false) }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                            body: JSON.stringify({ column_ids: this.columns.map(column => Number(column.id)) }),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'ترتیب ستون‌ها ذخیره نشد.');
+                        this.showToast('ترتیب ستون‌ها ذخیره شد');
+                    } catch (error) {
+                        this.columns = snapshot;
+                        this.activeColumnIndex = Math.max(0, Math.min(this.activeColumnIndex, this.columns.length - 1));
+                        this.showToast(error.message || 'ترتیب ستون‌ها ذخیره نشد.');
+                        this.destroySortables();
+                        this.destroyColumnSortables();
+                        this.$nextTick(() => {
+                            const variant = this.boardMediaQuery?.matches ? 'mobile' : 'desktop';
+                            this.columns.forEach(column => this.initSortable(column.id, variant));
+                            this.initColumnSortable(variant);
+                        });
+                    } finally {
+                        this.columnMovePending = false;
+                        this.setSortablesDisabled(false);
+                        this.setColumnSortablesDisabled(false);
+                    }
+                },
+
                 initSortable(columnId, variant = 'desktop') {
                     if (!this.canEdit) return;
                     const isMobile = window.matchMedia('(max-width: 767px)').matches;
@@ -1757,6 +1884,10 @@
                     this.sortableInstances.forEach(item => item.instance.option('disabled', disabled));
                 },
 
+                setColumnSortablesDisabled(disabled) {
+                    this.columnSortableInstances.forEach(item => item.instance.option('disabled', disabled));
+                },
+
                 async moveTask(fromColId, toColId, taskId, newIndex, oldIndex = null) {
                     if (!this.canEdit || this.taskMovePending) return;
                     const fromCol = this.columns.find(c => c.id === fromColId);
@@ -1811,7 +1942,14 @@
                     this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', tags: [], checklist: [], comments: [] };
                     this.newCheckItem = '';
                     this.newComment = '';
+                    this.taskError = '';
+                    this.modalLastFocused = document.activeElement;
+                    this.modalSnapshot = null;
                     this.showModal = true;
+                    this.$nextTick(() => {
+                        this.modalSnapshot = JSON.stringify(this.form);
+                        this.$refs.taskTitle?.focus();
+                    });
                 },
 
                 openEditModal(task, columnId) {
@@ -1826,27 +1964,79 @@
                     };
                     this.newCheckItem = '';
                     this.newComment = '';
+                    this.taskError = '';
+                    this.modalLastFocused = document.activeElement;
+                    this.modalSnapshot = null;
                     this.showModal = true;
+                    this.$nextTick(() => {
+                        this.modalSnapshot = JSON.stringify(this.form);
+                        this.$refs.taskTitle?.focus();
+                    });
                 },
 
                 closeModal() {
                     this.showModal = false;
                     this.editingDescription = false;
+                    this.taskError = '';
+                    this.modalSnapshot = null;
+                    const target = this.modalLastFocused;
+                    this.modalLastFocused = null;
+                    this.$nextTick(() => target?.focus?.());
+                },
+
+                requestCloseModal() {
+                    if (this.taskSaving) return;
+                    const dirty = this.modalSnapshot && JSON.stringify(this.form) !== this.modalSnapshot;
+                    if (dirty && !window.confirm('تغییرات ذخیره نشده‌اند. از بستن پنجره مطمئن هستید؟')) return;
+                    this.closeModal();
+                },
+
+                requestDeleteFromTaskModal() {
+                    if (!this.editingTask || this.taskSaving) return;
+                    const columnId = this.form.columnId;
+                    const taskId = this.editingTask;
+                    this.closeModal();
+                    this.confirmDelete(columnId, taskId);
+                },
+
+                trapModalFocus(event) {
+                    if (event.key !== 'Tab') return;
+                    const dialog = event.currentTarget;
+                    const focusable = [...dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+                    if (!focusable.length) return;
+                    const first = focusable[0];
+                    const last = focusable[focusable.length - 1];
+                    if (event.shiftKey && document.activeElement === first) {
+                        event.preventDefault();
+                        last.focus();
+                    } else if (!event.shiftKey && document.activeElement === last) {
+                        event.preventDefault();
+                        first.focus();
+                    }
                 },
 
                 async saveTask() {
-                    if (!this.canEdit) return;
-                    if (!this.form.title.trim()) return;
+                    if (!this.canEdit || this.taskSaving) return;
+                    if (!this.form.title.trim()) {
+                        this.taskError = 'عنوان وظیفه را وارد کنید.';
+                        this.$nextTick(() => this.$refs.taskTitle?.focus());
+                        return;
+                    }
+                    this.taskSaving = true;
+                    this.taskError = '';
                     const token = '{{ csrf_token() }}';
                     const headers = { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token, 'Accept': 'application/json' };
 
-                    if (this.editingTask) {
-                        const sourceCol = this.columns.find(c => c.tasks.some(t => t.dbId === this.editingTask));
-                        const targetCol = this.columns.find(c => c.id === this.form.columnId);
-                        const task = sourceCol?.tasks.find(t => t.dbId === this.editingTask);
-                        if (task) {
+                    try {
+                        if (this.editingTask) {
+                            const sourceCol = this.columns.find(c => c.tasks.some(t => t.dbId === this.editingTask));
+                            const targetCol = this.columns.find(c => c.id === this.form.columnId);
+                            const task = sourceCol?.tasks.find(t => t.dbId === this.editingTask);
+                            if (!task) throw new Error('وظیفه پیدا نشد.');
                             const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId) };
-                            await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
+                            const response = await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
+                            const data = await response.json().catch(() => ({}));
+                            if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره وظیفه انجام نشد.');
                             Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: [...this.form.assignees], dueDate: this.form.dueDate, tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
                             if (sourceCol && targetCol && sourceCol.id !== targetCol.id) {
                                 sourceCol.tasks = sourceCol.tasks.filter(item => item.dbId !== task.dbId);
@@ -1854,19 +2044,24 @@
                                 this.activeColumnIndex = this.columns.findIndex(column => column.id === targetCol.id);
                                 this.$nextTick(() => this.scrollToColumn(this.activeColumnIndex));
                             }
-                        }
-                        this.showToast('تغییرات ذخیره شد');
-                    } else {
-                        const col = this.columns.find(c => c.id === this.form.columnId);
-                        if (col) {
+                            this.showToast('تغییرات ذخیره شد');
+                        } else {
+                            const col = this.columns.find(c => c.id === this.form.columnId);
+                            if (!col) throw new Error('ستون وظیفه پیدا نشد.');
                             const payload = { column_id: parseInt(this.form.columnId), title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments };
                             const res = await fetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
-                            const data = await res.json();
+                            const data = await res.json().catch(() => ({}));
+                            if (!res.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ایجاد وظیفه انجام نشد.');
                             col.tasks.push({ id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [] });
                             this.showToast('وظیفه جدید ایجاد شد');
                         }
+                        this.modalSnapshot = null;
+                        this.closeModal();
+                    } catch (error) {
+                        this.taskError = error.message || 'ذخیره وظیفه انجام نشد.';
+                    } finally {
+                        this.taskSaving = false;
                     }
-                    this.showModal = false;
                 },
 
                 openColumnModal() {
@@ -1874,6 +2069,7 @@
                     this.columnEditingId = null;
                     this.columnFormTitle = '';
                     this.columnFormColor = '#94A3B8';
+                    this.columnError = '';
                     this.showColumnModal = true;
                     this.$nextTick(() => this.$refs.columnTitle?.focus());
                 },
@@ -1883,6 +2079,7 @@
                     this.columnEditingId = column.id;
                     this.columnFormTitle = column.title;
                     this.columnFormColor = column.dotHex || '#94A3B8';
+                    this.columnError = '';
                     this.showColumnModal = true;
                     this.$nextTick(() => this.$refs.columnTitle?.focus());
                 },
@@ -1895,27 +2092,39 @@
                 },
 
                 async addColumn() {
-                    if (!this.canEdit || !this.columnFormTitle.trim()) return;
+                    if (!this.canEdit || this.columnSaving) return;
+                    if (!this.columnFormTitle.trim()) {
+                        this.columnError = 'نام ستون را وارد کنید.';
+                        return;
+                    }
+                    this.columnSaving = true;
+                    this.columnError = '';
                     const editing = Boolean(this.columnEditingId);
                     const url = editing
                         ? '{{ route("board.column.update", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', this.columnEditingId)
                         : '{{ route("board.column.store", [$workspace->slug, $project->slug], false) }}';
-                    const response = await fetch(url, {
-                        method: editing ? 'PATCH' : 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                        body: JSON.stringify(editing ? { title: this.columnFormTitle.trim(), color: this.columnFormColor } : { project_id: {{ $project->id }}, title: this.columnFormTitle.trim(), color: this.columnFormColor }),
-                    });
-                    const data = await response.json().catch(() => ({}));
-                    if (!response.ok) { this.showToast(data.message || 'افزودن ستون انجام نشد.'); return; }
-                    if (editing) {
-                        const column = this.columns.find(item => item.id === String(data.id));
-                        if (column) { column.title = data.title; column.dotHex = data.color || this.columnFormColor; }
-                    } else {
-                        this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', dotHex: data.color || this.columnFormColor, badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
+                    try {
+                        const response = await fetch(url, {
+                            method: editing ? 'PATCH' : 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                            body: JSON.stringify(editing ? { title: this.columnFormTitle.trim(), color: this.columnFormColor } : { project_id: {{ $project->id }}, title: this.columnFormTitle.trim(), color: this.columnFormColor }),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره ستون انجام نشد.');
+                        if (editing) {
+                            const column = this.columns.find(item => item.id === String(data.id));
+                            if (column) { column.title = data.title; column.dotHex = data.color || this.columnFormColor; }
+                        } else {
+                            this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', dotHex: data.color || this.columnFormColor, badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
+                        }
+                        this.closeColumnModal();
+                        this.showToast(editing ? 'نام ستون ویرایش شد' : 'ستون جدید اضافه شد');
+                        if (!editing) this.$nextTick(() => this.initSortable(String(data.id), 'desktop'));
+                    } catch (error) {
+                        this.columnError = error.message || 'ذخیره ستون انجام نشد.';
+                    } finally {
+                        this.columnSaving = false;
                     }
-                    this.closeColumnModal();
-                    this.showToast(editing ? 'نام ستون ویرایش شد' : 'ستون جدید اضافه شد');
-                    if (!editing) this.$nextTick(() => this.initSortable(String(data.id), 'desktop'));
                 },
 
                 confirmDeleteColumn(column) {
@@ -1925,20 +2134,28 @@
                 },
 
                 async deleteColumn() {
-                    if (!this.canEdit || !this.columnDeleteTarget.id || this.columns.length <= 1) return;
+                    if (!this.canEdit || this.columnDeleting || !this.columnDeleteTarget.id || this.columns.length <= 1) return;
                     const columnId = this.columnDeleteTarget.id;
-                    const response = await fetch('{{ route("board.column.destroy", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', columnId), {
-                        method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                    });
-                    const data = await response.json().catch(() => ({}));
-                    if (!response.ok) { this.showToast(data.message || 'حذف ستون انجام نشد.'); return; }
-                    this.columns = this.columns.filter(column => column.id !== columnId);
-                    this.activeColumnIndex = Math.max(0, Math.min(this.activeColumnIndex, this.columns.length - 1));
-                    this.showColumnDeleteModal = false;
-                    this.columnDeleteTarget = { id: null, title: '', taskCount: 0 };
-                    this.destroySortables();
-                    this.$nextTick(() => this.columns.forEach(column => this.initSortable(column.id, this.boardMediaQuery?.matches ? 'mobile' : 'desktop')));
-                    this.showToast('ستون حذف شد');
+                    this.columnDeleting = true;
+                    this.columnError = '';
+                    try {
+                        const response = await fetch('{{ route("board.column.destroy", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', columnId), {
+                            method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'حذف ستون انجام نشد.');
+                        this.columns = this.columns.filter(column => column.id !== columnId);
+                        this.activeColumnIndex = Math.max(0, Math.min(this.activeColumnIndex, this.columns.length - 1));
+                        this.showColumnDeleteModal = false;
+                        this.columnDeleteTarget = { id: null, title: '', taskCount: 0 };
+                        this.destroySortables();
+                        this.$nextTick(() => this.columns.forEach(column => this.initSortable(column.id, this.boardMediaQuery?.matches ? 'mobile' : 'desktop')));
+                        this.showToast('ستون حذف شد');
+                    } catch (error) {
+                        this.columnError = error.message || 'حذف ستون انجام نشد.';
+                    } finally {
+                        this.columnDeleting = false;
+                    }
                 },
 
                 confirmDelete(columnId, taskId) {
@@ -1948,18 +2165,25 @@
                 },
 
                 async deleteTask() {
-                    if (!this.canEdit) return;
+                    if (!this.canEdit || this.taskDeleting) return;
+                    this.taskDeleting = true;
                     const col = this.columns.find(c => c.id === this.deleteTarget.columnId);
-                    if (col) {
+                    try {
+                        if (!col) throw new Error('وظیفه پیدا نشد.');
                         const task = col.tasks.find(t => t.dbId === this.deleteTarget.taskId);
-                        if (task) {
-                            await fetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
-                        }
+                        if (!task) throw new Error('وظیفه پیدا نشد.');
+                        const response = await fetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'حذف وظیفه انجام نشد.');
                         col.tasks = col.tasks.filter(t => t.dbId !== this.deleteTarget.taskId);
                         this.showToast('وظیفه حذف شد');
+                        this.showDeleteModal = false;
+                        this.deleteTarget = { columnId: null, taskId: null };
+                    } catch (error) {
+                        this.showToast(error.message || 'حذف وظیفه انجام نشد.');
+                    } finally {
+                        this.taskDeleting = false;
                     }
-                    this.showDeleteModal = false;
-                    this.deleteTarget = { columnId: null, taskId: null };
                 },
 
                 showToast(message) {

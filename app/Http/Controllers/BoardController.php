@@ -392,6 +392,35 @@ class BoardController extends Controller
         return response()->json($column->fresh());
     }
 
+    public function reorderColumns(Request $request, string $workspace, string $project)
+    {
+        $projectModel = $request->attributes->get('project');
+        $validated = $request->validate([
+            'column_ids' => ['required', 'array', 'min:1'],
+            'column_ids.*' => ['integer', 'distinct'],
+        ]);
+
+        $columnIds = array_map('intval', $validated['column_ids']);
+        $projectColumnIds = $projectModel->columns()->pluck('id')->map(fn ($id) => (int) $id)->sort()->values()->all();
+        $submittedColumnIds = collect($columnIds)->sort()->values()->all();
+
+        abort_unless($projectColumnIds === $submittedColumnIds, 422, 'ترتیب ستون‌ها معتبر نیست.');
+
+        DB::transaction(function () use ($projectModel, $columnIds) {
+            $columns = $projectModel->columns()
+                ->whereIn('id', $columnIds)
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($columnIds as $index => $columnId) {
+                $columns[$columnId]->update(['position' => $index + 1]);
+            }
+        });
+
+        return response()->json(['success' => true]);
+    }
+
     public function destroyColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
     {
         $this->ensureColumnInCurrentProject($request, $column);
