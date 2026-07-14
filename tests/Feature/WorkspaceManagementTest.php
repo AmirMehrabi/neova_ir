@@ -209,9 +209,16 @@ class WorkspaceManagementTest extends TestCase
                 'name' => 'Renamed Project',
                 'key' => 'NEW',
                 'description' => 'Updated description',
+                'board_style' => 'creative',
             ])
             ->assertOk()
-            ->assertJsonPath('project.name', 'Renamed Project');
+            ->assertJsonPath('project.name', 'Renamed Project')
+            ->assertJsonPath('project.board_style', 'creative');
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'board_style' => 'creative',
+        ]);
     }
 
     public function test_task_assignment_update_and_mention_create_human_readable_notifications(): void

@@ -78,6 +78,10 @@ class BoardController extends Controller
             'role' => $workspace->roleFor($member),
         ])->values()->toArray();
 
+        $boardStyle = in_array($project->board_style, ['simple', 'creative'], true)
+            ? $project->board_style
+            : 'simple';
+
         return view('board', compact(
             'project',
             'workspace',
@@ -88,6 +92,7 @@ class BoardController extends Controller
             'workspacePeopleData',
             'canEdit',
             'canManageProject',
+            'boardStyle',
         ));
     }
 
@@ -291,17 +296,19 @@ class BoardController extends Controller
                     ->ignore($projectModel->id),
             ],
             'description' => ['nullable', 'string', 'max:2000'],
+            'board_style' => ['nullable', 'string', Rule::in(['simple', 'creative'])],
         ]);
 
         $projectModel->update([
             'name' => $validated['name'],
             'key' => mb_strtoupper($validated['key'] ?? ''),
             'description' => $validated['description'] ?? null,
+            'board_style' => $validated['board_style'] ?? $projectModel->board_style ?? 'simple',
         ]);
 
         return response()->json([
             'message' => 'تنظیمات پروژه ذخیره شد.',
-            'project' => $projectModel->only(['id', 'name', 'key', 'description']),
+            'project' => $projectModel->only(['id', 'name', 'key', 'description', 'board_style']),
         ]);
     }
 

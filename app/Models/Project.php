@@ -10,7 +10,9 @@ use Illuminate\Support\Str;
 
 class Project extends Model
 {
-    protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'key', 'is_active', 'visibility'];
+    public const BOARD_STYLES = ['simple', 'creative'];
+
+    protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'key', 'is_active', 'visibility', 'board_style'];
 
     protected static function booted(): void
     {
