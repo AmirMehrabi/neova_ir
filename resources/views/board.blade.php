@@ -346,18 +346,20 @@
                     </div>
                     <div x-show="!column.collapsed" class="relative flex min-h-[44px] items-center justify-between mb-3 pb-1 px-1">
                         <div class="flex items-center gap-2 min-w-0">
+                            <h2 class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
+                            <span class="board-column-header-accent" aria-hidden="true"></span>
+
+                            {{-- <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="'background-color:' + column.dotHex"></span> --}}
                             @if ($canEdit)
                                 <button type="button" class="column-drag-handle w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#18212B] hover:bg-white cursor-grab active:cursor-grabbing shrink-0" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                                 </button>
                             @endif
-                            <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="'background-color:' + column.dotHex"></span>
-                            <span class="board-column-header-accent" aria-hidden="true"></span>
-                            <h2 class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
-                            <span class="text-[11px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span>
+                            {{-- <span class="text-[11px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span> --}}
                         </div>
                         <div class="flex items-center gap-1 shrink-0">
                             <button @click.stop="column.collapsed = true" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all shrink-0" title="جمع کردن ستون" aria-label="جمع کردن ستون"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m9 18 6-6-6-6"/></svg></button>
+
                             @if ($canEdit)
                                 <div class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
                                     <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="w-9 h-9 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
