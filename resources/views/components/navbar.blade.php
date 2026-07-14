@@ -5,11 +5,11 @@
     $navbarUnreadCount = $navbarUnreadCount ?? 0;
 @endphp
 
-<header class="sticky top-0 z-30 border-b {{ $light ? 'border-[#E7E3DA] bg-[#FBFAF7]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' : 'border-white/10 bg-[#071B33]/96 shadow-[0_8px_30px_rgba(7,27,51,0.18)]' }} backdrop-blur-xl">
+<header class="sticky top-0 z-30 border-b {{ $dark ? 'border-white/10 bg-[#18212B]/96 shadow-[0_8px_30px_rgba(24,33,43,0.18)]' : 'border-[#E5E8E5] bg-[#FAF9F6]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' }} backdrop-blur-xl">
     <div class="{{ $fluid ? 'max-w-[1600px] mx-auto' : 'max-w-7xl mx-auto' }} px-3 sm:px-6 h-14 md:h-16 flex items-center gap-3 md:gap-4">
         {{-- Logo --}}
         <a href="{{ route('dashboard') }}" class="shrink-0 inline-flex items-center" aria-label="داشبورد نئووا">
-            <img src="{{ asset($light ? 'assets/logo/horizental-logo-black-transparent.png' : 'assets/logo/horizental-logo-white-transparent.png') }}" alt="نئووا" class="h-7 sm:h-8 w-auto object-contain">
+            <img src="{{ asset($dark ? 'assets/logo/horizental-logo-white-transparent.png' : 'assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-7 sm:h-8 w-auto object-contain">
         </a>
 
         {{-- Content area: slot + search --}}
@@ -32,7 +32,7 @@
                 <button
                     type="button"
                     @click="notificationsOpen = !notificationsOpen"
-                    class="relative w-11 h-11 md:w-9 md:h-9 rounded-xl md:rounded-lg flex items-center justify-center {{ $light ? 'text-[#475569] hover:text-[#18212B] hover:bg-[#F1EFEA]' : 'text-white/75 hover:text-white hover:bg-white/10' }} transition-colors"
+                    class="relative w-11 h-11 md:w-9 md:h-9 rounded-xl md:rounded-lg flex items-center justify-center {{ $dark ? 'text-white/75 hover:text-white hover:bg-white/10' : 'text-[#475569] hover:text-[#18212B] hover:bg-[#F1F3F1]' }} transition-colors"
                     aria-label="اعلان‌ها"
                 >
                     <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -81,7 +81,7 @@
             <div class="relative" x-data="{ userDropdown: false }" @click.away="userDropdown = false">
                 <button
                     @click="userDropdown = !userDropdown"
-                    class="min-w-11 min-h-11 flex items-center justify-center gap-2 px-1.5 sm:px-2 py-1.5 rounded-xl sm:rounded-lg {{ $light ? 'hover:bg-[#F1EFEA]' : 'hover:bg-white/10' }} transition-colors"
+                    class="min-w-11 min-h-11 flex items-center justify-center gap-2 px-1.5 sm:px-2 py-1.5 rounded-xl sm:rounded-lg {{ $dark ? 'hover:bg-white/10' : 'hover:bg-[#F1F3F1]' }} transition-colors"
                 >
                     <div class="w-8 h-8 rounded-full bg-[#1668FF] flex items-center justify-center ring-1 ring-white/20 overflow-hidden">
                         @if (auth()->user()->avatar)
@@ -90,8 +90,8 @@
                             <span class="text-[9px] text-white font-bold">{{ auth()->user()->initials }}</span>
                         @endif
                     </div>
-                    <span class="text-[11px] font-semibold {{ $light ? 'text-[#334155]' : 'text-white/85' }} hidden sm:block">{{ auth()->user()->full_name }}</span>
-                    <svg class="hidden sm:block w-3 h-3 {{ $light ? 'text-[#94A3B8]' : 'text-white/50' }} transition-transform" :class="userDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <span class="text-[11px] font-semibold {{ $dark ? 'text-white/85' : 'text-[#334155]' }} hidden sm:block">{{ auth()->user()->full_name }}</span>
+                    <svg class="hidden sm:block w-3 h-3 {{ $dark ? 'text-white/50' : 'text-[#94A3B8]' }} transition-transform" :class="userDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div

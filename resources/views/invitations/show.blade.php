@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="min-h-screen bg-[#F5F7FA]">
+<div class="neova-product min-h-screen bg-[#FAF9F6]">
     <x-navbar>
         <x-breadcrumb :items="collect([
             ['label' => 'داشبورد', 'url' => route('dashboard')],

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('body')
 <div
-    class="min-h-screen bg-[#EEF2F7]"
+    class="neova-dashboard neova-product min-h-screen bg-[#FAF9F6]"
     x-data="{
         showModal: false,
         modalType: 'workspace',
@@ -58,17 +58,24 @@
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
         .project-card { transition: background-color 0.18s ease, box-shadow 0.18s ease; }
-        .project-card:hover { background: #F7FAFF; box-shadow: inset -3px 0 0 #1668FF; }
+        .project-card:hover { background: #F5F7F6; box-shadow: inset -3px 0 0 #2563EB; }
+        .neova-dashboard .bg-white { background-color: #FFFFFF !important; }
+        .neova-dashboard .text-\[\#071B33\] { color: #18212B !important; }
+        .neova-dashboard .text-\[\#1668FF\], .neova-dashboard .text-\[\#0069FF\] { color: #2563EB !important; }
+        .neova-dashboard .bg-\[\#1668FF\], .neova-dashboard .bg-\[\#0069FF\] { background-color: #2563EB !important; }
+        .neova-dashboard .bg-\[\#EAF1FF\], .neova-dashboard .bg-\[\#E8F0FE\] { background-color: #E9F0FF !important; }
+        .neova-dashboard .border-\[\#D8E0EB\], .neova-dashboard .border-\[\#E6EBF2\] { border-color: #E5E8E5 !important; }
+        .neova-dashboard .text-\[\#64748B\] { color: #66717A !important; }
         @media (prefers-reduced-motion: reduce) {
             .project-card { transition: none; }
         }
     </style>
 
-    <x-navbar>
+    <x-navbar light>
         @slot('search')
             <div class="relative" @click.away="searchOpen = false; searchQuery = ''">
                 <div class="relative">
-                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8A8175]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input
                         x-model="searchQuery"
                         @input.debounce.300ms="doSearch()"
@@ -78,7 +85,7 @@
                         @keydown.arrow-up.prevent="navigateResults(-1)"
                         @keydown.enter.prevent="selectResult()"
                         type="text"
-                        class="w-full text-[12px] font-medium text-white bg-white/8 border border-white/10 rounded-lg pr-9 pl-3 py-2.5 focus:outline-none focus:bg-white/12 focus:border-white/25 transition-all placeholder:text-white/45"
+                        class="w-full text-[12px] font-medium text-[#18212B] bg-white/70 border border-[#E5E8E5] rounded-xl pr-9 pl-3 py-2.5 focus:outline-none focus:bg-white focus:border-[#9CB8F3] transition-all placeholder:text-[#8B949B]"
                         placeholder="جستجوی پروژه یا وظیفه…"
                     >
                 </div>

@@ -9,15 +9,22 @@
     <style>
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
-        .sortable-ghost { opacity: 0.4; background: #E8F0FE !important; border: 2px dashed #0069FF !important; box-shadow: none !important; }
-        .sortable-chosen { box-shadow: 0 12px 28px rgba(0,105,255,0.18), 0 2px 8px rgba(0,0,0,0.12) !important; transform: rotate(1.5deg); z-index: 50; }
+        .sortable-ghost { opacity: 0.4; background: #E9F0FF !important; border: 2px dashed #2563EB !important; box-shadow: none !important; }
+        .sortable-chosen { box-shadow: 0 12px 28px rgba(37,99,235,0.16), 0 2px 8px rgba(24,33,43,0.10) !important; transform: rotate(1.5deg); z-index: 50; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
         .checklist-bar { height: 6px; border-radius: 3px; background: #E2E8F0; overflow: hidden; }
-        .checklist-bar-fill { height: 100%; border-radius: 3px; background: #0069FF; transition: width 0.3s ease; }
+        .checklist-bar-fill { height: 100%; border-radius: 3px; background: #2563EB; transition: width 0.3s ease; }
+        .neova-board .bg-white { background-color: #FFFFFF !important; }
+        .neova-board .text-\[\#1A1D21\], .neova-board .text-\[\#18212B\] { color: #18212B !important; }
+        .neova-board .text-\[\#0069FF\], .neova-board .text-\[\#1668FF\] { color: #2563EB !important; }
+        .neova-board .bg-\[\#0069FF\], .neova-board .bg-\[\#1668FF\] { background-color: #2563EB !important; }
+        .neova-board .bg-\[\#E8F0FE\], .neova-board .bg-\[\#EAF1FF\] { background-color: #E9F0FF !important; }
+        .neova-board .border-\[\#E2E8F0\], .neova-board .border-\[\#E5E1D8\] { border-color: #E5E8E5 !important; }
+        .neova-board .text-\[\#64748B\] { color: #66717A !important; }
         .check-item input[type="checkbox"]:checked + span { text-decoration: line-through; color: #94A3B8; }
         .mobile-board-track { scrollbar-width: none; scroll-padding-inline: 1rem; overscroll-behavior-inline: contain; }
         .mobile-board-track::-webkit-scrollbar { display: none; }
@@ -57,7 +64,7 @@
         }
     </style>
 </head>
-<body class="bg-[#F7F5F0] min-h-screen overflow-x-hidden" x-data="board()" x-init="init()" x-cloak>
+<body class="neova-board neova-product min-h-screen overflow-x-hidden" x-data="board()" x-init="init()" x-cloak>
 
     {{-- Top Navigation Bar --}}
     <x-navbar light fluid>

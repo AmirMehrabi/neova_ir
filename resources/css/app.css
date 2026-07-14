@@ -1,5 +1,23 @@
 @import 'tailwindcss';
 
+:root {
+    --neova-paper: #FAF9F6;
+    --neova-surface: #FFFFFF;
+    --neova-surface-muted: #F3F4F2;
+    --neova-ink: #18212B;
+    --neova-muted: #66717A;
+    --neova-line: #E5E8E5;
+    --neova-cobalt: #2563EB;
+    --neova-cobalt-soft: #E9F0FF;
+    --neova-coral: #E97862;
+    --neova-mint: #77C9A7;
+}
+
+.neova-product {
+    background: var(--neova-paper);
+    color: var(--neova-ink);
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
