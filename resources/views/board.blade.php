@@ -83,8 +83,7 @@
     </style>
 </head>
 <body
-    class="neova-board neova-product min-h-screen overflow-x-hidden"
-    :class="boardStyle === 'creative' ? 'board-style-creative' : 'board-style-simple'"
+    class="neova-board neova-product board-style-creative min-h-screen overflow-x-hidden"
     x-data="board()"
     x-init="init()"
     x-cloak
@@ -162,10 +161,6 @@
         @endslot
 
         @slot('actions')
-            <div class="hidden md:flex board-style-toggle" role="group" aria-label="ظاهر تخته">
-                <button type="button" @click="setBoardStyle('simple')" :class="boardStyle === 'simple' ? 'is-active' : ''">ساده</button>
-                <button type="button" @click="setBoardStyle('creative')" :class="boardStyle === 'creative' ? 'is-active' : ''">خلاق</button>
-            </div>
             <div class="relative hidden md:block" @click.away="filterPanelOpen = false">
                 <button
                     type="button"
@@ -210,7 +205,6 @@
                     </div>
                 </div>
             </div>
-            <span class="hidden md:inline-flex items-center text-[#64748B] text-xs font-bold px-3 py-1.5 rounded-full bg-[#F1EFEA] border border-[#E7E3DA]" x-text="toPersianDigits(totalTasks()) + (boardStyle === 'creative' ? ' کارت' : ' وظیفه')"></span>
             @if ($canManageProject)
                 <button
                     @click="openProjectDrawer()"
@@ -226,7 +220,6 @@
                     class="hidden md:inline-flex items-center gap-1.5 h-9 px-3.5 bg-[#18212B] hover:bg-[#253342] text-white rounded-xl transition-all duration-150 shadow-md shadow-[#18212B]/25 hover:shadow-lg hover:shadow-[#18212B]/30 active:scale-[0.97] text-[11px] font-black"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    <span x-text="boardStyle === 'creative' ? 'کارت جدید' : 'وظیفه جدید'"></span>
                 </button>
             @else
                 <span class="hidden md:inline-flex text-[11px] font-bold text-[#64748B] bg-[#F1EFEA] border border-[#E7E3DA] rounded-md px-2.5 py-1.5">فقط مشاهده</span>
@@ -255,43 +248,11 @@
                     </div>
                     <span class="block text-[#94A3B8] text-[9px] mt-0.5 truncate">{{ $workspace->name }}</span>
                 </div>
-                @if ($canEdit)
-                    <button @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)" class="h-11 px-3 rounded-xl bg-[#18212B] text-white flex items-center gap-1.5 text-[11px] font-black shadow-lg shadow-black/10 active:scale-[0.97] shrink-0">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                        <span x-text="boardStyle === 'creative' ? 'کارت جدید' : 'وظیفه جدید'"></span>
+                @if ($canManageProject)
+                    <button @click="openProjectDrawer()" class="w-11 h-11 rounded-xl border border-[#E7E3DA] text-[#64748B] flex items-center justify-center active:bg-white" aria-label="مدیریت پروژه">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
                     </button>
-                @else
-                    <span class="text-[9px] font-bold text-white/70 bg-white/10 rounded-lg px-2.5 py-2">فقط مشاهده</span>
                 @endif
-                <div class="relative shrink-0" @click.away="mobileActionsOpen = false">
-                    <button @click="mobileActionsOpen = !mobileActionsOpen" class="w-11 h-11 rounded-xl border border-[#E7E3DA] text-[#64748B] flex items-center justify-center active:bg-white" aria-label="گزینه‌های پروژه" :aria-expanded="mobileActionsOpen">
-                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
-                    </button>
-                    <div x-show="mobileActionsOpen" x-transition class="absolute left-0 top-full mt-2 w-56 rounded-xl bg-white border border-[#E2E8F0] shadow-xl overflow-hidden z-50">
-                        <div class="px-3 py-2.5 text-[11px] font-bold text-[#64748B] border-b border-[#F1F5F9]">
-                            <span x-text="toPersianDigits(totalTasks())"></span>
-                            <span x-text="boardStyle === 'creative' ? ' کارت' : ' وظیفه'"></span>
-                        </div>
-                        <div class="px-3 py-2.5 border-b border-[#F1F5F9]">
-                            <p class="text-[11px] font-bold text-[#64748B] mb-2">ظاهر تخته</p>
-                            <div class="board-style-toggle w-full">
-                                <button type="button" class="flex-1" @click="setBoardStyle('simple'); mobileActionsOpen = false" :class="boardStyle === 'simple' ? 'is-active' : ''">ساده</button>
-                                <button type="button" class="flex-1" @click="setBoardStyle('creative'); mobileActionsOpen = false" :class="boardStyle === 'creative' ? 'is-active' : ''">خلاق</button>
-                            </div>
-                        </div>
-                        <button @click="mobileActionsOpen = false; filterPanelOpen = true" class="w-full min-h-11 px-3 flex items-center gap-2 text-right text-[12px] font-bold text-[#334155] hover:bg-[#F8FAFC]">
-                            <svg class="w-4 h-4 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 12h12M10 20h4"/></svg>
-                            فیلترها
-                            <span x-show="activeFilterCount() > 0" class="mr-auto text-[10px] font-bold text-[#18212B]" x-text="toPersianDigits(activeFilterCount())"></span>
-                        </button>
-                        @if ($canManageProject)
-                            <button @click="mobileActionsOpen = false; openProjectDrawer()" class="w-full min-h-11 px-3 flex items-center gap-2 text-right text-[12px] font-bold text-[#334155] hover:bg-[#F8FAFC]">
-                                <svg class="w-4 h-4 text-[#64748B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
-                                مدیریت پروژه
-                            </button>
-                        @endif
-                    </div>
-                </div>
             </div>
         @endslot
     </x-navbar>
@@ -390,24 +351,23 @@
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                                 </button>
                             @endif
-                            <span class="board-column-header-accent" aria-hidden="true"></span>
                             <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="'background-color:' + column.dotHex"></span>
-                            <button @click.stop="column.collapsed = true" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all shrink-0" title="جمع کردن ستون" aria-label="جمع کردن ستون"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m9 18 6-6-6-6"/></svg></button>
-                            <div class="min-w-0">
-                                <h2 class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
-                                <p x-show="boardStyle === 'creative'" class="text-[10px] font-bold text-[#94A3B8] mt-0.5" x-text="toPersianDigits(column.tasks.length) + ' کارت'"></p>
-                            </div>
-                            <span x-show="boardStyle === 'simple'" class="text-[11px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span>
+                            <span class="board-column-header-accent" aria-hidden="true"></span>
+                            <h2 class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
+                            <span class="text-[11px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span>
                         </div>
-                        @if ($canEdit)
-                            <div class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
-                                <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="w-9 h-9 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
-                                <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-32 rounded-xl border border-[#E8EBE9] bg-white py-1 shadow-xl z-20" @click.stop>
-                                    <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش</button>
-                                    <button @click="openColumnMenuId = null; confirmDeleteColumn(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-red-500 hover:bg-red-50">حذف</button>
+                        <div class="flex items-center gap-1 shrink-0">
+                            <button @click.stop="column.collapsed = true" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all shrink-0" title="جمع کردن ستون" aria-label="جمع کردن ستون"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m9 18 6-6-6-6"/></svg></button>
+                            @if ($canEdit)
+                                <div class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
+                                    <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="w-9 h-9 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+                                    <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-32 rounded-xl border border-[#E8EBE9] bg-white py-1 shadow-xl z-20" @click.stop>
+                                        <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش</button>
+                                        <button @click="openColumnMenuId = null; confirmDeleteColumn(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-red-500 hover:bg-red-50">حذف</button>
+                                    </div>
                                 </div>
-                            </div>
-                        @endif
+                            @endif
+                        </div>
                     </div>
 
                     <div x-show="!column.collapsed" class="board-column-well" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
@@ -451,8 +411,8 @@
                                             <span x-show="(task.assignees || []).length > 3" class="text-[10px] text-[#94A3B8] font-bold mr-1" x-text="'+' + toPersianDigits((task.assignees || []).length - 3)"></span>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <span x-show="checklistTotal(task) > 0 && boardStyle === 'simple'" class="task-card__checklist-count" x-text="checklistLabel(task)"></span>
-                                            <span x-show="(task.comments || []).length > 0 && boardStyle === 'creative'" class="text-[10px] font-bold text-[#94A3B8]" x-text="toPersianDigits((task.comments || []).length) + ' نظر'"></span>
+                                            <span x-show="checklistTotal(task) > 0" class="task-card__checklist-count" x-text="checklistLabel(task)"></span>
+                                            <span x-show="(task.comments || []).length > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="toPersianDigits((task.comments || []).length) + ' نظر'"></span>
                                             <div class="flex items-center gap-1" x-show="task.dueDate">
                                                 <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                                 <span class="text-[11px] font-medium" :class="isOverdue(task.dueDate) ? 'text-red-500' : 'text-[#94A3B8]'" x-text="formatDate(task.dueDate)"></span>
@@ -473,25 +433,25 @@
                             <div class="w-11 h-11 rounded-xl bg-white/80 flex items-center justify-center mb-2 border border-[#E8EBE9]">
                                 <svg class="w-5 h-5 text-[#18212B]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                             </div>
-                            <p class="board-empty-title" x-text="boardStyle === 'creative' ? 'اولین کارت را اضافه کن' : 'هنوز وظیفه‌ای نیست'"></p>
+                            <p class="board-empty-title " x-text="'اولین کارت را اضافه کن'"></p>
                             @if ($canEdit)
                                 <button @click.stop="openAddModal(column.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-[11px] font-black text-[#18212B] border border-[#D7DDDA] hover:bg-[#F1F3F2] transition-colors">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
-                                    <span x-text="boardStyle === 'creative' ? 'افزودن کارت' : 'افزودن وظیفه'"></span>
+<span x-text="'افزودن کارت'"></span>
                                 </button>
                             @endif
                         </div>
                         @if ($canEdit)
                             <button x-show="column.tasks.length > 0" @click.stop="openAddModal(column.id)" class="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#D7D1C5] py-2.5 text-[12px] font-black text-[#64748B] hover:border-[#18212B] hover:bg-white hover:text-[#18212B] transition-colors">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
-                                <span x-text="boardStyle === 'creative' ? 'افزودن کارت' : 'افزودن وظیفه'"></span>
+                                <span x-text="'افزودن کارت'"></span>
                             </button>
                         @endif
                     </div>
                 </div>
             </template>
             @if ($canEdit)
-                <button @click="openColumnModal()" class="mt-14 min-w-[72px] w-[72px] min-h-[240px] rounded-2xl border-2 border-dashed border-[#D7D1C5] hover:border-[#18212B] hover:bg-[#F1F3F2] text-[#64748B] hover:text-[#18212B] flex items-center justify-center transition-colors" title="افزودن ستون"><span class="[writing-mode:vertical-rl] text-xs font-black" x-text="boardStyle === 'creative' ? '+ ستون جدید' : '+ افزودن ستون'"></span></button>
+                <button @click="openColumnModal()" class="mt-14 min-w-[72px] w-[72px] min-h-[240px] rounded-2xl border-2 border-dashed border-[#D7D1C5] hover:border-[#18212B] hover:bg-[#F1F3F2] text-[#64748B] hover:text-[#18212B] flex items-center justify-center transition-colors" title="افزودن ستون"><span class="[writing-mode:vertical-rl] text-xs font-black" x-text="'+ ستون جدید'"></span></button>
             @endif
         </div>
 
@@ -607,7 +567,7 @@
                                             </template>
                                         </div>
                                         <div class="flex items-center gap-2">
-                                            <span x-show="checklistTotal(task) > 0 && boardStyle === 'simple'" class="task-card__checklist-count" x-text="checklistLabel(task)"></span>
+                                            <span x-show="checklistTotal(task) > 0" class="task-card__checklist-count" x-text="checklistLabel(task)"></span>
                                             <div class="flex items-center gap-1" x-show="task.dueDate">
                                                 <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                                 <span class="text-[11px] font-bold" :class="isOverdue(task.dueDate) ? 'text-red-500' : 'text-[#64748B]'" x-text="formatDate(task.dueDate)"></span>
@@ -621,7 +581,7 @@
                             <div class="w-12 h-12 rounded-2xl bg-white text-[#18212B]/55 flex items-center justify-center mb-3 shadow-sm">
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                             </div>
-                            <p class="board-empty-title" x-text="boardStyle === 'creative' ? 'ایده‌ات را اینجا بچسبان' : 'وظیفه‌ای در این ستون نیست'"></p>
+                            <p class="board-empty-title" x-text="'ایده‌ات را اینجا بچسبان'"></p>
                         </div>
                     </div>
                 </section>
@@ -769,15 +729,6 @@
                         <label class="board-field-label">توضیحات پروژه</label>
                         <textarea x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
                     </div>
-                    <div>
-                        <label class="board-field-label">ظاهر پیش‌فرض تخته</label>
-                        <p class="text-[11px] text-[#94A3B8] mb-2 leading-6">این مقدار برای همه ذخیره می‌شود. هر کاربر می‌تواند موقتاً ظاهر را عوض کند.</p>
-                        <div class="board-style-toggle w-full max-w-xs">
-                            <button type="button" class="flex-1" @click="projectForm.board_style = 'simple'; setBoardStyle('simple')" :class="projectForm.board_style === 'simple' ? 'is-active' : ''">ساده</button>
-                            <button type="button" class="flex-1" @click="projectForm.board_style = 'creative'; setBoardStyle('creative')" :class="projectForm.board_style === 'creative' ? 'is-active' : ''">خلاق</button>
-                        </div>
-                        <p class="text-[11px] text-[#64748B] mt-2" x-text="projectForm.board_style === 'creative' ? 'رنگ، برچسب و حس کار تیمی' : 'تمرکز روی وضعیت و سرعت'"></p>
-                    </div>
                 </section>
                 <section x-show="projectDrawerTab === 'activity'" class="space-y-4">
                     <div>
@@ -874,7 +825,7 @@
                 {{-- Header --}}
                 <div class="task-modal-header shrink-0">
                     <div class="flex items-center gap-3">
-                        <h3 id="task-modal-title" class="text-white font-bold text-[15px]" x-text="editingTask ? (boardStyle === 'creative' ? 'ویرایش کارت' : 'ویرایش وظیفه') : (boardStyle === 'creative' ? 'کارت جدید' : 'وظیفه جدید')"></h3>
+                        <h3 id="task-modal-title" class="text-white font-bold text-[15px]" x-text="editingTask ? 'ویرایش کارت' : 'کارت جدید'"></h3>
                         <span x-show="editingTask" class="text-white/80 text-[11px] font-bold bg-white/15 px-2 py-0.5 rounded-md" x-text="form.id"></span>
                     </div>
                     <button @click="requestCloseModal()" class="text-white/70 hover:text-white transition-colors w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10" aria-label="بستن پنجره">
@@ -901,7 +852,7 @@
 
                         {{-- Description --}}
                         <div>
-                            <label class="board-field-label" x-text="boardStyle === 'creative' ? 'یادداشت / شرح' : 'توضیحات'"></label>
+                            <label class="board-field-label" x-text="'یادداشت / شرح'"></label>
                             <div x-show="!editingDescription" @click="if (canEdit) { descriptionBeforeEdit = form.description; editingDescription = true }" class="min-h-[32px]" :class="[(canEdit ? 'cursor-pointer' : 'cursor-default'), form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]']" x-html="form.description ? formatMentionText(form.description) : 'توضیحی ثبت نشده'"></div>
                             <div x-show="editingDescription" x-transition class="relative">
                                 <textarea
@@ -1162,11 +1113,11 @@
                         <div class="space-y-2">
                             <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
                             <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="w-full text-[11px] font-bold text-white bg-gradient-to-l from-[#000000] to-[#18212B] hover:from-[#000000] hover:to-[#253342] disabled:opacity-60 disabled:cursor-wait px-4 py-2.5 rounded-xl shadow-md shadow-black/20 hover:shadow-lg transition-all active:scale-[0.97]">
-                                <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : (boardStyle === 'creative' ? 'ایجاد کارت' : 'ایجاد وظیفه'))"></span>
+                                <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد کارت')"></span>
                             </button>
                             <button x-show="editingTask" type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#94A3B8] hover:text-red-500 disabled:opacity-50 px-4 py-2 rounded-xl border border-[#E2E8F0] hover:border-red-200 hover:bg-red-50 transition-all">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                <span x-text="boardStyle === 'creative' ? 'حذف کارت' : 'حذف وظیفه'"></span>
+                                <span x-text="'حذف کارت'"></span>
                             </button>
                         </div>
                         @else
@@ -1436,14 +1387,12 @@
 
                 visibleTags(task) {
                     const tags = task.tags || [];
-                    const limit = this.boardStyle === 'creative' ? 3 : 1;
-                    return tags.slice(0, limit);
+                    return tags.slice(0, 3);
                 },
 
                 hiddenTagCount(task) {
                     const tags = task.tags || [];
-                    const limit = this.boardStyle === 'creative' ? 3 : 1;
-                    return Math.max(0, tags.length - limit);
+                    return Math.max(0, tags.length - 3);
                 },
 
                 priorityEdgeClass(priority) {
