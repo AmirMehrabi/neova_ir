@@ -835,161 +835,50 @@
                     </button>
                 </div>
 
-                {{-- Body: Main + Sidebar (responsive) --}}
-                <div class="flex flex-col md:flex-row" style="direction: rtl;">
-                    {{-- Main Content Area --}}
-                    <div class="flex-1 min-w-0 p-4 md:p-6 space-y-5 md:space-y-6">
-                        {{-- Title --}}
-                        <div>
-                            <label class="board-field-label">عنوان</label>
-                            <input
-                                x-ref="taskTitle"
-                                x-model="form.title"
-                                type="text"
-                                :disabled="!canEdit"
-                                class="w-full text-base font-bold text-[#1A1D21] border-b-2 border-[#E2E8F0] pb-2 focus:outline-none focus:border-[#18212B] transition-colors bg-transparent placeholder:text-[#CBD5E1]"
-                                placeholder="عنوان وظیفه..."
-                            >
-                        </div>
-
-                        {{-- Description --}}
-                        <div>
-                            <label class="board-field-label" x-text="'یادداشت / شرح'"></label>
-                            <div x-show="!editingDescription" @click="if (canEdit) { descriptionBeforeEdit = form.description; editingDescription = true }" class="min-h-[32px]" :class="[(canEdit ? 'cursor-pointer' : 'cursor-default'), form.description ? 'text-sm text-[#475569] leading-relaxed whitespace-pre-wrap' : 'text-sm text-[#CBD5E1]']" x-html="form.description ? formatMentionText(form.description) : 'توضیحی ثبت نشده'"></div>
-                            <div x-show="editingDescription" x-transition class="relative">
-                                <textarea
-                                    x-model="form.description"
-                                    x-init="$nextTick(() => $el.focus())"
-                                    rows="4"
-                                    class="w-full text-sm text-[#1A1D21] border-2 border-[#18212B] rounded-lg px-3 py-2 focus:outline-none transition-colors resize-none leading-relaxed"
-                                    placeholder="توضیحات وظیفه را بنویسید..."
-                                    @input="handleMentionInput('description', $event)"
-                                    @keydown.down.prevent="moveMentionSelection(1)"
-                                    @keydown.up.prevent="moveMentionSelection(-1)"
-                                    @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
-                                    @keydown.escape="mentionOpen ? closeMentionMenu() : editingDescription = false"
-                                ></textarea>
-                                <div x-show="mentionOpen && mentionField === 'description'" class="absolute top-full right-0 left-0 mt-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
-                                    <template x-for="(person, index) in mentionResults" :key="person.id">
-                                        <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
-                                            <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
-                                            <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
-                                        </button>
-                                    </template>
-                                </div>
-                                <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
-                                <div class="flex gap-2 mt-2">
-                                    <button @click="editingDescription = false" class="text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#000000] px-3 py-1.5 rounded-lg transition-all">ذخیره</button>
-                                    <button @click="form.description = descriptionBeforeEdit; editingDescription = false" class="text-[11px] font-bold text-[#64748B] hover:text-[#1A1D21] px-3 py-1.5 rounded-lg transition-all">لغو</button>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Checklist --}}
-                        <div>
-                            <div class="flex items-center justify-between mb-2">
-                                <label class="board-field-label mb-0">چک‌لیست</label>
-                                <span class="text-[12px] font-bold text-[#64748B]" x-text="checklistProgress()"></span>
-                            </div>
-                            <div class="checklist-bar mb-3">
-                                <div class="checklist-bar-fill" :style="'width:' + checklistPercent() + '%'"></div>
-                            </div>
-                            <div class="space-y-1.5">
-                                <template x-for="(item, idx) in form.checklist" :key="idx">
-                                    <div class="check-item flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[#F8FAFC] group/item transition-colors">
-                                        <label class="flex items-center gap-2.5 cursor-pointer flex-1">
-                                            <input type="checkbox" x-model="item.done" :disabled="!canEdit" class="w-4 h-4 rounded border-2 border-[#CBD5E1] text-[#18212B] focus:ring-[#18212B]/20 cursor-pointer accent-[#18212B] disabled:cursor-default">
-                                            <span class="text-sm text-[#1A1D21] transition-all" x-text="item.text"></span>
-                                        </label>
-                                        @if ($canEdit)
-                                            <button @click="removeCheckItem(idx)" class="opacity-0 group-hover/item:opacity-100 text-[#94A3B8] hover:text-red-500 transition-all">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            </button>
-                                        @endif
-                                    </div>
-                                </template>
-                            </div>
-                            @if ($canEdit)
-                            <div class="mt-2">
-                                <input
-                                    x-model="newCheckItem"
-                                    @keydown.enter="addCheckItem()"
-                                    type="text"
-                                    class="w-full text-sm border border-[#E2E8F0] rounded-lg px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
-                                    placeholder="افزودن آیتم..."
-                                >
-                            </div>
-                            @endif
-                        </div>
-
-                        {{-- Conversation / Activity --}}
-                        <div>
-                            <label class="board-field-label mb-3">گفتگو</label>
-                            <div class="space-y-3">
-                                <template x-for="(comment, idx) in form.comments" :key="idx">
-                                    <div class="flex gap-3">
-                                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shrink-0 shadow-sm">
-                                            <span class="text-[9px] text-white font-bold" x-text="comment.author.charAt(0)"></span>
-                                        </div>
-                                        <div class="flex-1 bg-[#F8FAFC] rounded-xl px-3.5 py-2.5 border border-[#F1F5F9]">
-                                            <div class="flex items-center gap-2 mb-1">
-                                                <span class="text-[11px] font-bold text-[#1A1D21]" x-text="comment.author"></span>
-                                                <span class="text-[9px] text-[#94A3B8]" x-text="comment.time"></span>
-                                            </div>
-                                            <p class="text-[12px] text-[#475569] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
-                                        </div>
-                                    </div>
-                                </template>
-                            </div>
-                            @if ($canEdit)
-                            <div class="mt-3 flex gap-2.5">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shrink-0 shadow-sm">
-                                    <span class="text-[9px] text-white font-bold">ش</span>
-                                </div>
-                                <div class="flex-1 relative">
-                                    <textarea
-                                        x-model="newComment"
-                                        rows="2"
-                                        class="w-full text-sm border-2 border-[#E2E8F0] rounded-xl px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors resize-none placeholder:text-[#CBD5E1]"
-                                        placeholder="پیام بنویسید..."
-                                        @input="handleMentionInput('comment', $event)"
-                                        @keydown.down.prevent="moveMentionSelection(1)"
-                                        @keydown.up.prevent="moveMentionSelection(-1)"
-                                        @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
-                                        @keydown.escape="closeMentionMenu()"
-                                        @keydown.meta.enter="addComment()"
-                                        @keydown.ctrl.enter="addComment()"
-                                    ></textarea>
-                                    <div x-show="mentionOpen && mentionField === 'comment'" class="absolute bottom-full right-0 left-0 mb-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
-                                        <template x-for="(person, index) in mentionResults" :key="person.id">
-                                            <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
-                                                <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
-                                                <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
-                                            </button>
-                                        </template>
-                                    </div>
-                                    <p class="text-[10px] text-[#94A3B8] mt-1">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
-                                    <div class="flex justify-end mt-1.5" x-show="newComment.trim()">
-                                        <button @click="addComment()" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] px-3 py-1 rounded-lg transition-all">ارسال (Ctrl+Enter)</button>
-                                    </div>
-                                </div>
-                            </div>
-                            @endif
-                        </div>
+                {{-- Body: Single column --}}
+                <div class="p-4 md:p-6 space-y-5" style="direction: rtl;">
+                    {{-- Title --}}
+                    <div>
+                        <input
+                            x-ref="taskTitle"
+                            x-model="form.title"
+                            type="text"
+                            :disabled="!canEdit"
+                            class="w-full text-base font-bold text-[#1A1D21] border-b-2 border-[#E2E8F0] pb-2 focus:outline-none focus:border-[#18212B] transition-colors bg-transparent placeholder:text-[#CBD5E1]"
+                            placeholder="عنوان وظیفه..."
+                        >
                     </div>
 
-                    {{-- Sidebar --}}
-                    <div class="w-full md:w-[240px] shrink-0 bg-[#F8FAFC] md:border-r border-t md:border-t-0 border-[#F1F5F9] p-4 space-y-4">
-                        {{-- Column --}}
-                        <div>
-                            <label class="board-field-label">ستون</label>
-                            <select x-model="form.columnId" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
-                                <template x-for="col in columns" :key="col.id">
-                                    <option :value="col.id" x-text="col.title"></option>
+                    {{-- Description --}}
+                    <div>
+                        <label class="board-field-label">توضیحات</label>
+                        <textarea
+                            x-model="form.description"
+                            rows="6"
+                            :disabled="!canEdit"
+                            class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-lg px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
+                            placeholder="توضیحات وظیفه را بنویسید..."
+                            @input="handleMentionInput('description', $event)"
+                            @keydown.down.prevent="moveMentionSelection(1)"
+                            @keydown.up.prevent="moveMentionSelection(-1)"
+                            @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
+                            @keydown.escape="mentionOpen ? closeMentionMenu() : null"
+                        ></textarea>
+                        <div x-show="mentionOpen && mentionField === 'description'" class="relative">
+                            <div class="absolute top-full right-0 left-0 mt-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
+                                <template x-for="(person, index) in mentionResults" :key="person.id">
+                                    <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
+                                        <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
+                                        <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
+                                    </button>
                                 </template>
-                            </select>
+                            </div>
                         </div>
+                        <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                    </div>
 
+                    {{-- Grid: Priority | Due Date | Column --}}
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {{-- Priority --}}
                         <div>
                             <label class="board-field-label">اولویت</label>
@@ -1007,15 +896,26 @@
                         {{-- Due Date --}}
                         <div>
                             <label class="board-field-label">سررسید</label>
-                            <input x-model="form.dueDate" type="date" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
+                            <input x-model="form.dueDate" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]">
                             <p x-show="form.dueDate && isOverdue(form.dueDate)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
                         </div>
 
-                        {{-- Multi-User Assignee --}}
+                        {{-- Column --}}
+                        <div>
+                            <label class="board-field-label">ستون</label>
+                            <select x-model="form.columnId" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
+                                <template x-for="col in columns" :key="col.id">
+                                    <option :value="col.id" x-text="col.title"></option>
+                                </template>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Grid: Assignees | Tags --}}
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {{-- Assignees --}}
                         <div x-data="{ assigneeOpen: false, assigneeSearch: '' }" @click.away="assigneeOpen = false" class="relative">
                             <label class="board-field-label">مسئولین</label>
-
-                            {{-- Selected chips + trigger --}}
                             <div
                                 @click="if (canEdit) assigneeOpen = !assigneeOpen"
                                 class="w-full min-h-[36px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-1.5 transition-colors bg-white flex flex-wrap items-center gap-1"
@@ -1034,8 +934,6 @@
                                 <span x-show="form.assignees.length === 0" class="text-xs text-[#CBD5E1]">انتخاب کنید...</span>
                                 <svg class="w-3.5 h-3.5 text-[#94A3B8] mr-auto shrink-0" :class="assigneeOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </div>
-
-                            {{-- Dropdown --}}
                             <div
                                 x-show="assigneeOpen"
                                 x-transition:enter="transition ease-out duration-150"
@@ -1046,7 +944,6 @@
                                 x-transition:leave-end="opacity-0 -translate-y-1"
                                 class="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[#E2E8F0] rounded-xl shadow-lg shadow-black/10 z-10 overflow-hidden"
                             >
-                                {{-- Search --}}
                                 <div class="p-2 border-b border-[#F1F5F9]">
                                     <div class="relative">
                                         <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -1060,8 +957,6 @@
                                         >
                                     </div>
                                 </div>
-
-                                {{-- Select all --}}
                                 <button
                                     @click="toggleAllAssignees()"
                                     class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold hover:bg-[#F8FAFC] transition-colors border-b border-[#F1F5F9]"
@@ -1072,8 +967,6 @@
                                     </div>
                                     <span x-text="form.assignees.length === assignees.length ? 'حذف همه' : 'انتخاب همه'"></span>
                                 </button>
-
-                                {{-- User list --}}
                                 <div class="max-h-[180px] overflow-y-auto">
                                     <template x-for="name in filteredAssignees(assigneeSearch)" :key="name">
                                         <button
@@ -1098,35 +991,163 @@
                         </div>
 
                         {{-- Tags --}}
-                        <div>
-                            <label class="board-field-label">برچسب‌ها</label>
+                        <div x-data="{ tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }">
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="board-field-label mb-0">برچسب‌ها</label>
+                                @if ($canEdit)
+                                    <button type="button" @click="tagManagerOpen = !tagManagerOpen" class="text-[10px] font-bold text-[#64748B] hover:text-[#18212B] transition-colors" x-text="tagManagerOpen ? 'بستن' : 'مدیریت'"></button>
+                                @endif
+                            </div>
                             <div class="flex flex-wrap gap-1">
                                 <template x-for="tag in allTags" :key="tag.name">
                                     <button type="button" @click="if (canEdit) toggleTag(tag.name)" :disabled="!canEdit" class="text-[9px] font-bold px-2 py-1 rounded-md border transition-all duration-150" :class="form.tags.includes(tag.name) ? tag.activeClass : tag.inactiveClass" x-text="tag.name"></button>
                                 </template>
                             </div>
+                            {{-- Tag Manager --}}
+                            <div x-show="tagManagerOpen" x-transition class="mt-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-3">
+                                <template x-for="(tag, idx) in allTags" :key="'mgr-' + tag.name">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[11px] font-bold text-[#475569]" x-text="tag.name"></span>
+                                        <button type="button" @click="const tagName = allTags[idx].name; allTags.splice(idx, 1); const ti = form.tags.indexOf(tagName); if (ti !== -1) form.tags.splice(ti, 1);" class="text-[10px] text-red-400 hover:text-red-600 transition-colors">حذف</button>
+                                    </div>
+                                </template>
+                                <div class="border-t border-[#E2E8F0] pt-3 space-y-2">
+                                    <input
+                                        x-model="newTagName"
+                                        type="text"
+                                        class="w-full text-[11px] border border-[#E2E8F0] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
+                                        placeholder="نام برچسب جدید..."
+                                        @keydown.enter="if (newTagName.trim()) { allTags.push({ name: newTagName.trim(), activeClass: tagColors.find(c => c.hex === newTagColor)?.active || '', inactiveClass: tagColors.find(c => c.hex === newTagColor)?.inactive || '' }); newTagName = '' }"
+                                    >
+                                    <div class="flex items-center gap-1.5">
+                                        <template x-for="tc in tagColors" :key="tc.hex">
+                                            <button type="button" @click="newTagColor = tc.hex" class="w-5 h-5 rounded-full border-2 transition-all" :class="newTagColor === tc.hex ? 'border-[#18212B] scale-110' : 'border-transparent'" :style="'background-color:' + tc.hex"></button>
+                                        </template>
+                                    </div>
+                                    <button type="button" @click="if (newTagName.trim()) { allTags.push({ name: newTagName.trim(), activeClass: tagColors.find(c => c.hex === newTagColor)?.active || '', inactiveClass: tagColors.find(c => c.hex === newTagColor)?.inactive || '' }); newTagName = '' }" class="w-full text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#253342] rounded-lg py-1.5 transition-colors" :disabled="!newTagName.trim()">افزودن برچسب</button>
+                                </div>
+                            </div>
                         </div>
+                    </div>
 
-                        {{-- Separator --}}
-                        <div class="border-t border-[#E2E8F0]"></div>
+                    {{-- Separator --}}
+                    <div class="border-t border-[#E2E8F0]"></div>
 
-                        {{-- Actions --}}
+                    {{-- Checklist --}}
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="board-field-label mb-0">چک‌لیست</label>
+                            <span class="text-[12px] font-bold text-[#64748B]" x-text="checklistProgress()"></span>
+                        </div>
+                        <div class="checklist-bar mb-3">
+                            <div class="checklist-bar-fill" :style="'width:' + checklistPercent() + '%'"></div>
+                        </div>
+                        <div class="space-y-1.5">
+                            <template x-for="(item, idx) in form.checklist" :key="idx">
+                                <div class="check-item flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[#F8FAFC] group/item transition-colors">
+                                    <label class="flex items-center gap-2.5 cursor-pointer flex-1">
+                                        <input type="checkbox" x-model="item.done" :disabled="!canEdit" class="w-4 h-4 rounded border-2 border-[#CBD5E1] text-[#18212B] focus:ring-[#18212B]/20 cursor-pointer accent-[#18212B] disabled:cursor-default">
+                                        <span class="text-sm text-[#1A1D21] transition-all" x-text="item.text"></span>
+                                    </label>
+                                    @if ($canEdit)
+                                        <button @click="removeCheckItem(idx)" class="opacity-0 group-hover/item:opacity-100 text-[#94A3B8] hover:text-red-500 transition-all">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    @endif
+                                </div>
+                            </template>
+                        </div>
                         @if ($canEdit)
-                        <div class="space-y-2">
-                            <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
-                            <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="w-full text-[11px] font-bold text-white bg-gradient-to-l from-[#000000] to-[#18212B] hover:from-[#000000] hover:to-[#253342] disabled:opacity-60 disabled:cursor-wait px-4 py-2.5 rounded-xl shadow-md shadow-black/20 hover:shadow-lg transition-all active:scale-[0.97]">
-                                <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد کارت')"></span>
-                            </button>
-                            <button x-show="editingTask" type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="w-full flex items-center justify-center gap-1.5 text-[11px] font-semibold text-[#94A3B8] hover:text-red-500 disabled:opacity-50 px-4 py-2 rounded-xl border border-[#E2E8F0] hover:border-red-200 hover:bg-red-50 transition-all">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                <span x-text="'حذف کارت'"></span>
-                            </button>
+                        <div class="mt-2">
+                            <input
+                                x-model="newCheckItem"
+                                @keydown.enter="addCheckItem()"
+                                type="text"
+                                class="w-full text-sm border border-[#E2E8F0] rounded-lg px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
+                                placeholder="افزودن آیتم..."
+                            >
                         </div>
-                        @else
-                            <div class="text-[11px] leading-5 text-[#64748B] bg-white border border-[#E2E8F0] rounded-lg px-3 py-2.5">شما دسترسی مشاهده دارید و نمی‌توانید این وظیفه را تغییر دهید.</div>
+                        @endif
+                    </div>
+
+                    {{-- Separator --}}
+                    <div class="border-t border-[#E2E8F0]"></div>
+
+                    {{-- Comments --}}
+                    <div>
+                        <label class="board-field-label mb-3">گفتگو</label>
+                        <div class="space-y-3">
+                            <template x-for="(comment, idx) in form.comments" :key="idx">
+                                <div class="flex gap-3">
+                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shrink-0 shadow-sm">
+                                        <span class="text-[9px] text-white font-bold" x-text="comment.author.charAt(0)"></span>
+                                    </div>
+                                    <div class="flex-1 bg-[#F8FAFC] rounded-xl px-3.5 py-2.5 border border-[#F1F5F9]">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[11px] font-bold text-[#1A1D21]" x-text="comment.author"></span>
+                                            <span class="text-[9px] text-[#94A3B8]" x-text="comment.time"></span>
+                                        </div>
+                                        <p class="text-[12px] text-[#475569] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                        @if ($canEdit)
+                        <div class="mt-3 flex gap-2.5">
+                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shrink-0 shadow-sm">
+                                <span class="text-[9px] text-white font-bold">ش</span>
+                            </div>
+                            <div class="flex-1 relative">
+                                <textarea
+                                    x-model="newComment"
+                                    rows="2"
+                                    class="w-full text-sm border-2 border-[#E2E8F0] rounded-xl px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors resize-none placeholder:text-[#CBD5E1]"
+                                    placeholder="پیام بنویسید..."
+                                    @input="handleMentionInput('comment', $event)"
+                                    @keydown.down.prevent="moveMentionSelection(1)"
+                                    @keydown.up.prevent="moveMentionSelection(-1)"
+                                    @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
+                                    @keydown.escape="closeMentionMenu()"
+                                    @keydown.meta.enter="addComment()"
+                                    @keydown.ctrl.enter="addComment()"
+                                ></textarea>
+                                <div x-show="mentionOpen && mentionField === 'comment'" class="absolute bottom-full right-0 left-0 mb-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
+                                    <template x-for="(person, index) in mentionResults" :key="person.id">
+                                        <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
+                                            <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
+                                            <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                                <p class="text-[10px] text-[#94A3B8] mt-1">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                                <div class="flex justify-end mt-1.5" x-show="newComment.trim()">
+                                    <button @click="addComment()" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] px-3 py-1 rounded-lg transition-all">ارسال (Ctrl+Enter)</button>
+                                </div>
+                            </div>
+                        </div>
                         @endif
                     </div>
                 </div>
+
+                {{-- Footer --}}
+                <div class="sticky bottom-0 bg-white border-t border-[#E2E8F0] px-4 md:px-6 py-3 flex items-center justify-between">
+                    @if ($canEdit)
+                        <button x-show="editingTask" type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="flex items-center gap-1.5 text-[11px] font-semibold text-[#94A3B8] hover:text-red-500 disabled:opacity-50 px-3 py-2 rounded-xl border border-[#E2E8F0] hover:border-red-200 hover:bg-red-50 transition-all">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                            <span x-text="'حذف کارت'"></span>
+                        </button>
+                        <div x-show="!editingTask"></div>
+                        <div class="flex items-center gap-2">
+                            <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
+                            <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="text-[11px] font-bold text-white bg-gradient-to-l from-[#000000] to-[#18212B] hover:from-[#000000] hover:to-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-md shadow-black/20 hover:shadow-lg transition-all active:scale-[0.97]">
+                                <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد کارت')"></span>
+                            </button>
+                        </div>
+                    @else
+                        <div class="flex-1 text-[11px] leading-5 text-[#64748B] bg-white border border-[#E2E8F0] rounded-lg px-3 py-2.5">شما دسترسی مشاهده دارید و نمی‌توانید این وظیفه را تغییر دهید.</div>
+                    @endif
+                </div>
+
             </div>
         </div>
     </div>

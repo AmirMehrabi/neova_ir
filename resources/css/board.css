@@ -318,3 +318,13 @@
         transform: none !important;
     }
 }
+
+.jalali-date-input {
+    direction: ltr;
+    text-align: right;
+    cursor: pointer;
+}
+.jalali-date-input:focus {
+    outline: none;
+    border-color: #18212B;
+}
