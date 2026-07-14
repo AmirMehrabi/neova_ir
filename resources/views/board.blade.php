@@ -230,22 +230,28 @@
         {{-- Desktop board --}}
         <div class="hidden md:flex gap-3 items-start overflow-x-auto pb-4" style="direction: rtl;">
             <template x-for="(column, colIdx) in columns" :key="column.id">
-                <div class="flex flex-col shrink-0 transition-[width] duration-200" :class="column.collapsed ? 'w-14' : 'min-w-[280px] flex-1'">
-                    <div class="flex items-center justify-between mb-3 px-1">
+                <div @click="if (column.collapsed) column.collapsed = false" class="flex flex-col shrink-0 transition-[width] duration-200" :class="column.collapsed ? 'w-14 cursor-pointer' : 'min-w-[280px] flex-1'" :style="column.collapsed ? collapsedColumnStyle(column) : ''" :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''">
+                    <div x-show="column.collapsed" class="flex min-h-[240px] flex-col items-center justify-start rounded-2xl border border-white/50 px-2 py-4 text-white shadow-sm" :style="collapsedColumnStyle(column)">
+                        <span class="text-[10px] font-black opacity-90" x-text="column.tasks.length"></span>
+                        <span class="mt-5 [writing-mode:vertical-rl] rotate-180 text-xs font-black tracking-wide" x-text="column.title"></span>
+                        <span class="mt-auto text-[9px] font-bold opacity-80">باز کردن</span>
+                    </div>
+                    <div x-show="!column.collapsed" class="relative flex items-center justify-between mb-3 px-1">
                         <div class="flex items-center gap-2.5">
                             <span class="w-2.5 h-2.5 rounded-full shadow-sm" :class="column.dotColor"></span>
                             <h2 x-show="!column.collapsed" class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
                             <span class="text-[10px] font-bold min-w-[20px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="column.tasks.length"></span>
+                            <button @click.stop="column.collapsed = true" class="w-7 h-7 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#18212B] hover:bg-white transition-all shrink-0" title="جمع کردن ستون" aria-label="جمع کردن ستون"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="m15 18-6-6 6-6"/></svg></button>
                         </div>
                         @if ($canEdit)
-                            <button x-show="!column.collapsed" @click="openAddModal(column.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-[#0069FF] hover:bg-[#E8F0FE] transition-all" title="افزودن وظیفه">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                            </button>
-                            <button x-show="!column.collapsed" @click="confirmDeleteColumn(column)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-all" title="حذف ستون">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
-                            </button>
+                            <div x-show="!column.collapsed" class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
+                                <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#18212B] hover:bg-white transition-all" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg></button>
+                                <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-32 rounded-xl border border-[#E5E1D8] bg-white py-1 shadow-xl z-20" @click.stop>
+                                    <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش</button>
+                                    <button @click="openColumnMenuId = null; confirmDeleteColumn(column)" class="w-full px-3 py-2.5 text-right text-[11px] font-bold text-red-500 hover:bg-red-50">حذف</button>
+                                </div>
+                            </div>
                         @endif
-                        <button @click="column.collapsed = !column.collapsed" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-[#18212B] hover:bg-white transition-all" :title="column.collapsed ? 'باز کردن ستون' : 'جمع کردن ستون'"><svg class="w-3.5 h-3.5 transition-transform" :class="column.collapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="m15 18-6-6 6-6"/></svg></button>
                     </div>
 
                     <div x-show="!column.collapsed" class="flex flex-col gap-2.5 min-h-[240px] max-h-[calc(100vh-14rem)] overflow-y-auto rounded-2xl p-2.5 bg-[#EFEEE9] border border-[#E5E1D8]" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
@@ -292,7 +298,13 @@
                                 <svg class="w-5 h-5 text-[#0069FF]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                             </div>
                             <p class="text-[11px] text-[#94A3B8]">وظیفه‌ای نیست</p>
+                            @if ($canEdit)
+                                <button @click.stop="openAddModal(column.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-[10px] font-black text-[#2563EB] border border-[#D8E5FF] hover:bg-[#EAF1FF] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>افزودن وظیفه</button>
+                            @endif
                         </div>
+                        @if ($canEdit)
+                            <button x-show="column.tasks.length > 0" @click.stop="openAddModal(column.id)" class="mt-2 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#D7D1C5] py-2.5 text-[11px] font-black text-[#64748B] hover:border-[#2563EB] hover:bg-white hover:text-[#2563EB] transition-colors"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>افزودن کارت</button>
+                        @endif
                     </div>
                 </div>
             </template>
@@ -946,9 +958,9 @@
     <div x-show="showColumnModal" x-transition class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="closeColumnModal()">
         <div class="absolute inset-0 bg-[#18212B]/45 backdrop-blur-sm" @click="closeColumnModal()"></div>
         <form @submit.prevent="addColumn()" class="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" @click.stop>
-            <div class="p-6 border-b border-[#F1EFEA]"><h4 class="text-base font-black text-[#18212B]">افزودن ستون</h4><p class="text-xs text-[#64748B] mt-1">یک مرحله جدید برای جریان کار پروژه بسازید.</p></div>
+            <div class="p-6 border-b border-[#F1EFEA]"><h4 class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام ستون را برای نمایش بهتر جریان کار تغییر دهید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
             <div class="p-6"><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E5E1D8] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#2563EB]" placeholder="مثلاً آماده انتشار"></div>
-            <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" class="flex-1 h-11 rounded-xl border-2 border-[#E5E1D8] text-xs font-bold text-[#64748B]">انصراف</button><button type="submit" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342]">افزودن ستون</button></div>
+            <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" class="flex-1 h-11 rounded-xl border-2 border-[#E5E1D8] text-xs font-bold text-[#64748B]">انصراف</button><button type="submit" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342]" x-text="columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون'"></button></div>
         </form>
     </div>
 
@@ -1016,6 +1028,7 @@
                 canEdit: @json($canEdit),
                 canManageProject: @json($canManageProject),
                 mobileActionsOpen: false,
+                openColumnMenuId: null,
                 activeColumnIndex: 0,
                 swipeHintVisible: false,
                 mobileBoardObserver: null,
@@ -1051,6 +1064,7 @@
                 deleteTarget: { columnId: null, taskId: null },
                 columnDeleteTarget: { id: null, title: '', taskCount: 0 },
                 columnFormTitle: '',
+                columnEditingId: null,
                 toast: { show: false, message: '' },
                 newCheckItem: '',
                 newComment: '',
@@ -1086,6 +1100,11 @@
                 sortableInstances: [],
 
                 totalTasks() { return this.columns.reduce((sum, col) => sum + col.tasks.length, 0); },
+
+                collapsedColumnStyle(column) {
+                    const color = column.dotHex || '#94A3B8';
+                    return `background: linear-gradient(to bottom, ${color} 0%, color-mix(in srgb, ${color} 42%, transparent) 38%, transparent 100%);`;
+                },
 
                 filteredTasks(column) {
                     return column.tasks.filter(task => {
@@ -1825,7 +1844,16 @@
 
                 openColumnModal() {
                     if (!this.canEdit) return;
+                    this.columnEditingId = null;
                     this.columnFormTitle = '';
+                    this.showColumnModal = true;
+                    this.$nextTick(() => this.$refs.columnTitle?.focus());
+                },
+
+                openEditColumnModal(column) {
+                    if (!this.canEdit) return;
+                    this.columnEditingId = column.id;
+                    this.columnFormTitle = column.title;
                     this.showColumnModal = true;
                     this.$nextTick(() => this.$refs.columnTitle?.focus());
                 },
@@ -1833,21 +1861,31 @@
                 closeColumnModal() {
                     this.showColumnModal = false;
                     this.columnFormTitle = '';
+                    this.columnEditingId = null;
                 },
 
                 async addColumn() {
                     if (!this.canEdit || !this.columnFormTitle.trim()) return;
-                    const response = await fetch('{{ route("board.column.store", [$workspace->slug, $project->slug], false) }}', {
-                        method: 'POST',
+                    const editing = Boolean(this.columnEditingId);
+                    const url = editing
+                        ? '{{ route("board.column.update", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', this.columnEditingId)
+                        : '{{ route("board.column.store", [$workspace->slug, $project->slug], false) }}';
+                    const response = await fetch(url, {
+                        method: editing ? 'PATCH' : 'POST',
                         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                        body: JSON.stringify({ project_id: {{ $project->id }}, title: this.columnFormTitle.trim() }),
+                        body: JSON.stringify(editing ? { title: this.columnFormTitle.trim() } : { project_id: {{ $project->id }}, title: this.columnFormTitle.trim() }),
                     });
                     const data = await response.json().catch(() => ({}));
                     if (!response.ok) { this.showToast(data.message || 'افزودن ستون انجام نشد.'); return; }
-                    this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
+                    if (editing) {
+                        const column = this.columns.find(item => item.id === String(data.id));
+                        if (column) column.title = data.title;
+                    } else {
+                        this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', dotHex: '#94A3B8', badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
+                    }
                     this.closeColumnModal();
-                    this.showToast('ستون جدید اضافه شد');
-                    this.$nextTick(() => this.initSortable(String(data.id), 'desktop'));
+                    this.showToast(editing ? 'نام ستون ویرایش شد' : 'ستون جدید اضافه شد');
+                    if (!editing) this.$nextTick(() => this.initSortable(String(data.id), 'desktop'));
                 },
 
                 confirmDeleteColumn(column) {

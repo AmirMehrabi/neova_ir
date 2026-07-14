@@ -65,6 +65,7 @@ Route::middleware('auth')->group(function () {
                     Route::delete('/{workspace}/{project}/task/{task}', [BoardController::class, 'destroyTask'])->name('board.task.destroy');
                     Route::post('/{workspace}/{project}/task/{task}/move', [BoardController::class, 'moveTask'])->name('board.task.move');
                     Route::post('/{workspace}/{project}/column', [BoardController::class, 'storeColumn'])->name('board.column.store');
+                    Route::patch('/{workspace}/{project}/column/{column}', [BoardController::class, 'updateColumn'])->name('board.column.update');
                     Route::delete('/{workspace}/{project}/column/{column}', [BoardController::class, 'destroyColumn'])->name('board.column.destroy');
                 });
                 Route::middleware('workspace.editor')->group(function () {

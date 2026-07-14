@@ -33,6 +33,12 @@ class BoardController extends Controller
             'بررسی' => 'bg-[#F59E0B]',
             'انجام شده' => 'bg-[#22C55E]',
         ];
+        $colHexColors = [
+            'پس‌زمینه' => '#94A3B8',
+            'در حال انجام' => '#0069FF',
+            'بررسی' => '#F59E0B',
+            'انجام شده' => '#22C55E',
+        ];
         $colBadge = [
             'پس‌زمینه' => 'bg-[#F1F5F9] text-[#64748B]',
             'در حال انجام' => 'bg-[#E8F0FE] text-[#0069FF]',
@@ -44,6 +50,7 @@ class BoardController extends Controller
             'id' => (string) $c->id,
             'title' => $c->title,
             'dotColor' => $colColors[$c->title] ?? 'bg-[#94A3B8]',
+            'dotHex' => $colHexColors[$c->title] ?? '#94A3B8',
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
             'tasks' => $c->tasks->map(fn ($t) => [
                 'id' => $t->display_id,
@@ -366,6 +373,15 @@ class BoardController extends Controller
         ]);
 
         return response()->json($column);
+    }
+
+    public function updateColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
+    {
+        $this->ensureColumnInCurrentProject($request, $column);
+        $validated = $request->validate(['title' => ['required', 'string', 'max:100']]);
+        $column->update(['title' => trim($validated['title'])]);
+
+        return response()->json($column->fresh());
     }
 
     public function destroyColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
