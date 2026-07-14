@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="neova-product min-h-screen bg-[#FAF9F6]" x-data="{ tab: 'general' }">
+<div class="neova-product min-h-screen bg-[#FDFDFC]" x-data="{ tab: 'general' }">
     <x-navbar>
         <x-breadcrumb :items="collect([
             ['label' => 'داشبورد', 'url' => route('dashboard')],
@@ -24,10 +24,10 @@
         </div>
 
         <div class="flex gap-1 border-b border-[#DCE3ED] mb-6 overflow-x-auto">
-            <button @click="tab = 'general'" :class="tab === 'general' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">تنظیمات</button>
-            <button @click="tab = 'members'" :class="tab === 'members' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">اعضا</button>
-            <button @click="tab = 'invitations'" :class="tab === 'invitations' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">دعوت‌نامه‌ها</button>
-            <button @click="tab = 'projects'" :class="tab === 'projects' ? 'text-[#0069FF] border-[#0069FF]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">تیم پروژه‌ها</button>
+            <button @click="tab = 'general'" :class="tab === 'general' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">تنظیمات</button>
+            <button @click="tab = 'members'" :class="tab === 'members' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">اعضا</button>
+            <button @click="tab = 'invitations'" :class="tab === 'invitations' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">دعوت‌نامه‌ها</button>
+            <button @click="tab = 'projects'" :class="tab === 'projects' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'" class="px-4 py-3 text-xs font-bold border-b-2 whitespace-nowrap">تیم پروژه‌ها</button>
         </div>
 
         <section x-show="tab === 'general'" x-cloak>
@@ -38,8 +38,8 @@
                     <form method="POST" action="{{ route('workspaces.settings.update', $workspace->slug) }}" class="flex items-center gap-3">
                         @csrf
                         @method('PATCH')
-                        <input name="name" value="{{ old('name', $workspace->name) }}" class="flex-1 text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0069FF]" required>
-                        <button class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-lg px-4 py-2.5 shrink-0">ذخیره</button>
+                        <input name="name" value="{{ old('name', $workspace->name) }}" class="flex-1 text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#18212B]" required>
+                        <button class="text-xs font-bold text-white bg-[#18212B] hover:bg-[#000000] rounded-lg px-4 py-2.5 shrink-0">ذخیره</button>
                     </form>
                 </div>
             @else
@@ -59,7 +59,7 @@
                         <p class="text-[13px] font-bold text-[#172B4D] truncate">{{ $workspace->owner->full_name }}</p>
                         <p class="text-[10px] text-[#94A3B8]">{{ $workspace->owner->phone }}</p>
                     </div>
-                    <span class="text-[10px] font-bold text-[#0069FF] bg-[#E8F0FE] px-2.5 py-1 rounded-md">مالک</span>
+                    <span class="text-[10px] font-bold text-[#18212B] bg-[#F1F3F2] px-2.5 py-1 rounded-md">مالک</span>
                 </div>
 
                 @foreach ($members as $member)
@@ -70,7 +70,7 @@
                     @endphp
                     <div class="flex flex-col sm:flex-row sm:items-center gap-3 px-4 sm:px-5 py-4 border-b border-[#F1F5F9] last:border-0">
                         <div class="flex items-center gap-3 flex-1 min-w-0">
-                            <div class="w-9 h-9 rounded-full bg-[#E8F0FE] text-[#0069FF] flex items-center justify-center text-xs font-bold">{{ mb_substr($member->full_name, 0, 1) }}</div>
+                            <div class="w-9 h-9 rounded-full bg-[#F1F3F2] text-[#18212B] flex items-center justify-center text-xs font-bold">{{ mb_substr($member->full_name, 0, 1) }}</div>
                             <div class="min-w-0">
                                 <p class="text-[13px] font-bold text-[#172B4D] truncate">{{ $member->full_name }}</p>
                                 <p class="text-[10px] text-[#94A3B8]">{{ $member->phone }}</p>
@@ -86,7 +86,7 @@
                                             <option value="{{ $role }}" @selected($member->pivot->role === $role)>{{ $roleLabels[$role] }}</option>
                                         @endforeach
                                     </select>
-                                    <button class="text-[11px] font-bold text-[#0069FF] px-2 py-2">ذخیره</button>
+                                    <button class="text-[11px] font-bold text-[#18212B] px-2 py-2">ذخیره</button>
                                 </form>
                                 <form method="POST" action="{{ route('workspaces.members.destroy', [$workspace->slug, $member]) }}">
                                     @csrf
@@ -115,14 +115,14 @@
                     @csrf
                     <h3 class="text-sm font-bold text-[#172B4D] mb-4">دعوت عضو جدید</h3>
                     <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">شماره تلفن</label>
-                    <input name="phone" value="{{ old('phone') }}" dir="ltr" placeholder="09123456789" class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0069FF] mb-4">
+                    <input name="phone" value="{{ old('phone') }}" dir="ltr" placeholder="09123456789" class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#18212B] mb-4">
                     <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">نقش</label>
                     <select name="role" class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 bg-white mb-4">
                         @if ($actorRole === 'owner')<option value="admin">مدیر</option>@endif
                         <option value="user">کاربر</option>
                         <option value="viewer">مشاهده‌گر</option>
                     </select>
-                    <button class="w-full text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-lg px-4 py-2.5">ارسال دعوت‌نامه</button>
+                    <button class="w-full text-xs font-bold text-white bg-[#18212B] hover:bg-[#000000] rounded-lg px-4 py-2.5">ارسال دعوت‌نامه</button>
                     <p class="text-[10px] leading-5 text-[#94A3B8] mt-3">لینک دعوت از طریق پیامک ارسال می‌شود و ۷ روز اعتبار دارد.</p>
                 </form>
 
@@ -140,7 +140,7 @@
                                 <div class="flex gap-2">
                                     <form method="POST" action="{{ route('workspaces.invitations.resend', [$workspace->slug, $invitation]) }}">
                                         @csrf
-                                        <button class="text-[11px] font-bold text-[#0069FF] px-3 py-2">ارسال مجدد</button>
+                                        <button class="text-[11px] font-bold text-[#18212B] px-3 py-2">ارسال مجدد</button>
                                     </form>
                                     <form method="POST" action="{{ route('workspaces.invitations.revoke', [$workspace->slug, $invitation]) }}">
                                         @csrf
@@ -178,7 +178,7 @@
                                     @csrf
                                     @method('PATCH')
                                     <input type="hidden" name="visibility" value="{{ $project->visibility === 'public' ? 'private' : 'public' }}">
-                                    <button class="text-[10px] font-bold text-[#0069FF] hover:underline">
+                                    <button class="text-[10px] font-bold text-[#18212B] hover:underline">
                                         {{ $project->visibility === 'public' ? 'خصوصی کردن' : 'عمومی کردن' }}
                                     </button>
                                 </form>
@@ -192,7 +192,7 @@
                                         <option value="">همه اعضا اضافه شده‌اند</option>
                                     @endforelse
                                 </select>
-                                <button @disabled($availablePeople->isEmpty()) class="text-[11px] font-bold text-white bg-[#0069FF] disabled:bg-[#CBD5E1] rounded-lg px-3 py-2">افزودن</button>
+                                <button @disabled($availablePeople->isEmpty()) class="text-[11px] font-bold text-white bg-[#18212B] disabled:bg-[#CBD5E1] rounded-lg px-3 py-2">افزودن</button>
                             </form>
                         </div>
                     </div>

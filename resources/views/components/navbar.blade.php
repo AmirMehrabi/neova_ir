@@ -5,7 +5,7 @@
     $navbarUnreadCount = $navbarUnreadCount ?? 0;
 @endphp
 
-<header class="sticky top-0 z-30 border-b {{ $dark ? 'border-white/10 bg-[#18212B]/96 shadow-[0_8px_30px_rgba(24,33,43,0.18)]' : 'border-[#E5E8E5] bg-[#FAF9F6]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' }} backdrop-blur-xl">
+<header class="w-full sticky top-0 z-30 border-b {{ $dark ? 'border-white/10 bg-[#18212B]/96 shadow-[0_8px_30px_rgba(24,33,43,0.18)]' : 'border-[#E8EBE9] bg-[#FDFDFC]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' }} backdrop-blur-xl">
     <div class="{{ $fluid ? 'max-w-[1600px] mx-auto' : 'max-w-7xl mx-auto' }} px-3 sm:px-6 h-14 md:h-16 flex items-center gap-3 md:gap-4">
         {{-- Logo --}}
         <a href="{{ route('dashboard') }}" class="shrink-0 inline-flex items-center" aria-label="داشبورد نئووا">
@@ -53,13 +53,13 @@
                 >
                     <div class="flex items-center justify-between px-4 py-3 border-b border-[#F1F5F9]">
                         <span class="text-[13px] font-bold text-[#172B4D]">اعلان‌ها</span>
-                        <a href="{{ route('notifications.index') }}" class="text-[10px] font-bold text-[#0069FF]">مشاهده همه</a>
+                        <a href="{{ route('notifications.index') }}" class="text-[10px] font-bold text-[#18212B]">مشاهده همه</a>
                     </div>
                     <div class="max-h-80 overflow-y-auto">
                         @forelse ($navbarNotifications as $notification)
                             <a href="{{ route('notifications.open', $notification) }}" class="block px-4 py-3 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] transition-colors {{ $notification->read_at ? '' : 'bg-[#F5F9FF]' }}">
                                 <div class="flex gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-[#E8F0FE] text-[#0069FF] flex items-center justify-center shrink-0">
+                                    <div class="w-8 h-8 rounded-lg bg-[#F1F3F2] text-[#18212B] flex items-center justify-center shrink-0">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H2v-2a4 4 0 014-4h3m6-6a4 4 0 11-8 0 4 4 0 018 0zm6 3v6m3-3h-6"/></svg>
                                     </div>
                                     <div class="min-w-0">
@@ -83,7 +83,7 @@
                     @click="userDropdown = !userDropdown"
                     class="min-w-11 min-h-11 flex items-center justify-center gap-2 px-1.5 sm:px-2 py-1.5 rounded-xl sm:rounded-lg {{ $dark ? 'hover:bg-white/10' : 'hover:bg-[#F1F3F1]' }} transition-colors"
                 >
-                    <div class="w-8 h-8 rounded-full bg-[#1668FF] flex items-center justify-center ring-1 ring-white/20 overflow-hidden">
+                    <div class="w-8 h-8 rounded-full bg-[#18212B] flex items-center justify-center ring-1 ring-white/20 overflow-hidden">
                         @if (auth()->user()->avatar)
                             <img src="{{ asset('storage/avatars/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->full_name }}" class="w-full h-full object-cover">
                         @else
@@ -103,7 +103,7 @@
                 >
                     <div class="px-3 py-2.5 border-b border-[#F1F5F9]">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-full bg-[#1668FF] flex items-center justify-center overflow-hidden shrink-0">
+                            <div class="w-9 h-9 rounded-full bg-[#18212B] flex items-center justify-center overflow-hidden shrink-0">
                                 @if (auth()->user()->avatar)
                                     <img src="{{ asset('storage/avatars/' . auth()->user()->avatar) }}" alt="" class="w-full h-full object-cover">
                                 @else

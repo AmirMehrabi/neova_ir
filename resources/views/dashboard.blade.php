@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('body')
 <div
-    class="neova-dashboard neova-product min-h-screen bg-[#FAF9F6]"
+    class="neova-dashboard neova-product min-h-screen bg-[#FDFDFC]"
     x-data="{
         showModal: false,
         modalType: 'workspace',
@@ -58,13 +58,13 @@
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
         .project-card { transition: background-color 0.18s ease, box-shadow 0.18s ease; }
-        .project-card:hover { background: #F5F7F6; box-shadow: inset -3px 0 0 #2563EB; }
+        .project-card:hover { background: #F5F7F6; box-shadow: inset -3px 0 0 #18212B; }
         .neova-dashboard .bg-white { background-color: #FFFFFF !important; }
         .neova-dashboard .text-\[\#071B33\] { color: #18212B !important; }
-        .neova-dashboard .text-\[\#1668FF\], .neova-dashboard .text-\[\#0069FF\] { color: #2563EB !important; }
-        .neova-dashboard .bg-\[\#1668FF\], .neova-dashboard .bg-\[\#0069FF\] { background-color: #2563EB !important; }
-        .neova-dashboard .bg-\[\#EAF1FF\], .neova-dashboard .bg-\[\#E8F0FE\] { background-color: #E9F0FF !important; }
-        .neova-dashboard .border-\[\#D8E0EB\], .neova-dashboard .border-\[\#E6EBF2\] { border-color: #E5E8E5 !important; }
+        .neova-dashboard .text-\[\#18212B\], .neova-dashboard .text-\[\#18212B\] { color: #18212B !important; }
+        .neova-dashboard .bg-\[\#18212B\], .neova-dashboard .bg-\[\#18212B\] { background-color: #18212B !important; }
+        .neova-dashboard .bg-\[\#F1F3F2\], .neova-dashboard .bg-\[\#F1F3F2\] { background-color: #F1F3F2 !important; }
+        .neova-dashboard .border-\[\#D8E0EB\], .neova-dashboard .border-\[\#E6EBF2\] { border-color: #E8EBE9 !important; }
         .neova-dashboard .text-\[\#64748B\] { color: #66717A !important; }
         @media (prefers-reduced-motion: reduce) {
             .project-card { transition: none; }
@@ -85,7 +85,7 @@
                         @keydown.arrow-up.prevent="navigateResults(-1)"
                         @keydown.enter.prevent="selectResult()"
                         type="text"
-                        class="w-full text-[12px] font-medium text-[#18212B] bg-white/70 border border-[#E5E8E5] rounded-xl pr-9 pl-3 py-2.5 focus:outline-none focus:bg-white focus:border-[#9CB8F3] transition-all placeholder:text-[#8B949B]"
+                        class="w-full text-[12px] font-medium text-[#18212B] bg-white/70 border border-[#E8EBE9] rounded-xl pr-9 pl-3 py-2.5 focus:outline-none focus:bg-white focus:border-[#9CB8F3] transition-all placeholder:text-[#8B949B]"
                         placeholder="جستجوی پروژه یا وظیفه…"
                     >
                 </div>
@@ -106,7 +106,7 @@
                             <template x-for="(item, idx) in recentSearches" :key="idx">
                                 <a :href="item.url" class="flex items-center gap-3 px-3 py-2 hover:bg-[#F8FAFC] transition-colors" :class="selectedIdx === idx ? 'bg-[#F1F5F9]' : ''">
                                     <span class="w-5 h-5 rounded-md flex items-center justify-center shrink-0" :class="{
-                                        'bg-[#0069FF]/10 text-[#0069FF]': item.type === 'workspace',
+                                        'bg-[#18212B]/10 text-[#18212B]': item.type === 'workspace',
                                         'bg-[#22C55E]/10 text-[#22C55E]': item.type === 'project',
                                         'bg-[#F59E0B]/10 text-[#F59E0B]': item.type === 'task',
                                     }">
@@ -129,7 +129,7 @@
                                     <div class="px-3 py-1.5 border-b border-[#F1F5F9]"><span class="text-[9px] font-bold text-[#94A3B8] uppercase tracking-widest">فضاهای کاری</span></div>
                                     <template x-for="(item, idx) in searchResults.filter(r => r.type === 'workspace')" :key="'ws-'+idx">
                                         <a :href="item.url" @click="saveRecentSearch(item)" class="flex items-center gap-3 px-3 py-2 hover:bg-[#F8FAFC] transition-colors">
-                                            <span class="w-5 h-5 rounded-md bg-[#0069FF]/10 flex items-center justify-center shrink-0"><svg class="w-2.5 h-2.5 text-[#0069FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></span>
+                                            <span class="w-5 h-5 rounded-md bg-[#18212B]/10 flex items-center justify-center shrink-0"><svg class="w-2.5 h-2.5 text-[#18212B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg></span>
                                             <div class="flex-1 min-w-0"><p class="text-[11px] font-semibold text-[#1A1D21] truncate" x-text="item.name"></p><p class="text-[9px] text-[#94A3B8]" x-text="item.subtitle"></p></div>
                                         </a>
                                     </template>
@@ -227,7 +227,7 @@
                                 <div class="flex items-center gap-2 mt-4" x-show="!processing">
                                     <form method="POST" action="{{ route('invitations.accept', $invitation) }}" class="flex-1 sm:flex-none">
                                         @csrf
-                                        <button type="submit" @click="processing = true" class="w-full sm:w-auto text-[11px] font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-xl px-5 py-2.5 transition-all active:scale-[0.98] shadow-[0_4px_12px_rgba(0,105,255,0.25)]">
+                                        <button type="submit" @click="processing = true" class="w-full sm:w-auto text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#000000] rounded-xl px-5 py-2.5 transition-all active:scale-[0.98] shadow-[0_4px_12px_rgba(24,33,43,0.20)]">
                                             پذیرش دعوت
                                         </button>
                                     </form>
@@ -258,7 +258,7 @@
             <section class="border-b border-[#D8E0EB] last:border-b-0">
                 <div class="flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 border-b border-[#E6EBF2]">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-10 h-10 rounded-[10px] bg-[#EAF1FF] text-[#1668FF] flex items-center justify-center text-sm font-black shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
+                        <div class="w-10 h-10 rounded-[10px] bg-[#F1F3F2] text-[#18212B] flex items-center justify-center text-sm font-black shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
                         <div class="min-w-0">
                             <h2 class="text-[15px] sm:text-[17px] font-black text-[#071B33] truncate">{{ $workspace->name }}</h2>
                             <p class="text-[10px] sm:text-[11px] font-medium text-[#7C899B] mt-0.5">{{ $workspace->projects_count }} پروژه · {{ $workspace->members_count ?? 0 }} عضو</p>
@@ -272,7 +272,7 @@
                             <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="hidden sm:inline-flex text-[11px] font-bold text-[#64748B] border border-[#D8E0EB] bg-white rounded-[9px] px-3 py-2.5 hover:border-[#AEB9C8] hover:text-[#071B33] transition-colors">مدیریت فضا</a>
                             <button
                                 @click="targetWorkspace = '{{ $workspace->slug }}'; modalType = 'project'; showModal = true"
-                                class="flex items-center gap-1.5 bg-[#1668FF] hover:bg-[#0E57DB] text-white text-[11px] font-black px-3.5 py-2.5 rounded-[9px] shadow-[0_5px_14px_rgba(22,104,255,0.3)] transition-all active:scale-[0.98]"
+                                class="flex items-center gap-1.5 bg-[#18212B] hover:bg-[#000000] text-white text-[11px] font-black px-3.5 py-2.5 rounded-[9px] shadow-[0_5px_14px_rgba(24,33,43,0.22)] transition-all active:scale-[0.98]"
                             >
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                                 پروژه جدید
@@ -286,7 +286,7 @@
                         @foreach ($workspace->projects as $project)
                             <a
                                 href="{{ route('board', [$workspace->slug, $project->slug]) }}"
-                                class="project-card group flex items-center gap-3 sm:gap-5 bg-white px-4 py-4 sm:px-5 sm:py-5 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#1668FF]/15"
+                                class="project-card group flex items-center gap-3 sm:gap-5 bg-white px-4 py-4 sm:px-5 sm:py-5 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#18212B]/15"
                             >
                                 <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-[11px] bg-[#071B33] flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
                                     <span class="text-white font-black text-[11px] sm:text-[12px] tracking-wide">{{ $project->key ?: mb_substr($project->name, 0, 2) }}</span>
@@ -310,7 +310,7 @@
                                     <div class="lg:hidden flex items-center gap-2 mt-2 text-[9px] font-bold">
                                         @if ($project->total_tasks > 0)
                                             <span class="text-[#64748B]">{{ $project->done_tasks }} از {{ $project->total_tasks }} وظیفه</span>
-                                            <span class="text-[#1668FF]">{{ $project->progress_percentage }}٪</span>
+                                            <span class="text-[#18212B]">{{ $project->progress_percentage }}٪</span>
                                         @else
                                             <span class="text-[#94A3B8]">بدون وظیفه</span>
                                         @endif
@@ -321,13 +321,13 @@
                                     <div class="flex items-center justify-between gap-3 mb-2">
                                         @if ($project->total_tasks > 0)
                                             <span class="text-[10px] font-semibold text-[#64748B]">{{ $project->done_tasks }} از {{ $project->total_tasks }} وظیفه</span>
-                                            <span class="text-[10px] font-black text-[#1668FF]">{{ $project->progress_percentage }}٪</span>
+                                            <span class="text-[10px] font-black text-[#18212B]">{{ $project->progress_percentage }}٪</span>
                                         @else
                                             <span class="text-[10px] font-semibold text-[#94A3B8]">هنوز وظیفه‌ای ثبت نشده</span>
                                         @endif
                                     </div>
                                     <div class="h-2 bg-[#E8EDF4] rounded-full overflow-hidden">
-                                        <div class="h-full bg-[#1668FF] rounded-full" style="width: {{ $project->progress_percentage }}%"></div>
+                                        <div class="h-full bg-[#18212B] rounded-full" style="width: {{ $project->progress_percentage }}%"></div>
                                     </div>
                                 </div>
 
@@ -337,7 +337,7 @@
                                         <div class="flex items-center">
                                             @foreach ($members as $member)
                                                 <div class="relative group/tooltip {{ ! $loop->first ? '-mr-2' : '' }}">
-                                                    <div class="w-8 h-8 rounded-full bg-[#1668FF] flex items-center justify-center text-[10px] text-white font-bold ring-2 ring-white">
+                                                    <div class="w-8 h-8 rounded-full bg-[#18212B] flex items-center justify-center text-[10px] text-white font-bold ring-2 ring-white">
                                                         {{ mb_substr($member->name, 0, 1) }}
                                                     </div>
                                                     <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 bg-[#1A1D21] text-white text-[10px] font-medium rounded-lg whitespace-nowrap opacity-0 group-hover/tooltip:opacity-100 transition-opacity pointer-events-none z-10">
@@ -347,7 +347,7 @@
                                                 </div>
                                             @endforeach
                                             @if ($project->members_count > 3)
-                                                <div class="w-8 h-8 rounded-full bg-[#E8F0FE] text-[#0069FF] flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
+                                                <div class="w-8 h-8 rounded-full bg-[#F1F3F2] text-[#18212B] flex items-center justify-center text-[10px] font-bold ring-2 ring-white">
                                                     +{{ $project->members_count - 3 }}
                                                 </div>
                                             @endif
@@ -355,9 +355,9 @@
                                     @endif
                                 </div>
 
-                                <div class="flex items-center gap-2 shrink-0 text-[#1668FF]">
+                                <div class="flex items-center gap-2 shrink-0 text-[#18212B]">
                                     <span class="hidden xl:inline text-[11px] font-black">ورود به تخته</span>
-                                    <span class="w-9 h-9 rounded-[9px] bg-[#EAF1FF] group-hover:bg-[#1668FF] group-hover:text-white flex items-center justify-center transition-colors">
+                                    <span class="w-9 h-9 rounded-[9px] bg-[#F1F3F2] group-hover:bg-[#18212B] group-hover:text-white flex items-center justify-center transition-colors">
                                         <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/></svg>
                                     </span>
                                 </div>
@@ -370,7 +370,7 @@
                         @if ($canManage)
                             <button
                                 @click="targetWorkspace = '{{ $workspace->slug }}'; modalType = 'project'; showModal = true"
-                                class="text-[11px] font-bold text-[#0069FF] bg-[#E8F0FE] hover:bg-[#D6E4FD] px-3 py-1.5 rounded-lg transition-colors"
+                                class="text-[11px] font-bold text-[#18212B] bg-[#F1F3F2] hover:bg-[#E8EBE9] px-3 py-1.5 rounded-lg transition-colors"
                             >ایجاد پروژه</button>
                         @endif
                     </div>
@@ -383,7 +383,7 @@
                 </div>
                 <p class="text-[15px] font-bold text-[#172B4D] mb-1">فضای کاری ندارید</p>
                 <p class="text-xs text-[#64748B] mb-5">اولین فضای کاری خود را بسازید.</p>
-                <button @click="modalType = 'workspace'; showModal = true" class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] px-4 py-2.5 rounded-lg transition-colors">ایجاد فضای کاری</button>
+                <button @click="modalType = 'workspace'; showModal = true" class="text-xs font-bold text-white bg-[#18212B] hover:bg-[#000000] px-4 py-2.5 rounded-lg transition-colors">ایجاد فضای کاری</button>
             </div>
         @endforelse
         </div>
@@ -400,7 +400,7 @@
                             <h3 class="text-lg font-black text-[#071B33] mb-5">فضای کاری جدید</h3>
                             <form action="{{ route('dashboard.workspace.store') }}" method="POST">
                                 @csrf
-                                <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1668FF] focus:ring-4 focus:ring-[#1668FF]/10 transition-colors mb-5 placeholder:text-[#AAB5C4]" placeholder="نام فضای کاری">
+                                <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#18212B] focus:ring-4 focus:ring-[#18212B]/10 transition-colors mb-5 placeholder:text-[#AAB5C4]" placeholder="نام فضای کاری">
                                 <div class="flex gap-2 justify-end">
                                     <button type="button" @click="showModal = false" class="text-xs font-semibold text-[#64748B] px-4 py-2 rounded-xl border border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">انصراف</button>
                                     <button type="submit" class="text-xs font-black text-white bg-[#071B33] hover:bg-[#0B2545] px-4 py-2.5 rounded-xl transition-all">ایجاد فضای کاری</button>
@@ -415,15 +415,15 @@
                                 @csrf
                                 <div class="mb-3">
                                     <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">نام پروژه</label>
-                                    <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1668FF] focus:ring-4 focus:ring-[#1668FF]/10 transition-colors placeholder:text-[#AAB5C4]" placeholder="نام پروژه">
+                                    <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#18212B] focus:ring-4 focus:ring-[#18212B]/10 transition-colors placeholder:text-[#AAB5C4]" placeholder="نام پروژه">
                                 </div>
                                 <div class="mb-4">
                                     <label class="block text-[10px] font-bold text-[#94A3B8] mb-1.5 uppercase tracking-widest">کلید پروژه <span class="text-[#CBD5E1]">(اختیاری)</span></label>
-                                    <input name="key" type="text" maxlength="10" class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#1668FF] focus:ring-4 focus:ring-[#1668FF]/10 transition-colors uppercase placeholder:text-[#AAB5C4]" placeholder="مثلاً SCR">
+                                    <input name="key" type="text" maxlength="10" class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#18212B] focus:ring-4 focus:ring-[#18212B]/10 transition-colors uppercase placeholder:text-[#AAB5C4]" placeholder="مثلاً SCR">
                                 </div>
                                 <div class="flex gap-2 justify-end">
                                     <button type="button" @click="showModal = false" class="text-xs font-semibold text-[#64748B] px-4 py-2 rounded-xl border border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">انصراف</button>
-                                    <button type="submit" class="text-xs font-black text-white bg-[#1668FF] hover:bg-[#0E57DB] px-4 py-2.5 rounded-xl shadow-[0_5px_14px_rgba(22,104,255,0.24)] transition-all">ایجاد پروژه</button>
+                                    <button type="submit" class="text-xs font-black text-white bg-[#18212B] hover:bg-[#000000] px-4 py-2.5 rounded-xl shadow-[0_5px_14px_rgba(24,33,43,0.20)] transition-all">ایجاد پروژه</button>
                                 </div>
                             </form>
                         </div>

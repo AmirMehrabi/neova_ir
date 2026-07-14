@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="neova-product min-h-screen bg-[#FAF9F6]">
+<div class="neova-product min-h-screen bg-[#FDFDFC]">
     <x-navbar>
         <x-breadcrumb :items="collect([
             ['label' => 'داشبورد', 'url' => route('dashboard')],
@@ -25,7 +25,7 @@
                 <div class="flex gap-3 mt-7">
                     <form method="POST" action="{{ route('invitations.accept', $invitation) }}" class="flex-1">
                         @csrf
-                        <button class="w-full text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-xl px-4 py-3">پذیرش دعوت</button>
+                        <button class="w-full text-xs font-bold text-white bg-[#18212B] hover:bg-[#000000] rounded-xl px-4 py-3">پذیرش دعوت</button>
                     </form>
                     <form method="POST" action="{{ route('invitations.decline', $invitation) }}" class="flex-1">
                         @csrf

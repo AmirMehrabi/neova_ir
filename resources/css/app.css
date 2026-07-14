@@ -1,14 +1,14 @@
 @import 'tailwindcss';
 
 :root {
-    --neova-paper: #FAF9F6;
+    --neova-paper: #FDFDFC;
     --neova-surface: #FFFFFF;
-    --neova-surface-muted: #F3F4F2;
+    --neova-surface-muted: #F7F8F7;
     --neova-ink: #18212B;
     --neova-muted: #66717A;
-    --neova-line: #E5E8E5;
-    --neova-cobalt: #2563EB;
-    --neova-cobalt-soft: #E9F0FF;
+    --neova-line: #E8EBE9;
+    --neova-cobalt: #18212B;
+    --neova-cobalt-soft: #F1F3F2;
     --neova-coral: #E97862;
     --neova-mint: #77C9A7;
 }
@@ -36,12 +36,12 @@
 
 @layer components {
     .neova-home {
-        --paper: #f4f0e7;
-        --paper-deep: #eae4d8;
+        --paper: #fdfdfc;
+        --paper-deep: #f3f5f4;
         --ink: #0b1b2b;
         --muted: #5f6b73;
-        --blue: #075de8;
-        --blue-dark: #0348b9;
+        --blue: #18212b;
+        --blue-dark: #000000;
         --mint: #68d7ad;
         --line: rgba(11, 27, 43, 0.16);
         background: var(--paper);

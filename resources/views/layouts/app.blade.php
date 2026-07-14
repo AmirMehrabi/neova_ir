@@ -8,7 +8,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('head')
 </head>
-<body class="bg-[#FAF9F6] min-h-screen">
+<body class="bg-[#FDFDFC] min-h-screen">
     @yield('body')
     @stack('scripts')
 </body>

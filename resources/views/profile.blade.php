@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="neova-product min-h-screen bg-[#FAF9F6]">
+<div class="neova-product min-h-screen bg-[#FDFDFC]">
     <x-navbar>
         <x-breadcrumb :items="collect([
             ['label' => 'داشبورد', 'url' => route('dashboard')],
@@ -35,7 +35,7 @@
         <div class="bg-white border border-[#DFE5EF] rounded-xl p-5 mb-5">
             <h3 class="text-sm font-bold text-[#172B4D] mb-4">تصویر پروفایل</h3>
             <div class="flex items-center gap-5">
-                <div class="w-20 h-20 rounded-2xl bg-[#1668FF] flex items-center justify-center overflow-hidden shrink-0 ring-4 ring-[#E8F0FE]">
+                <div class="w-20 h-20 rounded-2xl bg-[#18212B] flex items-center justify-center overflow-hidden shrink-0 ring-4 ring-[#F1F3F2]">
                     @if ($user->avatar)
                         <img src="{{ asset('storage/avatars/' . $user->avatar) }}" alt="{{ $user->full_name }}" class="w-full h-full object-cover">
                     @else
@@ -46,7 +46,7 @@
                     <p class="text-[13px] font-bold text-[#172B4D]">{{ $user->full_name }}</p>
                     <p class="text-[10px] text-[#94A3B8] mt-1">{{ $user->phone }}</p>
                     <div class="flex items-center gap-2 mt-3" x-data="{ uploading: false }">
-                        <label class="cursor-pointer text-[11px] font-bold text-[#0069FF] bg-[#E8F0FE] hover:bg-[#D6E4FD] px-3 py-1.5 rounded-lg transition-colors">
+                        <label class="cursor-pointer text-[11px] font-bold text-[#18212B] bg-[#F1F3F2] hover:bg-[#E8EBE9] px-3 py-1.5 rounded-lg transition-colors">
                             <span x-show="!uploading">تغییر تصویر</span>
                             <span x-show="uploading" x-cloak>در حال آپلود...</span>
                             <input type="file" accept="image/*" class="hidden" x-on:change="
@@ -88,7 +88,7 @@
                     <div>
                         <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">نام</label>
                         <input name="first_name" type="text" value="{{ old('first_name', $user->first_name) }}" required
-                            class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0069FF] focus:ring-2 focus:ring-[#0069FF]/10 transition-all">
+                            class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#18212B] focus:ring-2 focus:ring-[#18212B]/10 transition-all">
                         @error('first_name')
                             <p class="text-[10px] text-red-500 font-semibold mt-1">{{ $message }}</p>
                         @enderror
@@ -96,7 +96,7 @@
                     <div>
                         <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">نام خانوادگی</label>
                         <input name="last_name" type="text" value="{{ old('last_name', $user->last_name) }}" required
-                            class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0069FF] focus:ring-2 focus:ring-[#0069FF]/10 transition-all">
+                            class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#18212B] focus:ring-2 focus:ring-[#18212B]/10 transition-all">
                         @error('last_name')
                             <p class="text-[10px] text-red-500 font-semibold mt-1">{{ $message }}</p>
                         @enderror
@@ -113,7 +113,7 @@
                 <div class="mb-5">
                     <label class="block text-[10px] font-bold text-[#64748B] mb-1.5">ایمیل <span class="text-[#CBD5E1]">(اختیاری)</span></label>
                     <input name="email" type="email" value="{{ old('email', $user->email) }}"
-                        class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#0069FF] focus:ring-2 focus:ring-[#0069FF]/10 transition-all" dir="ltr"
+                        class="w-full text-sm border border-[#DCE3ED] rounded-lg px-3 py-2.5 focus:outline-none focus:border-[#18212B] focus:ring-2 focus:ring-[#18212B]/10 transition-all" dir="ltr"
                         placeholder="email@example.com">
                     <p class="text-[9px] text-[#94A3B8] mt-1">ایمیل برای ارسال اعلان‌ها استفاده می‌شود.</p>
                     @error('email')
@@ -121,7 +121,7 @@
                     @enderror
                 </div>
 
-                <button type="submit" class="text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-lg px-5 py-2.5 transition-all active:scale-[0.98]">
+                <button type="submit" class="text-xs font-bold text-white bg-[#18212B] hover:bg-[#000000] rounded-lg px-5 py-2.5 transition-all active:scale-[0.98]">
                     ذخیره تغییرات
                 </button>
             </form>
@@ -139,7 +139,7 @@
                 <div class="space-y-3">
                     <label class="flex items-center justify-between p-3 rounded-lg border border-[#E2E8F0] hover:border-[#CBD5E1] transition-colors cursor-pointer">
                         <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-[#E8F0FE] text-[#0069FF] flex items-center justify-center shrink-0">
+                            <div class="w-8 h-8 rounded-lg bg-[#F1F3F2] text-[#18212B] flex items-center justify-center shrink-0">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                             </div>
                             <div>
@@ -149,7 +149,7 @@
                         </div>
                         <input type="hidden" name="task_activity" value="0">
                         <input type="checkbox" name="task_activity" value="1" {{ $user->hasNotificationPreference('task_activity') ? 'checked' : '' }}
-                            class="w-4 h-4 text-[#0069FF] border-[#DCE3ED] rounded focus:ring-[#0069FF]">
+                            class="w-4 h-4 text-[#18212B] border-[#DCE3ED] rounded focus:ring-[#18212B]">
                     </label>
 
                     <label class="flex items-center justify-between p-3 rounded-lg border border-[#E2E8F0] hover:border-[#CBD5E1] transition-colors cursor-pointer">
@@ -164,7 +164,7 @@
                         </div>
                         <input type="hidden" name="invitations" value="0">
                         <input type="checkbox" name="invitations" value="1" {{ $user->hasNotificationPreference('invitations') ? 'checked' : '' }}
-                            class="w-4 h-4 text-[#0069FF] border-[#DCE3ED] rounded focus:ring-[#0069FF]">
+                            class="w-4 h-4 text-[#18212B] border-[#DCE3ED] rounded focus:ring-[#18212B]">
                     </label>
 
                     <label class="flex items-center justify-between p-3 rounded-lg border border-[#E2E8F0] hover:border-[#CBD5E1] transition-colors cursor-pointer">
@@ -179,7 +179,7 @@
                         </div>
                         <input type="hidden" name="project_updates" value="0">
                         <input type="checkbox" name="project_updates" value="1" {{ $user->hasNotificationPreference('project_updates') ? 'checked' : '' }}
-                            class="w-4 h-4 text-[#0069FF] border-[#DCE3ED] rounded focus:ring-[#0069FF]">
+                            class="w-4 h-4 text-[#18212B] border-[#DCE3ED] rounded focus:ring-[#18212B]">
                     </label>
 
                     <label class="flex items-center justify-between p-3 rounded-lg border border-[#E2E8F0] hover:border-[#CBD5E1] transition-colors cursor-pointer">
@@ -194,11 +194,11 @@
                         </div>
                         <input type="hidden" name="digest" value="0">
                         <input type="checkbox" name="digest" value="1" {{ $user->hasNotificationPreference('digest') ? 'checked' : '' }}
-                            class="w-4 h-4 text-[#0069FF] border-[#DCE3ED] rounded focus:ring-[#0069FF]">
+                            class="w-4 h-4 text-[#18212B] border-[#DCE3ED] rounded focus:ring-[#18212B]">
                     </label>
                 </div>
 
-                <button type="submit" class="mt-4 text-xs font-bold text-white bg-[#0069FF] hover:bg-[#0057D9] rounded-lg px-5 py-2.5 transition-all active:scale-[0.98]">
+                <button type="submit" class="mt-4 text-xs font-bold text-white bg-[#18212B] hover:bg-[#000000] rounded-lg px-5 py-2.5 transition-all active:scale-[0.98]">
                     ذخیره تنظیمات
                 </button>
             </form>

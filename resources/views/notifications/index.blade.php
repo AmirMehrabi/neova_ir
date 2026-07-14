@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="neova-product min-h-screen bg-[#FAF9F6]">
+<div class="neova-product min-h-screen bg-[#FDFDFC]">
     <x-navbar>
         <x-breadcrumb :items="collect([
             ['label' => 'داشبورد', 'url' => route('dashboard')],
@@ -22,7 +22,7 @@
             @if (($navbarUnreadCount ?? 0) > 0)
                 <form method="POST" action="{{ route('notifications.read-all') }}">
                     @csrf
-                    <button class="text-[11px] font-bold text-[#0069FF]">خواندن همه</button>
+                    <button class="text-[11px] font-bold text-[#18212B]">خواندن همه</button>
                 </form>
             @endif
         </div>
@@ -40,7 +40,7 @@
                             <div class="flex gap-2">
                                 <form method="POST" action="{{ route('invitations.accept', $invitation) }}">
                                     @csrf
-                                    <button class="text-[11px] font-bold text-white bg-[#0069FF] rounded-lg px-4 py-2">پذیرش</button>
+                                    <button class="text-[11px] font-bold text-white bg-[#18212B] rounded-lg px-4 py-2">پذیرش</button>
                                 </form>
                                 <form method="POST" action="{{ route('invitations.decline', $invitation) }}">
                                     @csrf
