@@ -82,6 +82,8 @@ class BoardController extends Controller
             ? $project->board_style
             : 'simple';
 
+        $customTags = $project->custom_tags ?? [];
+
         return view('board', compact(
             'project',
             'workspace',
@@ -93,6 +95,7 @@ class BoardController extends Controller
             'canEdit',
             'canManageProject',
             'boardStyle',
+            'customTags',
         ));
     }
 
@@ -305,6 +308,11 @@ class BoardController extends Controller
             'description' => $validated['description'] ?? null,
             'board_style' => $validated['board_style'] ?? $projectModel->board_style ?? 'simple',
         ]);
+
+        if ($request->has('custom_tags')) {
+            $projectModel->custom_tags = $request->input('custom_tags');
+            $projectModel->save();
+        }
 
         return response()->json([
             'message' => 'تنظیمات پروژه ذخیره شد.',
