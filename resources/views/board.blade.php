@@ -29,7 +29,14 @@
         .neova-board .border-\[\#D7DDDA\] { border-color: #D7DDDA !important; }
         .neova-board .focus\:border-\[\#18212B\]:focus { border-color: #18212B !important; }
         .neova-board .focus\:ring-\[\#18212B\]\/20:focus { --tw-ring-color: rgb(24 33 43 / 0.2) !important; }
-        .neova-board { margin: 0; }
+        .neova-board {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: var(--neova-paper);
+            color: var(--neova-ink);
+        }
         .neova-board .border-\[\#E2E8F0\], .neova-board .border-\[\#E8EBE9\] { border-color: #E8EBE9 !important; }
         .neova-board .text-\[\#64748B\] { color: #66717A !important; }
         .check-item input[type="checkbox"]:checked + span { text-decoration: line-through; color: #94A3B8; }
@@ -41,6 +48,8 @@
         .mobile-task-list { touch-action: pan-y; }
         .task-drag-handle { touch-action: none; }
         .column-drag-handle { touch-action: none; }
+        .column-drag-handle { opacity: .7; transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease; }
+        .column-drag-handle:hover, .column-drag-handle:focus-visible { opacity: 1; }
         .column-order-dragging { scroll-snap-type: none !important; }
         body.mobile-task-dragging { user-select: none; -webkit-user-select: none; }
         body.mobile-task-dragging .mobile-board-track { scroll-behavior: auto !important; }
@@ -76,7 +85,7 @@
 <body class="neova-board neova-product min-h-screen overflow-x-hidden" x-data="board()" x-init="init()" x-cloak>
 
     {{-- Top Navigation Bar --}}
-    <x-navbar light fluid>
+    <x-navbar light fluid board-shell>
         <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-9 h-9 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] hover:text-[#18212B] hover:bg-white transition-colors shrink-0" aria-label="بازگشت">
             <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -169,7 +178,7 @@
         @endslot
 
         @slot('mobile')
-            <div class="max-w-[1600px] mx-auto px-3 py-2.5 flex items-center gap-2.5">
+            <div class="w-full px-2.5 sm:px-4 py-2.5 flex items-center gap-2.5">
                 <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-11 h-11 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] shrink-0 active:bg-white" aria-label="بازگشت">
                     <svg class="w-4.5 h-4.5 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -219,15 +228,15 @@
     </x-navbar>
 
     {{-- Board --}}
-    <main class="max-w-[1600px] mx-auto md:px-5 md:py-5">
+    <main class="w-full max-w-none">
 
         {{-- Primary board search and commands --}}
-        <section class="px-4 pt-4 md:px-0 md:pt-0 mb-4">
+        <section class="px-3 pt-2 md:px-4 md:pt-2 mb-2">
             <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
                 <div class="relative flex-1" @click.away="boardSearchOpen = false">
-                    <svg class="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#64748B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
-                    <input x-ref="boardSearch" x-model="boardSearchQuery" @input="boardSearchOpen = boardSearchQuery.length > 0" @focus="boardSearchOpen = boardSearchQuery.length > 0" @keydown.escape="clearBoardSearch()" type="search" class="w-full h-14 md:h-16 rounded-2xl border border-[#DDD8CE] bg-white pr-14 pl-20 text-sm md:text-base font-bold text-[#18212B] shadow-[0_8px_24px_rgba(24,33,43,0.05)] outline-none transition-all placeholder:text-[#A8A39A] focus:border-[#AEB8B2] focus:ring-4 focus:ring-[#18212B]/10" placeholder="جستجوی کارها و پروژه‌ها…">
-                    <kbd class="absolute left-4 top-1/2 -translate-y-1/2 inline-flex h-8 min-w-8 items-center justify-center rounded-lg border border-[#DDD8CE] bg-[#FBFAF7] px-2 text-xs font-black text-[#64748B]">/</kbd>
+                    <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#64748B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+                    <input x-ref="boardSearch" x-model="boardSearchQuery" @input="boardSearchOpen = boardSearchQuery.length > 0" @focus="boardSearchOpen = boardSearchQuery.length > 0" @keydown.escape="clearBoardSearch()" type="search" class="w-full h-11 md:h-12 rounded-xl border border-[#DDD8CE] bg-white pr-11 pl-14 text-sm font-bold text-[#18212B] shadow-[0_4px_14px_rgba(24,33,43,0.04)] outline-none transition-all placeholder:text-[#A8A39A] focus:border-[#AEB8B2] focus:ring-4 focus:ring-[#18212B]/10" placeholder="جستجوی کارها و پروژه‌ها…">
+                    <kbd class="absolute left-3 top-1/2 -translate-y-1/2 inline-flex h-6 min-w-6 items-center justify-center rounded-md border border-[#DDD8CE] bg-[#FBFAF7] px-1.5 text-[10px] font-black text-[#64748B]">/</kbd>
                     <div x-show="boardSearchOpen && boardSearchQuery.length > 0" x-transition class="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-[#E7E3DA] shadow-2xl overflow-hidden z-50">
                         <div class="px-4 py-3 border-b border-[#F1EFEA] flex items-center justify-between"><span class="text-[11px] font-bold text-[#94A3B8]">نتایج جستجو</span><span class="text-[11px] font-black text-[#18212B]" x-text="boardSearchResultCount() + ' نتیجه'"></span></div>
                         <div class="max-h-72 overflow-y-auto">
@@ -237,20 +246,14 @@
                     </div>
                 </div>
                 @if ($canEdit)
-                    <button @click="openColumnModal()" class="h-14 md:h-16 px-5 rounded-2xl bg-[#18212B] hover:bg-[#253342] text-white text-xs md:text-sm font-black inline-flex items-center justify-center gap-2 shadow-lg shadow-[#18212B]/10 transition-all active:scale-[.98] shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>افزودن ستون</button>
+                    <button @click="openColumnModal()" class="h-11 md:h-12 px-4 rounded-xl bg-[#18212B] hover:bg-[#253342] text-white text-xs font-black inline-flex items-center justify-center gap-2 shadow-lg shadow-[#18212B]/10 transition-all active:scale-[.98] shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>افزودن ستون</button>
                 @endif
             </div>
-            <div class="mt-2 flex items-center gap-2 text-[10px] font-bold text-[#A8A39A]"><span class="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span><span x-text="totalTasks() + ' وظیفه در ' + columns.length + ' ستون'"></span><span class="mr-auto hidden md:inline">برای جستجوی سریع کلید / یا Ctrl/⌘ K را بزنید</span></div>
-            @if ($canEdit)
-                <div class="mt-3 inline-flex items-center gap-2 rounded-xl border border-dashed border-[#C9D0CB] bg-[#FBFAF7] px-3 py-2 text-[10px] font-bold text-[#64748B]" role="note">
-                    <svg class="h-4 w-4 text-[#18212B]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h8M8 12h8M8 17h8M5 7h.01M5 12h.01M5 17h.01"/></svg>
-                    ستون‌ها را از دستگیرهٔ کنار نامشان بگیرید و بکشید تا جایشان عوض شود.
-                </div>
-            @endif
+            <div class="mt-1.5 flex items-center gap-2 text-[10px] font-bold text-[#A8A39A]"><span class="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span><span x-text="totalTasks() + ' وظیفه در ' + columns.length + ' ستون'"></span><span class="mr-auto hidden md:inline">/ جستجو · Ctrl/⌘ K تمرکز روی جستجو</span></div>
         </section>
 
         {{-- Desktop board --}}
-        <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
+        <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto px-3 md:px-4 pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
             <template x-for="(column, colIdx) in columns" :key="column.id">
                 <div class="board-column flex flex-col shrink-0 transition-[width] duration-200" :data-column-id="column.id" @click="if (column.collapsed) column.collapsed = false" :class="column.collapsed ? 'w-14 cursor-pointer' : 'w-[280px]'" :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''">
                     <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-2xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
