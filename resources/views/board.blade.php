@@ -57,11 +57,11 @@
         }
     </style>
 </head>
-<body class="bg-[#F0F4F8] min-h-screen overflow-x-hidden" x-data="board()" x-init="init()" x-cloak>
+<body class="bg-[#F7F5F0] min-h-screen overflow-x-hidden" x-data="board()" x-init="init()" x-cloak>
 
     {{-- Top Navigation Bar --}}
-    <x-navbar dark fluid>
-        <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-8 h-8 rounded-lg bg-white/10 border border-white/10 flex items-center justify-center text-white/85 hover:text-white hover:bg-white/15 transition-colors shrink-0" aria-label="بازگشت">
+    <x-navbar light fluid>
+        <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-9 h-9 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] hover:text-[#18212B] hover:bg-white transition-colors shrink-0" aria-label="بازگشت">
             <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -69,9 +69,9 @@
         <div class="min-w-0">
             <div class="flex items-center gap-2 min-w-0">
                 @if ($project->key)
-                    <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-white/10 border border-white/10 text-[10px] font-bold text-white/90 shrink-0">{{ $project->key }}</span>
+                    <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-[#F1EFEA] border border-[#E7E3DA] text-[10px] font-bold text-[#475569] shrink-0">{{ $project->key }}</span>
                 @endif
-                <span class="text-white font-bold text-[15px] truncate">{{ $project->name }}</span>
+                <span class="text-[#18212B] font-black text-[15px] truncate">{{ $project->name }}</span>
                 @if ($project->visibility === 'private')
                     <span class="inline-flex items-center gap-1 text-[9px] font-bold text-[#FEF3C7] bg-white/10 border border-white/10 px-1.5 py-0.5 rounded-md shrink-0">
                         <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -79,12 +79,12 @@
                     </span>
                 @endif
             </div>
-            <span class="block text-blue-200/80 text-[10px] mt-0.5 truncate">{{ $workspace->name }}</span>
+            <span class="block text-[#94A3B8] text-[10px] mt-0.5 truncate">{{ $workspace->name }}</span>
         </div>
 
 
         @slot('search')
-            <div class="relative hidden md:block" @click.away="boardSearchOpen = false">
+            <div class="relative hidden" @click.away="boardSearchOpen = false">
                 <div class="relative">
                     <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/45" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     <input
@@ -130,12 +130,12 @@
         @endslot
 
         @slot('actions')
-            <span class="hidden md:inline-flex items-center text-blue-100 text-xs font-medium px-3 py-1 rounded-full bg-white/8 border border-white/10" x-text="totalTasks() + ' وظیفه'"></span>
+            <span class="hidden md:inline-flex items-center text-[#64748B] text-xs font-bold px-3 py-1.5 rounded-full bg-[#F1EFEA] border border-[#E7E3DA]" x-text="totalTasks() + ' وظیفه'"></span>
             @if ($canManageProject)
                 <button
                     @click="openProjectDrawer()"
                     aria-label="مدیریت پروژه"
-                    class="hidden md:flex items-center justify-center w-9 h-9 text-white/85 hover:text-white bg-white/8 hover:bg-white/12 border border-white/10 rounded-xl transition-colors"
+                    class="hidden md:flex items-center justify-center w-9 h-9 text-[#64748B] hover:text-[#18212B] bg-[#F1EFEA] hover:bg-white border border-[#E7E3DA] rounded-xl transition-colors"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
                 </button>
@@ -154,14 +154,14 @@
 
         @slot('mobile')
             <div class="max-w-[1600px] mx-auto px-3 py-2.5 flex items-center gap-2.5">
-                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-11 h-11 rounded-xl bg-white/10 border border-white/10 flex items-center justify-center text-white shrink-0 active:bg-white/20" aria-label="بازگشت">
+                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-11 h-11 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] shrink-0 active:bg-white" aria-label="بازگشت">
                     <svg class="w-4.5 h-4.5 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </a>
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 min-w-0">
-                        <span class="text-white font-black text-[13px] truncate">{{ $project->name }}</span>
+                        <span class="text-[#18212B] font-black text-[13px] truncate">{{ $project->name }}</span>
                         @if ($project->visibility === 'private')
                             <span class="inline-flex items-center gap-1 text-[9px] font-bold text-[#FEF3C7] bg-white/10 border border-white/10 px-1.5 py-0.5 rounded-md shrink-0">
                                 <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
@@ -172,7 +172,7 @@
                             <span class="px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-[9px] font-bold text-blue-100 shrink-0">{{ $project->key }}</span>
                         @endif
                     </div>
-                    <span class="block text-blue-200/75 text-[9px] mt-0.5 truncate">{{ $workspace->name }}</span>
+                    <span class="block text-[#94A3B8] text-[9px] mt-0.5 truncate">{{ $workspace->name }}</span>
                 </div>
                 @if ($canEdit)
                     <button @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)" class="h-11 px-3 rounded-xl bg-[#0069FF] text-white flex items-center gap-1.5 text-[10px] font-black shadow-lg shadow-black/10 active:scale-[0.97] shrink-0">
@@ -183,7 +183,7 @@
                     <span class="text-[9px] font-bold text-blue-100 bg-white/10 rounded-lg px-2.5 py-2">فقط مشاهده</span>
                 @endif
                 <div class="relative shrink-0" @click.away="mobileActionsOpen = false">
-                    <button @click="mobileActionsOpen = !mobileActionsOpen" class="w-11 h-11 rounded-xl border border-white/10 text-white/80 flex items-center justify-center active:bg-white/10" aria-label="گزینه‌های پروژه" :aria-expanded="mobileActionsOpen">
+                    <button @click="mobileActionsOpen = !mobileActionsOpen" class="w-11 h-11 rounded-xl border border-[#E7E3DA] text-[#64748B] flex items-center justify-center active:bg-white" aria-label="گزینه‌های پروژه" :aria-expanded="mobileActionsOpen">
                         <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="12" cy="19" r="1.7"/></svg>
                     </button>
                     <div x-show="mobileActionsOpen" x-transition class="absolute left-0 top-full mt-2 w-48 rounded-xl bg-white border border-[#E2E8F0] shadow-xl overflow-hidden z-50">
@@ -205,24 +205,50 @@
     {{-- Board --}}
     <main class="max-w-[1600px] mx-auto md:px-5 md:py-5">
 
+        {{-- Primary board search and commands --}}
+        <section class="px-4 pt-4 md:px-0 md:pt-0 mb-4">
+            <div class="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
+                <div class="relative flex-1" @click.away="boardSearchOpen = false">
+                    <svg class="absolute right-5 top-1/2 -translate-y-1/2 w-5 h-5 text-[#64748B] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="m21 21-4.35-4.35m2.35-5.65a8 8 0 1 1-16 0 8 8 0 0 1 16 0Z"/></svg>
+                    <input x-ref="boardSearch" x-model="boardSearchQuery" @input="boardSearchOpen = boardSearchQuery.length > 0" @focus="boardSearchOpen = boardSearchQuery.length > 0" @keydown.escape="clearBoardSearch()" type="search" class="w-full h-14 md:h-16 rounded-2xl border border-[#DDD8CE] bg-white pr-14 pl-20 text-sm md:text-base font-bold text-[#18212B] shadow-[0_8px_24px_rgba(24,33,43,0.05)] outline-none transition-all placeholder:text-[#A8A39A] focus:border-[#93B4F7] focus:ring-4 focus:ring-[#2563EB]/10" placeholder="جستجوی کارها و پروژه‌ها…">
+                    <kbd class="absolute left-4 top-1/2 -translate-y-1/2 inline-flex h-8 min-w-8 items-center justify-center rounded-lg border border-[#DDD8CE] bg-[#FBFAF7] px-2 text-xs font-black text-[#64748B]">/</kbd>
+                    <div x-show="boardSearchOpen && boardSearchQuery.length > 0" x-transition class="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl border border-[#E7E3DA] shadow-2xl overflow-hidden z-50">
+                        <div class="px-4 py-3 border-b border-[#F1EFEA] flex items-center justify-between"><span class="text-[11px] font-bold text-[#94A3B8]">نتایج جستجو</span><span class="text-[11px] font-black text-[#2563EB]" x-text="boardSearchResultCount() + ' نتیجه'"></span></div>
+                        <div class="max-h-72 overflow-y-auto">
+                            <template x-for="col in columns" :key="'search-' + col.id"><template x-for="task in filteredTasks(col)" :key="'result-' + task.dbId"><button type="button" @click="boardSearchOpen = false; boardSearchQuery = ''; openEditModal(task, col.id)" class="w-full text-right px-4 py-3 border-b border-[#F7F5F0] hover:bg-[#FBFAF7] transition-colors"><span class="text-[10px] font-bold text-[#94A3B8]" x-text="col.title + ' · ' + task.id"></span><span class="block mt-1 text-sm font-black text-[#18212B]" x-html="highlightText(task.title, boardSearchQuery)"></span></button></template></template>
+                            <div x-show="boardSearchResultCount() === 0" class="px-4 py-8 text-center text-xs font-bold text-[#94A3B8]">نتیجه‌ای پیدا نشد</div>
+                        </div>
+                    </div>
+                </div>
+                @if ($canEdit)
+                    <button @click="openColumnModal()" class="h-14 md:h-16 px-5 rounded-2xl bg-[#18212B] hover:bg-[#253342] text-white text-xs md:text-sm font-black inline-flex items-center justify-center gap-2 shadow-lg shadow-[#18212B]/10 transition-all active:scale-[.98] shrink-0"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>افزودن ستون</button>
+                @endif
+            </div>
+            <div class="mt-2 flex items-center gap-2 text-[10px] font-bold text-[#A8A39A]"><span class="w-1.5 h-1.5 rounded-full bg-[#22C55E]"></span><span x-text="totalTasks() + ' وظیفه در ' + columns.length + ' ستون'"></span><span class="mr-auto hidden md:inline">برای جستجوی سریع کلید / یا Ctrl/⌘ K را بزنید</span></div>
+        </section>
+
         {{-- Desktop board --}}
-        <div class="hidden md:grid grid-cols-4 gap-4 items-start" style="direction: rtl;">
+        <div class="hidden md:flex gap-3 items-start overflow-x-auto pb-4" style="direction: rtl;">
             <template x-for="(column, colIdx) in columns" :key="column.id">
-                <div class="flex flex-col">
+                <div class="flex flex-col shrink-0 transition-[width] duration-200" :class="column.collapsed ? 'w-14' : 'min-w-[280px] flex-1'">
                     <div class="flex items-center justify-between mb-3 px-1">
                         <div class="flex items-center gap-2.5">
                             <span class="w-2.5 h-2.5 rounded-full shadow-sm" :class="column.dotColor"></span>
-                            <h2 class="text-[13px] font-bold text-[#1A1D21]" x-text="column.title"></h2>
+                            <h2 x-show="!column.collapsed" class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
                             <span class="text-[10px] font-bold min-w-[20px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="column.tasks.length"></span>
                         </div>
                         @if ($canEdit)
-                            <button @click="openAddModal(column.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-[#0069FF] hover:bg-[#E8F0FE] transition-all" title="افزودن وظیفه">
+                            <button x-show="!column.collapsed" @click="openAddModal(column.id)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-[#0069FF] hover:bg-[#E8F0FE] transition-all" title="افزودن وظیفه">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                             </button>
+                            <button x-show="!column.collapsed" @click="confirmDeleteColumn(column)" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-all" title="حذف ستون">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M6 6l12 12M18 6 6 18"/></svg>
+                            </button>
                         @endif
+                        <button @click="column.collapsed = !column.collapsed" class="w-6 h-6 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-[#18212B] hover:bg-white transition-all" :title="column.collapsed ? 'باز کردن ستون' : 'جمع کردن ستون'"><svg class="w-3.5 h-3.5 transition-transform" :class="column.collapsed ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="m15 18-6-6 6-6"/></svg></button>
                     </div>
 
-                    <div class="flex flex-col gap-2.5 min-h-[200px] max-h-[calc(100vh-11rem)] overflow-y-auto rounded-xl p-2 bg-[#E2E8F0]/50 border border-[#CBD5E1]/40" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
+                    <div x-show="!column.collapsed" class="flex flex-col gap-2.5 min-h-[240px] max-h-[calc(100vh-14rem)] overflow-y-auto rounded-2xl p-2.5 bg-[#EFEEE9] border border-[#E5E1D8]" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
                         <template x-for="task in filteredTasks(column)" :key="task.dbId">
                             <div class="bg-white rounded-xl border border-[#E2E8F0] p-3.5 cursor-grab active:cursor-grabbing hover:border-[#0069FF]/30 hover:shadow-md hover:shadow-[#0069FF]/8 transition-all duration-150 group relative" :data-id="task.dbId" :data-column="column.id" @click="openEditModal(task, column.id)">
                                 <div class="absolute top-0 right-0 w-1 h-full rounded-r-xl" :class="{ 'bg-[#EF4444]': task.priority === 'بالا', 'bg-[#8B5CF6]': task.priority === 'متوسط', 'bg-[#64748B]': task.priority === 'پایین' }"></div>
@@ -270,6 +296,9 @@
                     </div>
                 </div>
             </template>
+            @if ($canEdit)
+                <button @click="openColumnModal()" class="min-w-[72px] w-[72px] min-h-[240px] rounded-2xl border-2 border-dashed border-[#D7D1C5] hover:border-[#2563EB] hover:bg-[#EAF1FF] text-[#64748B] hover:text-[#2563EB] flex items-center justify-center transition-colors" title="افزودن ستون"><span class="[writing-mode:vertical-rl] text-xs font-black">+ افزودن ستون</span></button>
+            @endif
         </div>
 
         {{-- Mobile column navigator --}}
@@ -913,6 +942,24 @@
         </div>
     </div>
 
+    {{-- Add Column Modal --}}
+    <div x-show="showColumnModal" x-transition class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="closeColumnModal()">
+        <div class="absolute inset-0 bg-[#18212B]/45 backdrop-blur-sm" @click="closeColumnModal()"></div>
+        <form @submit.prevent="addColumn()" class="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" @click.stop>
+            <div class="p-6 border-b border-[#F1EFEA]"><h4 class="text-base font-black text-[#18212B]">افزودن ستون</h4><p class="text-xs text-[#64748B] mt-1">یک مرحله جدید برای جریان کار پروژه بسازید.</p></div>
+            <div class="p-6"><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E5E1D8] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#2563EB]" placeholder="مثلاً آماده انتشار"></div>
+            <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" class="flex-1 h-11 rounded-xl border-2 border-[#E5E1D8] text-xs font-bold text-[#64748B]">انصراف</button><button type="submit" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342]">افزودن ستون</button></div>
+        </form>
+    </div>
+
+    {{-- Delete Column Confirmation Modal --}}
+    <div x-show="showColumnDeleteModal" x-transition class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="showColumnDeleteModal = false">
+        <div class="absolute inset-0 bg-[#18212B]/55 backdrop-blur-sm" @click="showColumnDeleteModal = false"></div>
+        <div class="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" @click.stop>
+            <div class="p-6 text-center"><div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M12 9v3m0 4h.01M5.2 19h13.6c1.5 0 2.4-1.6 1.65-2.9L13.65 4.2a1.9 1.9 0 0 0-3.3 0L3.55 16.1C2.8 17.4 3.7 19 5.2 19Z"/></svg></div><h4 class="text-sm font-black text-[#18212B]">حذف ستون «<span x-text="columnDeleteTarget.title"></span>»؟</h4><p class="text-xs leading-6 text-[#64748B] mt-2 mb-5">این ستون و <span class="font-black text-red-500" x-text="columnDeleteTarget.taskCount"></span> وظیفه داخل آن حذف می‌شوند و قابل بازگشت نیستند.</p><div class="flex gap-2.5"><button @click="showColumnDeleteModal = false" class="flex-1 h-11 rounded-xl border-2 border-[#E5E1D8] text-xs font-bold text-[#64748B]">انصراف</button><button @click="deleteColumn()" class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs font-black">حذف ستون</button></div></div>
+        </div>
+    </div>
+
     {{-- Delete Confirmation Modal --}}
     <div
         x-show="showDeleteModal"
@@ -985,6 +1032,8 @@
                 taskMovePending: false,
                 showModal: false,
                 showDeleteModal: false,
+                showColumnModal: false,
+                showColumnDeleteModal: false,
                 projectDrawerOpen: false,
                 projectDrawerTab: 'members',
                 projectMemberSearch: '',
@@ -1000,6 +1049,8 @@
                 editingTask: null,
                 editingDescription: false,
                 deleteTarget: { columnId: null, taskId: null },
+                columnDeleteTarget: { id: null, title: '', taskCount: 0 },
+                columnFormTitle: '',
                 toast: { show: false, message: '' },
                 newCheckItem: '',
                 newComment: '',
@@ -1031,7 +1082,7 @@
                     { name: 'بهبود', activeClass: 'border-teal-400 bg-teal-50 text-teal-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' },
                 ],
 
-                columns: serverColumns,
+                columns: serverColumns.map(column => ({ ...column, collapsed: false })),
                 sortableInstances: [],
 
                 totalTasks() { return this.columns.reduce((sum, col) => sum + col.tasks.length, 0); },
@@ -1104,6 +1155,16 @@
                 },
 
                 init() {
+                    this.keyboardHandler = event => {
+                        const target = event.target;
+                        const typing = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
+                        if ((event.key === '/' && !typing) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
+                            event.preventDefault();
+                            this.$nextTick(() => this.$refs.boardSearch?.focus());
+                        }
+                        if (event.key === 'Escape' && !this.showModal && !this.showDeleteModal && !this.showColumnModal && !this.showColumnDeleteModal) this.clearBoardSearch();
+                    };
+                    window.addEventListener('keydown', this.keyboardHandler);
                     try {
                         this.swipeHintVisible = window.innerWidth < 768 && localStorage.getItem('neova-board-swipe-hint') !== 'dismissed';
                     } catch (error) {
@@ -1125,6 +1186,11 @@
                     this.$nextTick(() => {
                         if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
                     });
+                },
+
+                clearBoardSearch() {
+                    this.boardSearchQuery = '';
+                    this.boardSearchOpen = false;
                 },
 
                 toPersianDigits(value) {
@@ -1755,6 +1821,56 @@
                         }
                     }
                     this.showModal = false;
+                },
+
+                openColumnModal() {
+                    if (!this.canEdit) return;
+                    this.columnFormTitle = '';
+                    this.showColumnModal = true;
+                    this.$nextTick(() => this.$refs.columnTitle?.focus());
+                },
+
+                closeColumnModal() {
+                    this.showColumnModal = false;
+                    this.columnFormTitle = '';
+                },
+
+                async addColumn() {
+                    if (!this.canEdit || !this.columnFormTitle.trim()) return;
+                    const response = await fetch('{{ route("board.column.store", [$workspace->slug, $project->slug], false) }}', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                        body: JSON.stringify({ project_id: {{ $project->id }}, title: this.columnFormTitle.trim() }),
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) { this.showToast(data.message || 'افزودن ستون انجام نشد.'); return; }
+                    this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
+                    this.closeColumnModal();
+                    this.showToast('ستون جدید اضافه شد');
+                    this.$nextTick(() => this.initSortable(String(data.id), 'desktop'));
+                },
+
+                confirmDeleteColumn(column) {
+                    if (!this.canEdit || this.columns.length <= 1) return;
+                    this.columnDeleteTarget = { id: column.id, title: column.title, taskCount: column.tasks.length };
+                    this.showColumnDeleteModal = true;
+                },
+
+                async deleteColumn() {
+                    if (!this.canEdit || !this.columnDeleteTarget.id || this.columns.length <= 1) return;
+                    const columnId = this.columnDeleteTarget.id;
+                    const response = await fetch('{{ route("board.column.destroy", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', columnId), {
+                        method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                    });
+                    const data = await response.json().catch(() => ({}));
+                    if (!response.ok) { this.showToast(data.message || 'حذف ستون انجام نشد.'); return; }
+                    this.columns = this.columns.filter(column => column.id !== columnId);
+                    this.activeColumnIndex = Math.max(0, Math.min(this.activeColumnIndex, this.columns.length - 1));
+                    this.showColumnDeleteModal = false;
+                    this.columnDeleteTarget = { id: null, title: '', taskCount: 0 };
+                    this.destroySortables();
+                    this.$nextTick(() => this.columns.forEach(column => this.initSortable(column.id, this.boardMediaQuery?.matches ? 'mobile' : 'desktop')));
+                    this.showToast('ستون حذف شد');
                 },
 
                 confirmDelete(columnId, taskId) {

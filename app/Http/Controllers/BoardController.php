@@ -371,8 +371,15 @@ class BoardController extends Controller
     public function destroyColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
     {
         $this->ensureColumnInCurrentProject($request, $column);
+        abort_if($column->project->columns()->count() <= 1, 422, 'پروژه باید حداقل یک ستون داشته باشد.');
         $column->tasks()->delete();
         $column->delete();
+
+        $column->project->columns()->orderBy('position')->orderBy('id')->get()->each(function (ProjectColumn $remaining, int $index) {
+            if ((int) $remaining->position !== $index + 1) {
+                $remaining->update(['position' => $index + 1]);
+            }
+        });
 
         return response()->json(['success' => true]);
     }
