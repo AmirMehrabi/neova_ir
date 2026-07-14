@@ -50,7 +50,7 @@ class BoardController extends Controller
             'id' => (string) $c->id,
             'title' => $c->title,
             'dotColor' => $colColors[$c->title] ?? 'bg-[#94A3B8]',
-            'dotHex' => $colHexColors[$c->title] ?? '#94A3B8',
+            'dotHex' => $c->color ?: ($colHexColors[$c->title] ?? '#94A3B8'),
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
             'tasks' => $c->tasks->map(fn ($t) => [
                 'id' => $t->display_id,
@@ -361,6 +361,7 @@ class BoardController extends Controller
         $request->validate([
             'project_id' => 'required|exists:projects,id',
             'title' => 'required|string|max:100',
+            'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
 
         abort_unless((int) $request->project_id === (int) $request->attributes->get('project')->id, 403);
@@ -369,6 +370,7 @@ class BoardController extends Controller
         $column = ProjectColumn::create([
             'project_id' => $request->project_id,
             'title' => $request->title,
+            'color' => $request->input('color'),
             'position' => $maxPosition + 1,
         ]);
 
@@ -378,8 +380,14 @@ class BoardController extends Controller
     public function updateColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
     {
         $this->ensureColumnInCurrentProject($request, $column);
-        $validated = $request->validate(['title' => ['required', 'string', 'max:100']]);
-        $column->update(['title' => trim($validated['title'])]);
+        $validated = $request->validate([
+            'title' => ['required', 'string', 'max:100'],
+            'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+        ]);
+        $column->update([
+            'title' => trim($validated['title']),
+            'color' => $validated['color'] ?? $column->color,
+        ]);
 
         return response()->json($column->fresh());
     }
