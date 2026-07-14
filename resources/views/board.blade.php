@@ -896,7 +896,7 @@
                         {{-- Due Date --}}
                         <div>
                             <label class="board-field-label">سررسید</label>
-                            <input x-model="form.dueDate" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]">
+                            <input x-model="form.dueDate" x-ref="dueDateInput" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]">
                             <p x-show="form.dueDate && isOverdue(form.dueDate)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
                         </div>
 
@@ -1286,6 +1286,9 @@
                 newComment: '',
                 commentPosting: false,
                 mentionOpen: false,
+                showTagManager: false,
+                newTagName: '',
+                newTagColor: '#8B5CF6',
                 mentionField: null,
                 mentionQuery: '',
                 mentionResults: [],
@@ -1312,6 +1315,8 @@
                     { name: 'باگ', activeClass: 'border-red-400 bg-red-50 text-red-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' },
                     { name: 'بهبود', activeClass: 'border-teal-400 bg-teal-50 text-teal-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' },
                 ],
+
+                customTags: @json($customTags ?? []),
 
                 columnColors: [
                     { name: 'خاکستری', hex: '#94A3B8' },
@@ -1564,6 +1569,10 @@
                     this.$nextTick(() => {
                         if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
                     });
+
+                    this.$nextTick(() => {
+                        this.initJalaliDatePicker();
+                    });
                 },
 
                 clearBoardSearch() {
@@ -1573,6 +1582,22 @@
 
                 toPersianDigits(value) {
                     return String(value).replace(/\d/g, digit => '۰۱۲۳۴۵۶۷۸۹'[Number(digit)]);
+                },
+
+                initJalaliDatePicker() {
+                    if (!this.$refs.dueDateInput) return;
+                    const self = this;
+                    flatpickr(this.$refs.dueDateInput, {
+                        locale: 'fa',
+                        dateFormat: 'Y-m-d',
+                        altInput: true,
+                        altFormat: 'j F j',
+                        disableMobile: true,
+                        defaultDate: self.form.dueDate || null,
+                        onChange(selectedDates, dateStr) {
+                            self.form.dueDate = dateStr;
+                        },
+                    });
                 },
 
                 dismissSwipeHint() {
@@ -1909,6 +1934,47 @@
                     return tag.activeClass.split(' ').filter(c => c.startsWith('bg-') || c.startsWith('text-')).join(' ');
                 },
 
+                editableTags() {
+                    const hardcoded = this.allTags.map(t => ({ ...t, isCustom: false }));
+                    const custom = (this.customTags || []).map(t => ({
+                        name: t.name,
+                        activeClass: `border-[${t.color}] bg-[${t.color}]/10 text-[${t.color}]`,
+                        inactiveClass: `border-[#F1F5F9] text-[#94A3B8] hover:border-[${t.color}]/30`,
+                        isCustom: true,
+                    }));
+                    return [...hardcoded, ...custom];
+                },
+
+                addCustomTag() {
+                    const name = this.newTagName.trim();
+                    if (!name || this.customTags.some(t => t.name === name)) return;
+                    this.customTags.push({ name, color: this.newTagColor });
+                    this.newTagName = '';
+                    this.saveCustomTags();
+                },
+
+                removeCustomTag(name) {
+                    this.customTags = this.customTags.filter(t => t.name !== name);
+                    this.form.tags = this.form.tags.filter(t => t !== name);
+                    this.saveCustomTags();
+                },
+
+                async saveCustomTags() {
+                    try {
+                        await fetch('{{ route("board.project.update", [$workspace->slug, $project->slug], false) }}', {
+                            method: 'PATCH',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ custom_tags: this.customTags }),
+                        });
+                    } catch (e) {
+                        console.error('Failed to save custom tags');
+                    }
+                },
+
                 toggleTag(tagName) {
                     const idx = this.form.tags.indexOf(tagName);
                     if (idx > -1) this.form.tags.splice(idx, 1);
@@ -2008,10 +2074,12 @@
 
                 formatDate(dateStr) {
                     if (!dateStr) return '';
-                    const d = new Date(dateStr + 'T00:00:00');
-                    if (Number.isNaN(d.getTime())) return dateStr;
-                    const months = ['ژانویه','فوریه','مارس','آوریل','مه','ژوئن','ژوئیه','اوت','سپتامبر','اکتبر','نوامبر','دسامبر'];
-                    return this.toPersianDigits(d.getDate()) + ' ' + months[d.getMonth()];
+                    try {
+                        const jalali = moment(dateStr, 'YYYY-MM-DD').locale('fa').format('j D jMMMM');
+                        return this.toPersianDigits(jalali);
+                    } catch {
+                        return dateStr;
+                    }
                 },
 
                 isOverdue(dateStr) {
@@ -2242,6 +2310,9 @@
                     this.$nextTick(() => {
                         this.modalSnapshot = JSON.stringify(this.form);
                         this.$refs.taskTitle?.focus();
+                        if (this.$refs.dueDateInput && this.$refs.dueDateInput._flatpickr) {
+                            this.$refs.dueDateInput._flatpickr.clear();
+                        }
                     });
                 },
 
@@ -2264,6 +2335,9 @@
                     this.$nextTick(() => {
                         this.modalSnapshot = JSON.stringify(this.form);
                         this.$refs.taskTitle?.focus();
+                        if (this.$refs.dueDateInput && this.$refs.dueDateInput._flatpickr) {
+                            this.$refs.dueDateInput._flatpickr.setDate(this.form.dueDate || null);
+                        }
                     });
                 },
 
