@@ -244,7 +244,7 @@
         {{-- Desktop board --}}
         <div class="hidden md:flex gap-3 items-start overflow-x-auto pb-4" style="direction: rtl;">
             <template x-for="(column, colIdx) in columns" :key="column.id">
-                <div @click="if (column.collapsed) column.collapsed = false" class="flex flex-col shrink-0 transition-[width] duration-200" :class="column.collapsed ? 'w-14 cursor-pointer' : 'min-w-[280px] flex-1'" :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''">
+                <div @click="if (column.collapsed) column.collapsed = false" class="flex flex-col shrink-0 transition-[width] duration-200" :class="column.collapsed ? 'w-14 cursor-pointer' : 'w-[300px]'" :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''">
                     <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-2xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
                         <div class="flex h-[170px] w-full flex-col items-center rounded-xl border border-white/60 px-1.5 py-3 text-white shadow-sm" :style="collapsedColumnStyle(column)">
                             <span class="text-sm font-black" x-text="column.tasks.length"></span>
