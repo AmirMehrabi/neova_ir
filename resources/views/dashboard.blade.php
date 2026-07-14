@@ -256,7 +256,7 @@
                 $canManage = in_array($role, ['owner', 'admin'], true);
             @endphp
             <section class="border-b border-[#D8E0EB] last:border-b-0">
-                <div class="flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 border-b border-[#E6EBF2]">
+                <div class="flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 bg-[#F8FAFC] border-b border-[#E6EBF2]">
                     <div class="flex items-center gap-3 min-w-0">
                         <div class="w-10 h-10 rounded-[10px] bg-[#F1F3F2] text-[#18212B] flex items-center justify-center text-sm font-black shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
                         <div class="min-w-0">
@@ -270,13 +270,6 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
                             </a>
                             <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="hidden sm:inline-flex text-[11px] font-bold text-[#64748B] border border-[#D8E0EB] bg-white rounded-[9px] px-3 py-2.5 hover:border-[#AEB9C8] hover:text-[#071B33] transition-colors">مدیریت فضا</a>
-                            <button
-                                @click="targetWorkspace = '{{ $workspace->slug }}'; modalType = 'project'; showModal = true"
-                                class="flex items-center gap-1.5 bg-[#18212B] hover:bg-[#000000] text-white text-[11px] font-black px-3.5 py-2.5 rounded-[9px] shadow-[0_5px_14px_rgba(24,33,43,0.22)] transition-all active:scale-[0.98]"
-                            >
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                پروژه جدید
-                            </button>
                         @endif
                     </div>
                 </div>
@@ -363,6 +356,15 @@
                                 </div>
                             </a>
                         @endforeach
+                        @if ($canManage)
+                            <button
+                                @click="targetWorkspace = '{{ $workspace->slug }}'; modalType = 'project'; showModal = true"
+                                class="w-full flex items-center justify-center gap-2 border border-dashed border-[#D7D1C5] rounded-none px-4 py-4 sm:px-5 sm:py-5 text-[12px] font-bold text-[#64748B] hover:border-[#18212B] hover:text-[#18212B] hover:bg-[#F8FAFC] transition-colors"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                پروژه جدید
+                            </button>
+                        @endif
                     </div>
                 @else
                     <div class="flex flex-col items-center justify-center py-10 px-5 text-center">
