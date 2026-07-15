@@ -731,6 +731,38 @@
                         <label class="board-field-label">توضیحات پروژه</label>
                         <textarea x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
                     </div>
+                    <div>
+                        <label class="board-field-label">برچسب‌های پروژه</label>
+                        <p class="text-[11px] text-[#94A3B8] mb-2 leading-6">برچسب‌های سفارشی برای این پروژه. برچسب‌های پیش‌فرض همیشه در دسترس هستند.</p>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            <template x-for="tag in editableTags()" :key="tag.name">
+                                <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md border" :class="tag.activeClass">
+                                    <span x-text="tag.name"></span>
+                                    <template x-if="tag.isCustom">
+                                        <button @click="removeCustomTag(tag.name)" class="hover:text-red-500 ml-0.5">
+                                            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </template>
+                                </span>
+                            </template>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input
+                                x-model="newTagName"
+                                @keydown.enter="addCustomTag()"
+                                type="text"
+                                class="flex-1 text-[11px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
+                                placeholder="نام برچسب جدید..."
+                                maxlength="20"
+                            >
+                            <div class="flex gap-1">
+                                <template x-for="color in tagColors" :key="color">
+                                    <button type="button" @click="newTagColor = color" class="w-5 h-5 rounded-full border-2 transition-all" :class="newTagColor === color ? 'border-[#18212B] scale-110' : 'border-transparent'" :style="'background-color:' + color"></button>
+                                </template>
+                            </div>
+                            <button @click="addCustomTag()" :disabled="!newTagName.trim()" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] disabled:opacity-40 px-3 py-2 rounded-lg transition-colors">افزودن</button>
+                        </div>
+                    </div>
                 </section>
                 <section x-show="projectDrawerTab === 'activity'" class="space-y-4">
                     <div>
