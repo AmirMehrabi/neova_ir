@@ -237,10 +237,57 @@
 .task-modal-shell {
     background: #fff;
     width: 100%;
-    max-width: 820px;
+    max-width: 980px;
     border-radius: 16px;
     box-shadow: 0 24px 60px rgba(0, 0, 0, 0.22);
     overflow: hidden;
+}
+
+.task-modal-body {
+    background: #fff;
+}
+
+.task-modal-section {
+    padding: 16px;
+    border: 1px solid #E8EBE9;
+    border-radius: 16px;
+    background: #fff;
+}
+
+.task-modal-section--description {
+    padding: 20px;
+    background: #FCFDFC;
+    border-color: #DDE5E0;
+}
+
+.task-modal-section__heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.task-modal-section__title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #18212B;
+    font-size: 13px;
+    font-weight: 900;
+}
+
+.task-modal-section__title::before {
+    content: '';
+    width: 4px;
+    height: 18px;
+    border-radius: 999px;
+    background: var(--modal-accent, #18212B);
+}
+
+@media (max-width: 767px) {
+    .task-modal-section { padding: 13px; border-radius: 13px; }
+    .task-modal-section--description { padding: 16px; }
 }
 
 .task-modal-header {

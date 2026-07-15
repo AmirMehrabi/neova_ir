@@ -240,10 +240,14 @@ class WorkspaceManagementTest extends TestCase
                 'column_id' => $column->id,
                 'title' => 'کار جدید',
                 'assignees' => [$member->full_name],
+                'checklist' => [['text' => 'بررسی نهایی', 'done' => false]],
+                'comments' => [['author' => 'مالک پروژه', 'text' => 'شروع شد', 'time' => 'همین الان']],
             ])
             ->assertOk();
 
         $task = Task::findOrFail($response->json('id'));
+        $this->assertSame('بررسی نهایی', $task->checklist[0]['text']);
+        $this->assertSame('شروع شد', $task->comments[0]['text']);
         $this->assertStringContainsString('شما را به وظیفه', $member->notifications()->latest()->first()->data['message']);
 
         $this->actingAs($owner)

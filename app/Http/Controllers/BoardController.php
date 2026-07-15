@@ -135,6 +135,8 @@ class BoardController extends Controller
             'due_date' => $request->input('due_date'),
             'assignees' => $request->input('assignees', []),
             'tags' => $request->input('tags', []),
+            'checklist' => $request->input('checklist', []),
+            'comments' => $request->input('comments', []),
             'position' => $maxPosition + 1,
         ]);
         $notifier->taskCreated($task, $request->user());

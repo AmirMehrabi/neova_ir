@@ -868,25 +868,27 @@
                 </div>
 
                 {{-- Body: Single column --}}
-                <div class="p-4 md:p-6 space-y-5" style="direction: rtl;">
+                <div class="task-modal-body p-4 md:p-6 space-y-4" style="direction: rtl;">
                     {{-- Title --}}
-                    <div>
+                    <div class="task-modal-section task-modal-section--description">
+                        <div class="task-modal-section__heading">
+                            <div>
+                                <div class="task-modal-section__title">شرح وظیفه</div>
+                                <p class="text-[10px] text-[#94A3B8] mt-1">موضوع را مشخص کنید و جزئیات انجام آن را اینجا بنویسید.</p>
+                            </div>
+                            <span x-show="form.description" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.description.length) + ' نویسه'"></span>
+                        </div>
                         <input
                             x-ref="taskTitle"
                             x-model="form.title"
                             type="text"
                             :disabled="!canEdit"
-                            class="w-full text-base font-bold text-[#1A1D21] border-b-2 border-[#E2E8F0] pb-2 focus:outline-none focus:border-[#18212B] transition-colors bg-transparent placeholder:text-[#CBD5E1]"
+                            class="w-full text-base font-bold text-[#1A1D21] border-b-2 border-[#E2E8F0] pb-2 mb-4 focus:outline-none focus:border-[#18212B] transition-colors bg-transparent placeholder:text-[#CBD5E1]"
                             placeholder="عنوان وظیفه..."
                         >
-                    </div>
-
-                    {{-- Description --}}
-                    <div>
-                        <label class="board-field-label">توضیحات</label>
                         <textarea
                             x-model="form.description"
-                            rows="6"
+                            rows="8"
                             :disabled="!canEdit"
                             class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-lg px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
                             placeholder="توضیحات وظیفه را بنویسید..."
@@ -909,14 +911,19 @@
                         <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                     </div>
 
-                    {{-- Grid: Priority | Due Date | Column --}}
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {{-- Settings: one clear row on desktop --}}
+                    <section class="task-modal-section" aria-labelledby="task-settings-title">
+                        <div class="task-modal-section__heading">
+                            <div class="task-modal-section__title" id="task-settings-title">تنظیمات</div>
+                            <span class="text-[10px] text-[#94A3B8]">جزئیات اجرایی کارت</span>
+                        </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-start">
                         {{-- Priority --}}
                         <div>
-                            <label class="board-field-label">اولویت</label>
-                            <div class="flex flex-col gap-1">
+                            <label class="board-field-label mb-2">اولویت</label>
+                            <div class="flex flex-wrap gap-1">
                                 <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-violet-500'}, {name:'پایین', color:'bg-slate-400'}]" :key="p.name">
-                                    <label class="flex items-center gap-2 text-[11px] cursor-pointer px-2.5 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#18212B] bg-[#F1F3F2]' : 'border-transparent hover:bg-white'">
+                                    <label class="flex items-center gap-1.5 text-[10px] cursor-pointer px-2 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#18212B] bg-[#F1F3F2]' : 'border-transparent hover:bg-white'">
                                         <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEdit" class="hidden">
                                         <span class="w-2 h-2 rounded-full" :class="p.color"></span>
                                         <span class="font-semibold" :class="form.priority === p.name ? 'text-[#000000]' : 'text-[#64748B]'" x-text="p.name"></span>
@@ -941,11 +948,7 @@
                                 </template>
                             </select>
                         </div>
-                    </div>
-
-                    {{-- Grid: Assignees | Tags --}}
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {{-- Assignees --}}
+                    {{-- Assignees --}}
                         <div x-data="{ assigneeOpen: false, assigneeSearch: '' }" @click.away="assigneeOpen = false" class="relative">
                             <label class="board-field-label">مسئولین</label>
                             <div
@@ -1061,14 +1064,12 @@
                             </div>
                         </div>
                     </div>
-
-                    {{-- Separator --}}
-                    <div class="border-t border-[#E2E8F0]"></div>
+                    </section>
 
                     {{-- Checklist --}}
-                    <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <label class="board-field-label mb-0">چک‌لیست</label>
+                    <section class="task-modal-section" aria-labelledby="task-checklist-title">
+                        <div class="task-modal-section__heading">
+                            <div class="task-modal-section__title" id="task-checklist-title">چک‌لیست</div>
                             <span class="text-[12px] font-bold text-[#64748B]" x-text="checklistProgress()"></span>
                         </div>
                         <div class="checklist-bar mb-3">
@@ -1100,14 +1101,14 @@
                             >
                         </div>
                         @endif
-                    </div>
-
-                    {{-- Separator --}}
-                    <div class="border-t border-[#E2E8F0]"></div>
+                    </section>
 
                     {{-- Comments --}}
-                    <div>
-                        <label class="board-field-label mb-3">گفتگو</label>
+                    <section class="task-modal-section" aria-labelledby="task-comments-title">
+                        <div class="task-modal-section__heading">
+                            <div class="task-modal-section__title" id="task-comments-title">گفتگو</div>
+                            <span x-show="form.comments.length" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.comments.length) + ' پیام'"></span>
+                        </div>
                         <div class="space-y-3">
                             <template x-for="(comment, idx) in form.comments" :key="idx">
                                 <div class="flex gap-3">
@@ -1158,7 +1159,7 @@
                             </div>
                         </div>
                         @endif
-                    </div>
+                    </section>
                 </div>
 
                 {{-- Footer --}}
