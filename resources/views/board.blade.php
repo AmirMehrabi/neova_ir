@@ -933,9 +933,29 @@
                         </div>
 
                         {{-- Due Date --}}
-                        <div>
+                        <div class="relative">
                             <label class="board-field-label">سررسید</label>
-                            <input x-model="form.dueDate" x-ref="dueDateInput" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]">
+                            <div class="relative">
+                                <input :value="formatDateInput(form.dueDate)" x-ref="dueDateInput" @click="if (canEdit) openJalaliDatePicker()" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ">
+                                <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
+                            </div>
+                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker absolute top-full right-0 mt-2 z-30 w-[290px] rounded-2xl border border-[#E2E8F0] bg-white p-3 shadow-2xl">
+                                <div class="flex items-center justify-between mb-3">
+                                    <button type="button" @click="changeJalaliMonth(1)" class="jalali-picker__nav" aria-label="ماه بعد">‹</button>
+                                    <span class="text-xs font-black text-[#18212B]" x-text="jalaliMonthLabel()"></span>
+                                    <button type="button" @click="changeJalaliMonth(-1)" class="jalali-picker__nav" aria-label="ماه قبل">›</button>
+                                </div>
+                                <div class="grid grid-cols-7 gap-1 mb-1 text-center">
+                                    <template x-for="day in jalaliWeekdays" :key="day"><span class="text-[10px] font-bold text-[#94A3B8]" x-text="day"></span></template>
+                                </div>
+                                <div class="grid grid-cols-7 gap-1">
+                                    <template x-for="(day, index) in jalaliCalendarDays()" :key="index">
+                                        <button type="button" @click="day && selectJalaliDate(day)" :disabled="!day" class="jalali-picker__day" :class="[!day ? 'invisible' : '', day && isSelectedJalaliDay(day) ? 'jalali-picker__day--selected' : '', day && isTodayJalaliDay(day) ? 'jalali-picker__day--today' : '']" x-text="day ? toPersianDigits(day) : ''"></button>
+                                    </template>
+                                </div>
+                                <button type="button" @click="selectTodayJalaliDate()" class="w-full mt-3 pt-2 border-t border-[#F1F5F9] text-[10px] font-bold text-[#64748B] hover:text-[#18212B]">امروز</button>
+                            </div>
                             <p x-show="form.dueDate && isOverdue(form.dueDate)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
                         </div>
 
@@ -1329,6 +1349,8 @@
                 mentionStart: null,
                 mentionCursor: null,
                 form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: '', dueDate: '', tags: [], checklist: [], comments: [] },
+                jalaliDatePicker: { open: false, year: 1400, month: 1 },
+                jalaliWeekdays: ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'],
 
                 projectMembers: serverMembers,
                 workspacePeople: serverWorkspacePeople,
@@ -1618,19 +1640,91 @@
                 },
 
                 initJalaliDatePicker() {
-                    if (!this.$refs.dueDateInput) return;
-                    const self = this;
-                    flatpickr(this.$refs.dueDateInput, {
-                        locale: 'fa',
-                        dateFormat: 'Y-m-d',
-                        altInput: true,
-                        altFormat: 'j F j',
-                        disableMobile: true,
-                        defaultDate: self.form.dueDate || null,
-                        onChange(selectedDates, dateStr) {
-                            self.form.dueDate = dateStr;
-                        },
-                    });
+                    const today = moment().locale('fa');
+                    this.jalaliDatePicker.year = Number(today.format('jYYYY'));
+                    this.jalaliDatePicker.month = Number(today.format('jM'));
+                },
+
+                jalaliDateParts(dateStr) {
+                    const date = dateStr
+                        ? moment(dateStr, 'YYYY-MM-DD').locale('fa')
+                        : moment().locale('fa');
+                    return {
+                        year: Number(date.format('jYYYY')),
+                        month: Number(date.format('jM')),
+                        day: Number(date.format('jD')),
+                    };
+                },
+
+                formatDateInput(dateStr) {
+                    if (!dateStr) return '';
+                    const date = moment(dateStr, 'YYYY-MM-DD').locale('fa');
+                    return this.toPersianDigits(date.format('YYYY/MM/DD'));
+                },
+
+                jalaliMonthLabel() {
+                    const date = moment(`${this.jalaliDatePicker.year}/${this.jalaliDatePicker.month}/1`, 'jYYYY/jM/jD').locale('fa');
+                    return this.toPersianDigits(date.format('jMMMM jYYYY'));
+                },
+
+                jalaliMonthDays(year, month) {
+                    const date = moment(`${year}/${month}/1`, 'jYYYY/jM/jD').locale('fa');
+                    return Number(date.endOf('jMonth').format('jD'));
+                },
+
+                jalaliCalendarDays() {
+                    const { year, month } = this.jalaliDatePicker;
+                    const firstDay = moment(`${year}/${month}/1`, 'jYYYY/jM/jD').toDate();
+                    const offset = (firstDay.getDay() + 1) % 7;
+                    return [...Array(offset).fill(null), ...Array.from({ length: this.jalaliMonthDays(year, month) }, (_, index) => index + 1)];
+                },
+
+                openJalaliDatePicker() {
+                    const current = this.jalaliDateParts(this.form.dueDate);
+                    this.jalaliDatePicker.year = current.year;
+                    this.jalaliDatePicker.month = current.month;
+                    this.jalaliDatePicker.open = true;
+                },
+
+                closeJalaliDatePicker() {
+                    this.jalaliDatePicker.open = false;
+                },
+
+                changeJalaliMonth(step) {
+                    let month = this.jalaliDatePicker.month + step;
+                    let year = this.jalaliDatePicker.year;
+                    if (month < 1) { month = 12; year--; }
+                    if (month > 12) { month = 1; year++; }
+                    this.jalaliDatePicker.year = year;
+                    this.jalaliDatePicker.month = month;
+                },
+
+                selectJalaliDate(day) {
+                    this.form.dueDate = moment.from(`${this.jalaliDatePicker.year}/${this.jalaliDatePicker.month}/${day}`, 'fa', 'YYYY/M/D').format('YYYY-MM-DD');
+                    this.closeJalaliDatePicker();
+                },
+
+                clearJalaliDate() {
+                    this.form.dueDate = '';
+                    this.closeJalaliDatePicker();
+                },
+
+                selectTodayJalaliDate() {
+                    const today = moment().locale('fa');
+                    this.jalaliDatePicker.year = Number(today.format('jYYYY'));
+                    this.jalaliDatePicker.month = Number(today.format('jM'));
+                    this.selectJalaliDate(Number(today.format('jD')));
+                },
+
+                isSelectedJalaliDay(day) {
+                    if (!this.form.dueDate) return false;
+                    const selected = this.jalaliDateParts(this.form.dueDate);
+                    return selected.year === this.jalaliDatePicker.year && selected.month === this.jalaliDatePicker.month && selected.day === day;
+                },
+
+                isTodayJalaliDay(day) {
+                    const today = this.jalaliDateParts();
+                    return today.year === this.jalaliDatePicker.year && today.month === this.jalaliDatePicker.month && today.day === day;
                 },
 
                 dismissSwipeHint() {
@@ -2108,7 +2202,7 @@
                 formatDate(dateStr) {
                     if (!dateStr) return '';
                     try {
-                        const jalali = moment(dateStr, 'YYYY-MM-DD').locale('fa').format('j D jMMMM');
+                        const jalali = moment(dateStr, 'YYYY-MM-DD').locale('fa').format('YYYY/MM/DD');
                         return this.toPersianDigits(jalali);
                     } catch {
                         return dateStr;
@@ -2343,9 +2437,6 @@
                     this.$nextTick(() => {
                         this.modalSnapshot = JSON.stringify(this.form);
                         this.$refs.taskTitle?.focus();
-                        if (this.$refs.dueDateInput && this.$refs.dueDateInput._flatpickr) {
-                            this.$refs.dueDateInput._flatpickr.clear();
-                        }
                     });
                 },
 
@@ -2368,14 +2459,12 @@
                     this.$nextTick(() => {
                         this.modalSnapshot = JSON.stringify(this.form);
                         this.$refs.taskTitle?.focus();
-                        if (this.$refs.dueDateInput && this.$refs.dueDateInput._flatpickr) {
-                            this.$refs.dueDateInput._flatpickr.setDate(this.form.dueDate || null);
-                        }
                     });
                 },
 
                 closeModal() {
                     this.showModal = false;
+                    this.closeJalaliDatePicker();
                     this.editingDescription = false;
                     this.taskError = '';
                     this.modalSnapshot = null;
