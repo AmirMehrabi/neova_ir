@@ -81,6 +81,11 @@ class User extends Authenticatable
             ->withTimestamps();
     }
 
+    public function projectActivities(): HasMany
+    {
+        return $this->hasMany(ProjectActivity::class, 'actor_id');
+    }
+
     public function workspaceInvitations(): HasMany
     {
         return $this->hasMany(WorkspaceInvitation::class, 'responded_by');

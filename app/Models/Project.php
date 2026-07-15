@@ -50,6 +50,11 @@ class Project extends Model
         return Task::whereIn('column_id', $this->columns()->pluck('id'));
     }
 
+    public function activities(): HasMany
+    {
+        return $this->hasMany(ProjectActivity::class);
+    }
+
     public function canUserView(User $user, Workspace $workspace): bool
     {
         if ($this->visibility === 'public') {

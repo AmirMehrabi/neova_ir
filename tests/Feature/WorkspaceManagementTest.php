@@ -249,6 +249,8 @@ class WorkspaceManagementTest extends TestCase
         $this->assertSame('بررسی نهایی', $task->checklist[0]['text']);
         $this->assertSame('شروع شد', $task->comments[0]['text']);
         $this->assertStringContainsString('شما را به وظیفه', $member->notifications()->latest()->first()->data['message']);
+        $this->assertDatabaseHas('project_activities', ['project_id' => $project->id, 'actor_id' => $owner->id, 'kind' => 'task_created']);
+        $this->assertDatabaseHas('project_activities', ['project_id' => $project->id, 'task_id' => $task->id, 'kind' => 'task_assignees_added']);
 
         $this->actingAs($owner)
             ->putJson(route('board.task.update', [$workspace->slug, $project->slug, $task->id]), [
@@ -260,6 +262,9 @@ class WorkspaceManagementTest extends TestCase
             ])
             ->assertOk();
 
+        $this->assertDatabaseHas('project_activities', ['project_id' => $project->id, 'task_id' => $task->id, 'kind' => 'task_description_changed']);
+        $this->assertDatabaseHas('project_activities', ['project_id' => $project->id, 'task_id' => $task->id, 'kind' => 'task_priority_changed']);
+
         $this->actingAs($owner)
             ->postJson(route('board.task.comments.store', [$workspace->slug, $project->slug, $task->id]), [
                 'text' => "@[{$member->full_name}](user:{$member->id}) نظر شما چیست؟",
@@ -267,6 +272,13 @@ class WorkspaceManagementTest extends TestCase
             ])
             ->assertOk()
             ->assertJsonPath('comment.mention_ids.0', $member->id);
+
+        $this->assertDatabaseHas('project_activities', ['project_id' => $project->id, 'task_id' => $task->id, 'kind' => 'task_comment_added']);
+        $activityResponse = $this->actingAs($owner)
+            ->getJson(route('board.activity', [$workspace->slug, $project->slug], false).'?kind=task_priority_changed&user_id='.$owner->id)
+            ->assertOk()
+            ->assertJsonPath('data.0.kind', 'task_priority_changed');
+        $this->assertSame($owner->full_name, $activityResponse->json('data.0.actor'));
 
         $messages = $member->notifications()->latest()->take(3)->get()->pluck('data.message')->implode(' ');
         $this->assertStringContainsString('از شما نام برد', $messages);

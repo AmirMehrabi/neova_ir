@@ -767,40 +767,54 @@
                 <section x-show="projectDrawerTab === 'activity'" class="space-y-4">
                     <div>
                         <h3 class="text-sm font-black text-[#071B33]">فعالیت‌های پروژه</h3>
-                        <p class="text-[11px] leading-5 text-[#64748B] mt-1">تمام تغییرات وظایف در این پروژه</p>
+                        <p class="text-[11px] leading-5 text-[#64748B] mt-1">تمام تغییرات پروژه، وظایف و اعضا</p>
                     </div>
                     <div class="relative">
                         <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input x-model="activitySearch" class="w-full text-xs border-2 border-[#E2E8F0] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#18212B]" placeholder="جستجو در فعالیت‌ها…">
+                        <input x-model="activitySearch" @input.debounce.300ms="loadActivity(1)" class="w-full text-xs border-2 border-[#E2E8F0] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#18212B]" placeholder="جستجو در فعالیت‌ها…">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <select x-model="activityUserId" @change="loadActivity(1)" class="w-full text-[11px] border-2 border-[#E2E8F0] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#18212B] bg-white">
+                            <option value="">همه کاربران</option>
+                            <template x-for="person in activityUsers" :key="person.id"><option :value="person.id" x-text="person.name"></option></template>
+                        </select>
+                        <select x-model="activityKind" @change="loadActivity(1)" class="w-full text-[11px] border-2 border-[#E2E8F0] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#18212B] bg-white">
+                            <option value="">همه رویدادها</option>
+                            <template x-for="kind in activityKinds" :key="kind"><option :value="kind" x-text="activityKindLabel(kind)"></option></template>
+                        </select>
                     </div>
                     <div x-show="activityLoading" class="py-8 text-center">
                         <svg class="animate-spin w-5 h-5 text-[#18212B] mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                         <p class="text-[11px] text-[#94A3B8] mt-2">در حال بارگذاری…</p>
                     </div>
                     <div x-show="!activityLoading" class="space-y-2">
-                        <template x-for="(item, idx) in filteredActivity()" :key="idx">
+                        <template x-for="item in activityItems" :key="item.id">
                             <div class="flex gap-3 p-3 rounded-xl border border-[#E2E8F0] hover:border-[#CBD5E1] transition-colors">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                                      :class="{
-                                         'bg-[#DCFCE7] text-[#16A34A]': item.kind === 'task_assigned',
-                                         'bg-[#F1F3F2] text-[#18212B]': item.kind === 'task_updated',
-                                         'bg-[#FEF3C7] text-[#D97706]': item.kind === 'task_moved',
-                                         'bg-[#F3E8FF] text-[#9333EA]': item.kind === 'task_mentioned',
+                                         'bg-[#DCFCE7] text-[#16A34A]': item.kind.includes('added') || item.kind === 'task_created',
+                                         'bg-[#F1F3F2] text-[#18212B]': item.kind.includes('changed'),
+                                         'bg-[#FEF3C7] text-[#D97706]': item.kind.includes('moved'),
+                                         'bg-[#FEE2E2] text-[#DC2626]': item.kind.includes('deleted') || item.kind.includes('removed'),
+                                         'bg-[#F3E8FF] text-[#9333EA]': item.kind.includes('comment') || item.kind.includes('mentioned'),
                                      }">
-                                    <svg x-show="item.kind === 'task_assigned'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                                    <svg x-show="item.kind === 'task_updated'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    <svg x-show="item.kind === 'task_moved'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                                    <svg x-show="item.kind === 'task_mentioned'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>
+                                    <span class="text-[10px] font-black" x-text="activityKindLabel(item.kind).slice(0, 1)"></span>
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[12px] leading-5 text-[#334155]" x-html="highlightText(item.message || '', activitySearch)"></p>
+                                    <p class="text-[10px] text-[#64748B] mt-1" x-text="item.actor"></p>
                                     <p class="text-[9px] text-[#94A3B8] mt-1" x-text="item.time || ''"></p>
                                 </div>
                             </div>
                         </template>
-                        <div x-show="filteredActivity().length === 0 && !activityLoading" class="py-8 text-center">
+                        <div x-show="activityItems.length === 0 && !activityLoading" class="py-8 text-center">
                             <p class="text-[11px] text-[#94A3B8]">فعالیتی یافت نشد</p>
                         </div>
+                    </div>
+                    <div x-show="activityMeta.last_page > 1" class="flex items-center justify-between pt-2">
+                        <button @click="loadActivity(activityMeta.current_page - 1)" :disabled="activityMeta.current_page <= 1 || activityLoading" class="text-[10px] font-bold text-[#64748B] disabled:opacity-40">قبلی</button>
+                        <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(activityMeta.current_page) + ' از ' + toPersianDigits(activityMeta.last_page)"></span>
+                        <button @click="loadActivity(activityMeta.current_page + 1)" :disabled="activityMeta.current_page >= activityMeta.last_page || activityLoading" class="text-[10px] font-bold text-[#64748B] disabled:opacity-40">بعدی</button>
                     </div>
                 </section>
             </div>
@@ -1324,6 +1338,11 @@
                 activitySearch: '',
                 activityItems: [],
                 activityLoading: false,
+                activityUserId: '',
+                activityKind: '',
+                activityUsers: [],
+                activityKinds: [],
+                activityMeta: { current_page: 1, last_page: 1, total: 0 },
                 projectMemberSaving: null,
                 projectSettingsSaving: false,
                 editingTask: null,
@@ -1559,14 +1578,19 @@
                     return count;
                 },
 
-                async loadActivity() {
+                async loadActivity(page = 1) {
                     if (this.activityLoading) return;
                     this.activityLoading = true;
                     try {
-                        const res = await fetch('{{ route("board.activity", [$workspace->slug, $project->slug], false) }}', {
+                        const params = new URLSearchParams({ page, search: this.activitySearch, user_id: this.activityUserId, kind: this.activityKind });
+                        const res = await fetch('{{ route("board.activity", [$workspace->slug, $project->slug], false) }}?' + params.toString(), {
                             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                         });
-                        this.activityItems = await res.json();
+                        const payload = await res.json();
+                        this.activityItems = payload.data || [];
+                        this.activityMeta = payload.meta || { current_page: 1, last_page: 1, total: 0 };
+                        this.activityUsers = payload.filters?.users || this.activityUsers;
+                        this.activityKinds = payload.filters?.kinds || this.activityKinds;
                     } catch (e) {
                         this.activityItems = [];
                     } finally {
@@ -1574,12 +1598,18 @@
                     }
                 },
 
-                filteredActivity() {
-                    const q = this.activitySearch.trim().toLowerCase();
-                    if (!q) return this.activityItems;
-                    return this.activityItems.filter(item =>
-                        (item.message || '').toLowerCase().includes(q)
-                    );
+                activityKindLabel(kind) {
+                    const labels = {
+                        task_created: 'ایجاد وظیفه', task_description_changed: 'توضیحات', task_description_removed: 'حذف توضیحات',
+                        task_priority_changed: 'اولویت', task_due_date_changed: 'سررسید', task_assignees_added: 'افزودن مسئول', task_assignees_removed: 'حذف مسئول',
+                        task_tags_added: 'افزودن برچسب', task_tags_removed: 'حذف برچسب', task_checklist_changed: 'چک‌لیست', task_comment_added: 'گفتگو',
+                        task_checklist_item_added: 'افزودن چک‌لیست', task_checklist_item_removed: 'حذف چک‌لیست', task_checklist_item_completed: 'تکمیل چک‌لیست', task_checklist_item_reopened: 'بازکردن چک‌لیست',
+                        task_moved: 'جابجایی وظیفه', task_deleted: 'حذف وظیفه', column_created: 'ایجاد ستون', column_title_changed: 'تغییر ستون',
+                        column_color_changed: 'رنگ ستون', column_order_changed: 'ترتیب ستون‌ها', column_deleted: 'حذف ستون', project_member_added: 'افزودن عضو',
+                        project_member_removed: 'حذف عضو', project_name_changed: 'نام پروژه', project_key_changed: 'کلید پروژه', project_description_changed: 'توضیحات پروژه',
+                        project_board_style_changed: 'سبک تخته', project_custom_tags_changed: 'برچسب‌های پروژه'
+                    };
+                    return labels[kind] || kind;
                 },
 
                 init() {

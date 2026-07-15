@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\ProjectColumn;
+use App\Models\ProjectActivity;
 use App\Models\Task;
 use App\Models\User;
 use App\Services\ProjectActivityNotifier;
+use App\Services\ProjectActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -104,6 +106,7 @@ class BoardController extends Controller
         string $workspace,
         string $project,
         ProjectActivityNotifier $notifier,
+        ProjectActivityLogger $activityLogger,
     ) {
         $request->validate([
             'column_id' => 'required|exists:project_columns,id',
@@ -140,6 +143,7 @@ class BoardController extends Controller
             'position' => $maxPosition + 1,
         ]);
         $notifier->taskCreated($task, $request->user());
+        $activityLogger->taskCreated($task, $request->user());
 
         return response()->json($task);
     }
@@ -150,6 +154,7 @@ class BoardController extends Controller
         string $project,
         string $task,
         ProjectActivityNotifier $notifier,
+        ProjectActivityLogger $activityLogger,
     ) {
         $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
@@ -163,15 +168,18 @@ class BoardController extends Controller
             'title', 'description', 'priority', 'due_date',
             'assignees', 'tags', 'checklist', 'comments', 'column_id', 'position',
         ]));
-        $notifier->taskUpdated($task->refresh(), $before, $request->user());
+        $task = $task->refresh();
+        $notifier->taskUpdated($task, $before, $request->user());
+        $activityLogger->taskUpdated($task, $before, $request->user());
 
         return response()->json($task);
     }
 
-    public function destroyTask(Request $request, string $workspace, string $project, string $task)
+    public function destroyTask(Request $request, string $workspace, string $project, string $task, ProjectActivityLogger $activityLogger)
     {
         $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
+        $activityLogger->taskDeleted($task, $request->user());
         $task->delete();
 
         return response()->json(['success' => true]);
@@ -183,6 +191,7 @@ class BoardController extends Controller
         string $project,
         string $task,
         ProjectActivityNotifier $notifier,
+        ProjectActivityLogger $activityLogger,
     ) {
         $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
@@ -192,6 +201,7 @@ class BoardController extends Controller
         ]);
         $targetColumn = ProjectColumn::findOrFail($request->column_id);
         $this->ensureColumnInCurrentProject($request, $targetColumn);
+        $sourceColumnTitle = $task->column->title;
 
         DB::transaction(function () use ($request, $task) {
             $oldColumnId = (int) $task->column_id;
@@ -245,7 +255,9 @@ class BoardController extends Controller
                 ]);
             }
         });
-        $notifier->taskMoved($task->refresh(), $request->user(), $targetColumn->title);
+        $task = $task->refresh();
+        $notifier->taskMoved($task, $request->user(), $targetColumn->title);
+        $activityLogger->taskMoved($task, $sourceColumnTitle, $targetColumn->title, $request->user());
 
         return response()->json(['success' => true]);
     }
@@ -256,6 +268,7 @@ class BoardController extends Controller
         string $project,
         string $task,
         ProjectActivityNotifier $notifier,
+        ProjectActivityLogger $activityLogger,
     ) {
         $task = $this->findTaskInCurrentProject($request, $task);
         $validated = $request->validate([
@@ -279,19 +292,21 @@ class BoardController extends Controller
         $comments = $task->comments ?? [];
         $comments[] = $comment;
         $task->update(['comments' => $comments]);
-        $notifier->taskUpdated($task->refresh(), $before, $request->user());
+        $task = $task->refresh();
+        $notifier->taskUpdated($task, $before, $request->user());
+        $activityLogger->commentAdded($task, $comment, $request->user());
 
         return response()->json(['comment' => $comment]);
     }
 
-    public function updateProject(Request $request, string $workspace, string $project)
+    public function updateProject(Request $request, string $workspace, string $project, ProjectActivityLogger $activityLogger)
     {
         $workspaceModel = $request->attributes->get('workspace');
         $projectModel = $request->attributes->get('project');
         abort_unless($workspaceModel->canManageMembers($request->user()), 403);
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'name' => ['nullable', 'string', 'max:255'],
             'key' => [
                 'nullable',
                 'string',
@@ -304,10 +319,11 @@ class BoardController extends Controller
             'board_style' => ['nullable', 'string', Rule::in(['simple', 'creative'])],
         ]);
 
+        $before = $projectModel->only(['name', 'key', 'description', 'board_style', 'custom_tags']);
         $projectModel->update([
-            'name' => $validated['name'],
-            'key' => mb_strtoupper($validated['key'] ?? ''),
-            'description' => $validated['description'] ?? null,
+            'name' => $validated['name'] ?? $projectModel->name,
+            'key' => mb_strtoupper(array_key_exists('key', $validated) ? ($validated['key'] ?? '') : ($projectModel->key ?? '')),
+            'description' => array_key_exists('description', $validated) ? $validated['description'] : $projectModel->description,
             'board_style' => $validated['board_style'] ?? $projectModel->board_style ?? 'simple',
         ]);
 
@@ -315,6 +331,12 @@ class BoardController extends Controller
             $projectModel->custom_tags = $request->input('custom_tags');
             $projectModel->save();
         }
+        $projectModel->refresh();
+        $changes = [];
+        foreach (array_keys($before) as $field) {
+            if ($before[$field] != $projectModel->{$field}) $changes[$field] = [$before[$field], $projectModel->{$field}];
+        }
+        $activityLogger->projectChanged($projectModel, $changes, $request->user());
 
         return response()->json([
             'message' => 'تنظیمات پروژه ذخیره شد.',
@@ -322,7 +344,7 @@ class BoardController extends Controller
         ]);
     }
 
-    public function addProjectMember(Request $request, string $workspace, string $project)
+    public function addProjectMember(Request $request, string $workspace, string $project, ProjectActivityLogger $activityLogger)
     {
         $workspaceModel = $request->attributes->get('workspace');
         $projectModel = $request->attributes->get('project');
@@ -334,9 +356,11 @@ class BoardController extends Controller
         $user = User::findOrFail($validated['user_id']);
         abort_unless($workspaceModel->hasMember($user), 422, 'این کاربر عضو فضای کاری نیست.');
 
+        $alreadyMember = $projectModel->members()->where('users.id', $user->id)->exists();
         $projectModel->members()->syncWithoutDetaching([
             $user->id => ['added_by' => $request->user()->id],
         ]);
+        if (! $alreadyMember) $activityLogger->memberChanged($projectModel, $user, $request->user(), true);
 
         return response()->json([
             'message' => 'عضو به پروژه اضافه شد.',
@@ -348,14 +372,16 @@ class BoardController extends Controller
         ]);
     }
 
-    public function removeProjectMember(Request $request, string $workspace, string $project, User $user)
+    public function removeProjectMember(Request $request, string $workspace, string $project, User $user, ProjectActivityLogger $activityLogger)
     {
         $workspaceModel = $request->attributes->get('workspace');
         $projectModel = $request->attributes->get('project');
         abort_unless($workspaceModel->canManageMembers($request->user()), 403);
         abort_unless($projectModel->members()->where('users.id', $user->id)->exists(), 404);
+        $activityLogger->memberChanged($projectModel, $user, $request->user(), false);
 
-        DB::transaction(function () use ($projectModel, $user) {
+        $changedTasks = [];
+        DB::transaction(function () use ($projectModel, $user, &$changedTasks) {
             $projectModel->members()->detach($user->id);
             $projectModel->columns()->with('tasks')->get()->each(function (ProjectColumn $column) use ($user) {
                 $column->tasks->each(function (Task $task) use ($user) {
@@ -364,16 +390,21 @@ class BoardController extends Controller
                         ->values()
                         ->all();
                     if ($assignees !== ($task->assignees ?? [])) {
+                        $before = $task->only(['title', 'description', 'priority', 'due_date', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
                         $task->update(['assignees' => $assignees]);
+                        $changedTasks[] = [$task->fresh(), $before];
                     }
                 });
             });
         });
+        foreach ($changedTasks as [$changedTask, $before]) {
+            $activityLogger->taskUpdated($changedTask, $before, $request->user());
+        }
 
         return response()->json(['message' => 'عضو از پروژه حذف شد.']);
     }
 
-    public function storeColumn(Request $request)
+    public function storeColumn(Request $request, ProjectActivityLogger $activityLogger)
     {
         $request->validate([
             'project_id' => 'required|exists:projects,id',
@@ -390,26 +421,34 @@ class BoardController extends Controller
             'color' => $request->input('color'),
             'position' => $maxPosition + 1,
         ]);
+        $activityLogger->columnChanged($column, $request->user(), 'column_created', "{$request->user()->full_name} ستون «{$column->title}» را ایجاد کرد.");
 
         return response()->json($column);
     }
 
-    public function updateColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
+    public function updateColumn(Request $request, string $workspace, string $project, ProjectColumn $column, ProjectActivityLogger $activityLogger)
     {
         $this->ensureColumnInCurrentProject($request, $column);
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:100'],
             'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ]);
+        $before = $column->only(['title', 'color']);
         $column->update([
             'title' => trim($validated['title']),
             'color' => $validated['color'] ?? $column->color,
         ]);
+        foreach ($before as $field => $value) {
+            if ($value != $column->{$field}) {
+                $label = $field === 'title' ? 'نام' : 'رنگ';
+                $activityLogger->columnChanged($column, $request->user(), 'column_'.$field.'_changed', "{$request->user()->full_name} {$label} ستون «{$column->title}» را تغییر داد.", ['field' => $field, 'before' => $value, 'after' => $column->{$field}]);
+            }
+        }
 
         return response()->json($column->fresh());
     }
 
-    public function reorderColumns(Request $request, string $workspace, string $project)
+    public function reorderColumns(Request $request, string $workspace, string $project, ProjectActivityLogger $activityLogger)
     {
         $projectModel = $request->attributes->get('project');
         $validated = $request->validate([
@@ -422,6 +461,7 @@ class BoardController extends Controller
         $submittedColumnIds = collect($columnIds)->sort()->values()->all();
 
         abort_unless($projectColumnIds === $submittedColumnIds, 422, 'ترتیب ستون‌ها معتبر نیست.');
+        $beforeOrder = $projectModel->columns()->orderBy('position')->pluck('id')->map(fn ($id) => (int) $id)->all();
 
         DB::transaction(function () use ($projectModel, $columnIds) {
             $columns = $projectModel->columns()
@@ -434,14 +474,20 @@ class BoardController extends Controller
                 $columns[$columnId]->update(['position' => $index + 1]);
             }
         });
+        if ($beforeOrder !== $columnIds) {
+            $activityLogger->log($projectModel, $request->user(), 'column_order_changed', "{$request->user()->full_name} ترتیب ستون‌های پروژه را تغییر داد.", metadata: ['before' => $beforeOrder, 'after' => $columnIds]);
+        }
 
         return response()->json(['success' => true]);
     }
 
-    public function destroyColumn(Request $request, string $workspace, string $project, ProjectColumn $column)
+    public function destroyColumn(Request $request, string $workspace, string $project, ProjectColumn $column, ProjectActivityLogger $activityLogger)
     {
         $this->ensureColumnInCurrentProject($request, $column);
         abort_if($column->project->columns()->count() <= 1, 422, 'پروژه باید حداقل یک ستون داشته باشد.');
+        $deletedTasks = $column->tasks()->get();
+        foreach ($deletedTasks as $deletedTask) $activityLogger->taskDeleted($deletedTask, $request->user());
+        $activityLogger->columnChanged($column, $request->user(), 'column_deleted', "{$request->user()->full_name} ستون «{$column->title}» را حذف کرد.");
         $column->tasks()->delete();
         $column->delete();
 
@@ -494,19 +540,50 @@ class BoardController extends Controller
     public function activity(Request $request, string $workspace, string $project)
     {
         $projectModel = $request->attributes->get('project');
+        $validated = $request->validate([
+            'user_id' => ['nullable', 'integer'],
+            'kind' => ['nullable', 'string', 'max:80'],
+            'search' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+            'per_page' => ['nullable', 'integer', 'min:10', 'max:50'],
+        ]);
+        $query = ProjectActivity::query()
+            ->with(['actor:id,first_name,last_name,name'])
+            ->where('project_id', $projectModel->id);
+        if (! empty($validated['user_id'])) $query->where('actor_id', $validated['user_id']);
+        if (! empty($validated['kind'])) $query->where('kind', $validated['kind']);
+        if (! empty($validated['search'])) {
+            $search = $validated['search'];
+            $query->where(function ($builder) use ($search) {
+                $builder->where('message', 'like', "%{$search}%")
+                    ->orWhere('subject', 'like', "%{$search}%")
+                    ->orWhereHas('actor', fn ($actor) => $actor->where('first_name', 'like', "%{$search}%")->orWhere('last_name', 'like', "%{$search}%")->orWhere('name', 'like', "%{$search}%"));
+            });
+        }
+        $activities = $query->latest()->paginate($validated['per_page'] ?? 30);
+        $people = collect([$projectModel->workspace->owner])->merge($projectModel->members()->orderBy('name')->get())->unique('id')->values();
+        $kinds = ProjectActivity::where('project_id', $projectModel->id)->distinct()->orderBy('kind')->pluck('kind')->values();
 
-        $notifications = \App\Models\Notification::query()
-            ->where('type', 'App\\Notifications\\ProjectActivityNotification')
-            ->whereRaw("JSON_EXTRACT(data, '$.project_id') = ?", [$projectModel->id])
-            ->orderByDesc('created_at')
-            ->limit(100)
-            ->get()
-            ->map(fn ($n) => [
-                'kind' => $n->data['kind'] ?? '',
-                'message' => $n->data['message'] ?? '',
-                'time' => $n->created_at->diffForHumans(),
-            ]);
-
-        return response()->json($notifications);
+        return response()->json([
+            'data' => $activities->getCollection()->map(fn (ProjectActivity $activity) => [
+                'id' => $activity->id,
+                'kind' => $activity->kind,
+                'message' => $activity->message,
+                'subject' => $activity->subject,
+                'actor' => $activity->actor?->full_name ?? 'کاربر حذف‌شده',
+                'time' => $activity->created_at->diffForHumans(),
+                'created_at' => $activity->created_at->toIso8601String(),
+                'metadata' => $activity->metadata,
+            ])->values(),
+            'meta' => [
+                'current_page' => $activities->currentPage(),
+                'last_page' => $activities->lastPage(),
+                'total' => $activities->total(),
+            ],
+            'filters' => [
+                'users' => $people->map(fn ($person) => ['id' => $person->id, 'name' => $person->full_name])->values(),
+                'kinds' => $kinds,
+            ],
+        ]);
     }
 }
