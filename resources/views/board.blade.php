@@ -10,7 +10,7 @@
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; }
         .sortable-ghost { opacity: 0.4; background: #F1F3F2 !important; border: 2px dashed #18212B !important; box-shadow: none !important; }
-        .sortable-chosen { box-shadow: 0 12px 28px rgba(24,33,43,0.16), 0 2px 8px rgba(24,33,43,0.10) !important; transform: rotate(1.5deg); z-index: 50; }
+        .sortable-chosen { box-shadow: 0 4px 12px rgba(24,33,43,0.09) !important; transform: translateY(-1px); z-index: 50; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         ::-webkit-scrollbar { width: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -83,7 +83,7 @@
     </style>
 </head>
 <body
-    class="neova-board neova-product board-style-creative min-h-screen overflow-x-hidden"
+    class="neova-board neova-product board-style-editorial min-h-screen overflow-x-hidden"
     x-data="board()"
     x-init="init()"
     x-cloak
@@ -173,7 +173,7 @@
                     فیلتر
                     <span x-show="activeFilterCount() > 0" class="min-w-5 h-5 px-1 rounded-full bg-[#18212B] text-white text-[10px] flex items-center justify-center" x-text="toPersianDigits(activeFilterCount())"></span>
                 </button>
-                <div x-show="filterPanelOpen" x-transition class="absolute left-0 top-full mt-2 w-72 rounded-2xl border border-[#E2E8F0] bg-white shadow-xl z-50 p-3 space-y-3">
+                <div x-show="filterPanelOpen" x-transition class="absolute left-0 top-full mt-2 w-72 rounded-xl border border-[#E2E8F0] bg-white shadow-sm z-50 p-3 space-y-3">
                     <div class="flex items-center justify-between">
                         <p class="text-[12px] font-black text-[#18212B]">فیلتر تخته</p>
                         <button x-show="activeFilterCount() > 0" type="button" @click="clearAllFilters()" class="text-[11px] font-bold text-red-500">پاک کردن</button>
@@ -258,35 +258,37 @@
     </x-navbar>
 
     {{-- Active filters strip --}}
-    <div x-show="activeFilterCount() > 0" x-cloak class="board-filter-bar px-3 md:px-4 py-2.5">
-        <div class="flex flex-wrap items-center gap-2">
-            <span class="text-[12px] font-bold text-[#64748B]">فیلتر فعال:</span>
-            <template x-for="name in filterByAssignee" :key="'chip-a-' + name">
-                <button type="button" @click="toggleAssigneeFilter(name)" class="filter-chip is-active">
-                    <span x-text="name"></span>
-                    <span aria-hidden="true">×</span>
-                </button>
-            </template>
-            <template x-for="p in filterByPriority" :key="'chip-p-' + p">
-                <button type="button" @click="togglePriorityFilter(p)" class="filter-chip is-active">
-                    <span x-text="'اولویت ' + p"></span>
-                    <span aria-hidden="true">×</span>
-                </button>
-            </template>
-            <template x-for="tag in filterByTag" :key="'chip-t-' + tag">
-                <button type="button" @click="toggleTagFilter(tag)" class="filter-chip is-active">
-                    <span x-text="tag"></span>
-                    <span aria-hidden="true">×</span>
-                </button>
-            </template>
-            <button type="button" @click="clearAllFilters()" class="text-[11px] font-bold text-red-500 mr-auto">پاک کردن همه</button>
+    <div x-show="activeFilterCount() > 0" x-cloak class="board-filter-bar">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5">
+            <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[12px] font-bold text-[#64748B]">فیلتر فعال:</span>
+                <template x-for="name in filterByAssignee" :key="'chip-a-' + name">
+                    <button type="button" @click="toggleAssigneeFilter(name)" class="filter-chip is-active">
+                        <span x-text="name"></span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </template>
+                <template x-for="p in filterByPriority" :key="'chip-p-' + p">
+                    <button type="button" @click="togglePriorityFilter(p)" class="filter-chip is-active">
+                        <span x-text="'اولویت ' + p"></span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </template>
+                <template x-for="tag in filterByTag" :key="'chip-t-' + tag">
+                    <button type="button" @click="toggleTagFilter(tag)" class="filter-chip is-active">
+                        <span x-text="tag"></span>
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </template>
+                <button type="button" @click="clearAllFilters()" class="text-[11px] font-bold text-red-500 mr-auto">پاک کردن همه</button>
+            </div>
         </div>
     </div>
 
     {{-- Mobile filter sheet --}}
     <div x-show="filterPanelOpen" x-cloak class="md:hidden fixed inset-0 z-[45]" @keydown.escape.window="filterPanelOpen = false">
         <div class="absolute inset-0 bg-[#071B33]/40" @click="filterPanelOpen = false"></div>
-        <div class="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white border-t border-[#E2E8F0] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3 shadow-2xl" @click.stop>
+        <div class="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white border-t border-[#E2E8F0] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3 shadow-lg" @click.stop>
             <div class="flex items-center justify-between">
                 <p class="text-[14px] font-black text-[#18212B]">فیلتر تخته</p>
                 <button type="button" @click="filterPanelOpen = false" class="text-[12px] font-bold text-[#64748B] min-h-10 px-2">بستن</button>
@@ -324,10 +326,10 @@
     </div>
 
     {{-- Board --}}
-    <main class="w-full max-w-none">
+    <main class="w-full max-w-7xl mx-auto">
 
         {{-- Desktop board --}}
-        <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto px-3 md:px-4 pt-4 md:pt-5 pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
+        <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto px-3 sm:px-6 pt-4 md:pt-5 pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
             <template x-for="(column, colIdx) in columns" :key="column.id">
                 <div
                     class="board-column board-column-shell flex flex-col shrink-0"
@@ -337,7 +339,7 @@
                     :class="column.collapsed ? '!w-14 cursor-pointer' : ''"
                     :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''"
                 >
-                    <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-2xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
+                    <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
                         <div class="flex h-[170px] w-full flex-col items-center rounded-xl border border-white/60 px-1.5 py-3 text-white shadow-sm" :style="collapsedColumnStyle(column)">
                             <span class="text-sm font-black" x-text="toPersianDigits(column.tasks.length)"></span>
                             <span class="mt-4 [writing-mode:vertical-rl] rotate-180 text-xs font-black tracking-wide" x-text="column.title"></span>
@@ -372,7 +374,8 @@
                         </div>
                     </div>
 
-                    <div x-show="!column.collapsed" class="board-column-well" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
+                    <div x-show="!column.collapsed" class="board-column-well">
+                        <div class="board-task-list" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
                         <template x-for="task in filteredTasks(column)" :key="task.dbId">
                             <div
                                 class="task-card group"
@@ -381,7 +384,6 @@
                                 :data-column="column.id"
                                 @click="openEditModal(task, column.id)"
                             >
-                                <div class="task-card__cover" aria-hidden="true"></div>
                                 <div class="task-card__priority-edge" :class="priorityEdgeClass(task.priority)"></div>
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2">
@@ -406,7 +408,7 @@
                                     <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-[#F1F5F9]">
                                         <div class="flex items-center -space-x-1.5 space-x-reverse">
                                             <template x-for="(a, ai) in (task.assignees || []).slice(0, 3)" :key="ai">
-                                                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
+                                                <div class="w-6 h-6 rounded-full bg-[#18212B] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
                                                     <span class="text-[8px] text-white font-bold" x-text="a.charAt(0)"></span>
                                                 </div>
                                             </template>
@@ -436,18 +438,15 @@
                                 <svg class="w-5 h-5 text-[#18212B]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                             </div>
                             <p class="board-empty-title " x-text="'اولین کارت را اضافه کن'"></p>
-                            @if ($canEdit)
-                                <button @click.stop="openAddModal(column.id)" class="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-[11px] font-black text-[#18212B] border border-[#D7DDDA] hover:bg-[#F1F3F2] transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
-<span x-text="'افزودن کارت'"></span>
-                                </button>
-                            @endif
+                        </div>
                         </div>
                         @if ($canEdit)
-                            <button x-show="column.tasks.length > 0" @click.stop="openAddModal(column.id)" class="mt-1 flex w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-[#D7D1C5] py-2.5 text-[12px] font-black text-[#64748B] hover:border-[#18212B] hover:bg-white hover:text-[#18212B] transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
-                                <span x-text="'افزودن کارت'"></span>
-                            </button>
+                            <div class="board-column-footer">
+                                <button @click.stop="openAddModal(column.id)" class="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#D7D1C5] py-2.5 text-[12px] font-black text-[#64748B] hover:border-[#18212B] hover:bg-white hover:text-[#18212B] transition-colors">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
+                                    <span x-text="'افزودن کارت'"></span>
+                                </button>
+                            </div>
                         @endif
                     </div>
                 </div>
@@ -474,7 +473,7 @@
                     </button>
                 </template>
             </div>
-            <div class="px-4 pb-2.5 flex items-center justify-between">
+            <div class="px-3 pb-2.5 flex items-center justify-between">
                 <span class="text-[9px] font-bold text-[#64748B]" x-text="toPersianDigits(activeColumnIndex + 1) + ' از ' + toPersianDigits(columns.length)"></span>
                 <div class="flex items-center gap-1.5" aria-hidden="true">
                     <template x-for="(_, index) in columns" :key="'dot-' + index">
@@ -487,7 +486,7 @@
                 </span>
             </div>
             @if ($canEdit)
-                <div class="px-4 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی ستون، دستگیرهٔ آن را بکشید.</div>
+                <div class="px-3 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی ستون، دستگیرهٔ آن را بکشید.</div>
             @endif
         </section>
 
@@ -495,14 +494,14 @@
         <div
             x-ref="mobileBoardTrack"
             @scroll.passive="handleMobileBoardScroll()"
-            class="mobile-board-track md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory px-4 pt-4 pb-8"
+            class="mobile-board-track md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory px-3 pt-4 pb-8"
             style="direction: rtl;"
             aria-label="تخته پروژه"
             x-init="$nextTick(() => initColumnSortable('mobile'))"
         >
             <template x-for="(column, colIdx) in columns" :key="'mobile-' + column.id">
                 <section
-                    class="mobile-board-column flex-none w-[calc(100%_-_32px)] min-w-[calc(100%_-_32px)]"
+                    class="mobile-board-column flex flex-col flex-none w-[calc(100%_-_24px)] min-w-[calc(100%_-_24px)]"
                     :data-column-index="colIdx"
                     :aria-label="column.title"
                 >
@@ -517,18 +516,12 @@
                             <h2 class="text-[14px] font-black text-[#172B4D]" x-text="column.title"></h2>
                             <span class="text-[10px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span>
                         </div>
-                        @if ($canEdit)
-                            <button @click="openAddModal(column.id)" class="w-11 h-11 rounded-xl flex items-center justify-center text-[#18212B] bg-[#F1F3F2] active:bg-[#E8EBE9]" :aria-label="'افزودن وظیفه به ' + column.title">
-                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                            </button>
-                        @endif
                     </div>
                     <div
-                        class="mobile-task-list flex flex-col gap-3 min-h-[calc(100dvh-18rem)] rounded-2xl p-2.5 bg-[#E2E8F0]/55 border transition-colors"
+                        class="mobile-task-list flex flex-1 min-h-0 flex-col rounded-xl p-0 bg-[#F1F0EC] border transition-colors"
                         :class="mobileDragActive && activeColumnIndex === colIdx ? 'border-[#18212B]/60 bg-[#EEF1EF]/65' : 'border-[#CBD5E1]/50'"
-                        :id="'col-mobile-' + column.id"
-                        x-init="$nextTick(() => initSortable(column.id, 'mobile'))"
                     >
+                        <div class="mobile-task-scroll flex flex-1 min-h-0 flex-col gap-3" :id="'col-mobile-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'mobile'))">
                         <template x-for="task in filteredTasks(column)" :key="'mobile-task-' + task.dbId">
                             <article
                                 class="task-card group"
@@ -537,7 +530,6 @@
                                 :data-column="column.id"
                                 @click="if (canOpenTaskFromCard()) openEditModal(task, column.id)"
                             >
-                                <div class="task-card__cover" aria-hidden="true"></div>
                                 <div class="task-card__priority-edge" :class="priorityEdgeClass(task.priority)"></div>
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2.5">
@@ -563,7 +555,7 @@
                                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-[#EEF2F6]">
                                         <div class="flex items-center -space-x-1.5 space-x-reverse">
                                             <template x-for="(a, ai) in (task.assignees || []).slice(0, 3)" :key="ai">
-                                                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
+                                                <div class="w-6 h-6 rounded-full bg-[#18212B] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
                                                     <span class="text-[8px] text-white font-bold" x-text="a.charAt(0)"></span>
                                                 </div>
                                             </template>
@@ -585,6 +577,15 @@
                             </div>
                             <p class="board-empty-title" x-text="'ایده‌ات را اینجا بچسبان'"></p>
                         </div>
+                        </div>
+                        @if ($canEdit)
+                            <div class="board-column-footer">
+                                <button @click="openAddModal(column.id)" class="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#D7D1C5] py-2.5 text-[12px] font-black text-[#64748B] active:border-[#18212B] active:bg-white active:text-[#18212B]" :aria-label="'افزودن وظیفه به ' + column.title">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
+                                    <span x-text="'افزودن کارت'"></span>
+                                </button>
+                            </div>
+                        @endif
                     </div>
                 </section>
             </template>
@@ -646,7 +647,7 @@
             x-transition:leave="transition ease-in duration-180"
             x-transition:leave-start="opacity-100 translate-x-0"
             x-transition:leave-end="opacity-0 -translate-x-full"
-            class="absolute inset-y-0 left-0 w-full sm:w-[430px] bg-white shadow-[18px_0_50px_rgba(7,27,51,0.22)] flex flex-col"
+            class="absolute inset-y-0 left-0 w-full sm:w-[430px] bg-white shadow-[8px_0_24px_rgba(24,33,43,0.12)] flex flex-col"
             @click.stop
         >
             <header class="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
@@ -954,7 +955,7 @@
                                 <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
                             </div>
-                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker absolute top-full right-0 mt-2 z-30 w-[290px] rounded-2xl border border-[#E2E8F0] bg-white p-3 shadow-2xl">
+                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker absolute top-full right-0 mt-2 z-30 w-[290px] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg">
                                 <div class="flex items-center justify-between mb-3">
                                     <button type="button" @click="changeJalaliMonth(1)" class="jalali-picker__nav" aria-label="ماه بعد">‹</button>
                                     <span class="text-xs font-black text-[#18212B]" x-text="jalaliMonthLabel()"></span>
@@ -1046,7 +1047,7 @@
                                             <div class="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors" :class="form.assignees.includes(name) ? 'border-[#18212B] bg-[#18212B]' : 'border-[#CBD5E1]'">
                                                 <svg x-show="form.assignees.includes(name)" class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                             </div>
-                                            <div class="w-5 h-5 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shrink-0">
+                                            <div class="w-5 h-5 rounded-full bg-[#18212B] flex items-center justify-center shrink-0">
                                                 <span class="text-[7px] text-white font-bold" x-text="name.charAt(0)"></span>
                                             </div>
                                             <span class="text-[11px] font-semibold" :class="form.assignees.includes(name) ? 'text-[#000000]' : 'text-[#475569]'" x-text="name"></span>
@@ -1146,7 +1147,7 @@
                         <div class="space-y-3">
                             <template x-for="(comment, idx) in form.comments" :key="idx">
                                 <div class="flex gap-3">
-                                    <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shrink-0 shadow-sm">
+                                    <div class="w-7 h-7 rounded-full bg-[#18212B] flex items-center justify-center shrink-0 shadow-sm">
                                         <span class="text-[9px] text-white font-bold" x-text="comment.author.charAt(0)"></span>
                                     </div>
                                     <div class="flex-1 bg-[#F8FAFC] rounded-xl px-3.5 py-2.5 border border-[#F1F5F9]">
@@ -1161,7 +1162,7 @@
                         </div>
                         @if ($canEdit)
                         <div class="mt-3 flex gap-2.5">
-                            <div class="w-7 h-7 rounded-full bg-gradient-to-br from-[#18212B] to-[#000000] flex items-center justify-center shrink-0 shadow-sm">
+                            <div class="w-7 h-7 rounded-full bg-[#18212B] flex items-center justify-center shrink-0 shadow-sm">
                                 <span class="text-[9px] text-white font-bold">ش</span>
                             </div>
                             <div class="flex-1 relative">
@@ -1206,7 +1207,7 @@
                         <div x-show="!editingTask"></div>
                         <div class="flex items-center gap-2">
                             <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
-                            <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="text-[11px] font-bold text-white bg-gradient-to-l from-[#000000] to-[#18212B] hover:from-[#000000] hover:to-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-md shadow-black/20 hover:shadow-lg transition-all active:scale-[0.97]">
+                            <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-lg shadow-sm transition-colors">
                                 <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد کارت')"></span>
                             </button>
                         </div>
@@ -1222,7 +1223,7 @@
     {{-- Add Column Modal --}}
     <div x-show="showColumnModal" x-cloak x-transition:enter="transition-opacity ease-out duration-100" x-transition:leave="transition-opacity ease-in duration-75" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="closeColumnModal()">
         <div class="absolute inset-0 bg-[#18212B]/45" @click="closeColumnModal()"></div>
-        <form @submit.prevent="addColumn()" class="relative bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-labelledby="column-modal-title" @keydown="trapModalFocus($event)">
+        <form @submit.prevent="addColumn()" class="relative bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-labelledby="column-modal-title" @keydown="trapModalFocus($event)">
             <div class="p-6 border-b border-[#F1EFEA]"><h4 id="column-modal-title" class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام ستون را برای نمایش بهتر جریان کار تغییر دهید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
             <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">رنگ نشان ستون</label><div class="flex flex-wrap gap-2"><template x-for="color in columnColors" :key="color.hex"><button type="button" @click="columnFormColor = color.hex" class="group inline-flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[10px] font-bold transition-all" :class="columnFormColor === color.hex ? 'border-[#18212B] bg-[#FBFAF7] text-[#18212B] ring-2 ring-[#18212B]/10' : 'border-[#E8EBE9] text-[#64748B] hover:bg-[#FBFAF7]'"><span class="h-4 w-4 rounded-full shadow-sm" :style="'background-color:' + color.hex"></span><span x-text="color.name"></span></button></template></div></div><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p></div>
             <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" :disabled="columnSaving" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button type="submit" :disabled="columnSaving" :aria-busy="columnSaving" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait" x-text="columnSaving ? 'در حال ذخیره…' : (columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون')"></button></div>
@@ -1232,7 +1233,7 @@
     {{-- Delete Column Confirmation Modal --}}
     <div x-show="showColumnDeleteModal" x-cloak x-transition:enter="transition-opacity ease-out duration-100" x-transition:leave="transition-opacity ease-in duration-75" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="showColumnDeleteModal = false">
         <div class="absolute inset-0 bg-[#18212B]/55" @click="showColumnDeleteModal = false"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-label="تأیید حذف ستون" @keydown="trapModalFocus($event)">
+        <div class="relative bg-white w-full max-w-sm rounded-xl shadow-lg overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-label="تأیید حذف ستون" @keydown="trapModalFocus($event)">
             <div class="p-6 text-center"><div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M12 9v3m0 4h.01M5.2 19h13.6c1.5 0 2.4-1.6 1.65-2.9L13.65 4.2a1.9 1.9 0 0 0-3.3 0L3.55 16.1C2.8 17.4 3.7 19 5.2 19Z"/></svg></div><h4 class="text-sm font-black text-[#18212B]">حذف ستون «<span x-text="columnDeleteTarget.title"></span>»؟</h4><p class="text-xs leading-6 text-[#64748B] mt-2 mb-5">این ستون و <span class="font-black text-red-500" x-text="columnDeleteTarget.taskCount"></span> وظیفه داخل آن حذف می‌شوند و قابل بازگشت نیستند.</p><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3" role="alert"></p><div class="flex gap-2.5"><button @click="showColumnDeleteModal = false" :disabled="columnDeleting" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button @click="deleteColumn()" :disabled="columnDeleting" :aria-busy="columnDeleting" class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-xs font-black" x-text="columnDeleting ? 'در حال حذف…' : 'حذف ستون'"></button></div></div>
         </div>
     </div>
@@ -1251,7 +1252,7 @@
         @keydown.escape.window="showDeleteModal = false"
     >
         <div class="absolute inset-0 bg-[#0A1628]/60 backdrop-blur-sm" @click="showDeleteModal = false"></div>
-        <div class="relative bg-white w-full max-w-sm rounded-2xl shadow-2xl shadow-black/20 overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-label="تأیید حذف وظیفه" @keydown="trapModalFocus($event)">
+        <div class="relative bg-white w-full max-w-sm rounded-xl shadow-lg overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-label="تأیید حذف وظیفه" @keydown="trapModalFocus($event)">
             <div class="p-6 text-center">
                 <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
                     <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
@@ -1410,7 +1411,7 @@
 
                 collapsedColumnStyle(column) {
                     const color = column.dotHex || '#94A3B8';
-                    return `background: linear-gradient(to bottom, ${color} 0%, color-mix(in srgb, ${color} 42%, transparent) 38%, transparent 100%);`;
+                    return `background: ${color};`;
                 },
 
                 filteredTasks(column) {
@@ -1498,15 +1499,15 @@
                 },
 
                 priorityEdgeClass(priority) {
-                    if (priority === 'بالا') return 'bg-[#EF4444]';
-                    if (priority === 'متوسط') return 'bg-[#8B5CF6]';
-                    return 'bg-[#64748B]';
+                    if (priority === 'بالا') return 'priority-high';
+                    if (priority === 'متوسط') return 'priority-medium';
+                    return 'priority-low';
                 },
 
                 priorityBadgeClass(priority) {
-                    if (priority === 'بالا') return 'bg-red-50 text-red-600';
-                    if (priority === 'متوسط') return 'bg-violet-50 text-violet-600';
-                    return 'bg-slate-100 text-slate-600';
+                    if (priority === 'بالا') return 'priority-high';
+                    if (priority === 'متوسط') return 'priority-medium';
+                    return 'priority-low';
                 },
 
                 cardAccentStyle(task, column) {
@@ -2258,6 +2259,9 @@
                         chosenClass: 'sortable-chosen',
                         dragClass: 'sortable-drag',
                         direction: 'horizontal',
+                        swapThreshold: 0.65,
+                        invertSwap: true,
+                        invertedSwapThreshold: 0.65,
                         draggable: variant === 'mobile' ? '.mobile-board-column' : '.board-column',
                         handle: '.column-drag-handle',
                         delay: variant === 'mobile' ? 140 : 50,
