@@ -1,7 +1,7 @@
 @extends('layouts.app')
 @section('body')
 <div
-    class="neova-dashboard neova-product min-h-screen bg-[#FDFDFC]"
+    class="neova-dashboard dashboard-page neova-product min-h-screen bg-[#FDFDFC]"
     x-data="{
         showModal: false,
         modalType: 'workspace',
@@ -59,11 +59,11 @@
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
         .project-card { transition: background-color 0.18s ease, box-shadow 0.18s ease; }
         .project-card:hover { background: #F5F7F6; box-shadow: inset -3px 0 0 #18212B; }
-        .neova-dashboard .bg-white { background-color: #FFFFFF !important; }
+        .neova-dashboard .bg-white { background-color: #FFFDF8 !important; }
         .neova-dashboard .text-\[\#071B33\] { color: #18212B !important; }
         .neova-dashboard .text-\[\#18212B\], .neova-dashboard .text-\[\#18212B\] { color: #18212B !important; }
         .neova-dashboard .bg-\[\#18212B\], .neova-dashboard .bg-\[\#18212B\] { background-color: #18212B !important; }
-        .neova-dashboard .bg-\[\#F1F3F2\], .neova-dashboard .bg-\[\#F1F3F2\] { background-color: #F1F3F2 !important; }
+        .neova-dashboard .bg-\[\#F1F3F2\], .neova-dashboard .bg-\[\#F1F3F2\] { background-color: #EEE8DD !important; }
         .neova-dashboard .border-\[\#D8E0EB\], .neova-dashboard .border-\[\#E6EBF2\] { border-color: #E8EBE9 !important; }
         .neova-dashboard .text-\[\#64748B\] { color: #66717A !important; }
         @media (prefers-reduced-motion: reduce) {
@@ -178,7 +178,7 @@
     </x-navbar>
 
     {{-- Content --}}
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
+    <main class="dashboard-content max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-10">
         @if (session('success'))
             <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl px-4 py-3">{{ session('success') }}</div>
         @endif
@@ -198,7 +198,7 @@
         </div>
 
         @if ($invitations->count())
-            <div class="mb-6 sm:mb-8 space-y-3">
+            <div class="dashboard-invitations mb-6 sm:mb-8 space-y-3">
                 <h2 class="text-[13px] font-bold text-[#071B33] flex items-center gap-2">
                     <svg class="w-4 h-4 text-[#F59E0B]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0m6 0H9"/></svg>
                     دعوت‌نامه‌های در انتظار
@@ -249,7 +249,7 @@
             </div>
         @endif
 
-        <div class="overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_12px_30px_rgba(7,27,51,0.06)]">
+        <div class="dashboard-workspace-list overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_12px_30px_rgba(7,27,51,0.06)]">
         @forelse ($workspaces as $workspace)
             @php
                 $role = $workspace->getAttribute('user_role');

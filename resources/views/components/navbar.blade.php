@@ -5,7 +5,7 @@
     $navbarUnreadCount = $navbarUnreadCount ?? 0;
 @endphp
 
-<header class="w-full sticky top-0 z-30 border-b {{ $dark ? 'border-white/10 bg-[#18212B]/96 shadow-[0_8px_30px_rgba(24,33,43,0.18)]' : 'border-[#E8EBE9] bg-[#FDFDFC]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' }} backdrop-blur-xl">
+<header class="app-navbar w-full sticky top-0 z-30 border-b {{ $dark ? 'border-white/10 bg-[#18212B]/96 shadow-[0_8px_30px_rgba(24,33,43,0.18)]' : 'border-[#E8EBE9] bg-[#FDFDFC]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' }} backdrop-blur-xl">
     <div class="{{ $boardShell ? 'max-w-7xl mx-auto' : ($fluid ? 'max-w-[1600px] mx-auto' : 'max-w-7xl mx-auto') }} px-3 sm:px-6 h-14 md:h-16 flex items-center gap-3 md:gap-4">
         {{-- Logo --}}
         <a href="{{ route('dashboard') }}" class="shrink-0 inline-flex items-center" aria-label="داشبورد نئووا">

@@ -163,9 +163,9 @@
             <p class="landing-eyebrow">قدم بعدی</p>
             <h2 id="closing-title">یک پروژه واقعی را همین امروز وارد نئووا کنید.</h2>
             <p>یک فضای کاری بسازید، پروژه‌تان را تعریف کنید و اولین کار را روی تخته بگذارید.</p>
-            <div class="landing-hero-actions">
+            <div class="landing-hero-actions  justify-center items-center content-center">
                 <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-button">{{ auth()->check() ? 'رفتن به داشبورد' : 'شروع رایگان' }} <span aria-hidden="true">←</span></a>
-                @guest<a href="{{ route('auth') }}" class="landing-text-link">قبلاً حساب دارید؟ وارد شوید</a>@endguest
+                {{-- @guest<a href="{{ route('auth') }}" class="landing-text-link">قبلاً حساب دارید؟ وارد شوید</a>@endguest --}}
             </div>
         </section>
     </main>

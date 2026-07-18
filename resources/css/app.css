@@ -15,6 +15,48 @@
 }
 
 @layer components {
+    .app-page {
+        background: #f7f3ec !important;
+        color: #1f2925;
+        font-family: 'Estedad', sans-serif;
+    }
+
+    .app-navbar {
+        border-color: #d8d0c3 !important;
+        background: rgba(247, 243, 236, .94) !important;
+        box-shadow: 0 5px 18px rgba(31, 41, 37, .045) !important;
+    }
+
+    .dashboard-page .dashboard-content { padding-top: clamp(34px, 5vw, 62px); padding-bottom: 72px; }
+    .dashboard-page .dashboard-content > div:first-child p { color: #66716b !important; }
+    .dashboard-page .dashboard-content h1,
+    .dashboard-page .dashboard-content h2,
+    .dashboard-page .dashboard-content h3 { color: #1f2925 !important; line-height: 1.45; }
+    .dashboard-page .dashboard-content > div:first-child button,
+    .dashboard-page .dashboard-content > div:first-child a { border-color: #1f2925 !important; color: #1f2925 !important; background: transparent !important; border-radius: 999px !important; box-shadow: none !important; }
+    .dashboard-page .dashboard-content > div:first-child button:hover,
+    .dashboard-page .dashboard-content > div:first-child a:hover { color: #fffdf8 !important; background: #d86f57 !important; border-color: #d86f57 !important; }
+    .dashboard-page .dashboard-invitations > h2 { color: #1f2925 !important; }
+    .dashboard-page .dashboard-invitations > h2 svg { color: #d86f57 !important; }
+    .dashboard-page .dashboard-invitations > div { border-color: #dbc5a5 !important; border-radius: 3px !important; background: #fff8e9 !important; box-shadow: none !important; }
+    .dashboard-page .dashboard-invitations button[type="submit"] { background: #1f2925 !important; border-radius: 999px !important; box-shadow: none !important; }
+    .dashboard-page .dashboard-invitations button[type="submit"]:hover { background: #d86f57 !important; }
+    .dashboard-page .dashboard-invitations form button:not([type="submit"]) { border-color: #d8d0c3 !important; border-radius: 999px !important; background: transparent !important; }
+    .dashboard-page .dashboard-workspace-list { border-color: #d8d0c3 !important; border-radius: 3px !important; background: #fffdf8 !important; box-shadow: 8px 8px 0 #eee8dd !important; }
+    .dashboard-page .dashboard-workspace-list > section { border-color: #d8d0c3 !important; }
+    .dashboard-page .dashboard-workspace-list > section > div:first-child { border-color: #d8d0c3 !important; background: #f0ebe2 !important; }
+    .dashboard-page .dashboard-workspace-list .project-card { background: #fffdf8 !important; }
+    .dashboard-page .dashboard-workspace-list .project-card:hover { background: #f6f1e8 !important; box-shadow: inset -3px 0 0 #d86f57 !important; }
+    .dashboard-page .dashboard-workspace-list .project-card > div:first-child { background: #1f2925 !important; }
+    .dashboard-page .dashboard-workspace-list .project-card > div:last-child > span { background: #eee8dd !important; color: #1f2925 !important; }
+    .dashboard-page .dashboard-workspace-list .project-card p { color: #66716b !important; }
+    .dashboard-page .dashboard-workspace-list .project-card .bg-\[\#18212B\] { background: #1f2925 !important; }
+    .dashboard-page .dashboard-workspace-list .project-card .bg-\[\#F1F3F2\] { background: #e3eee5 !important; color: #587262 !important; }
+    .dashboard-page .dashboard-workspace-list .border-dashed { border-color: #cdbfae !important; color: #66716b !important; }
+    .dashboard-page .dashboard-workspace-list .border-dashed:hover { border-color: #d86f57 !important; color: #d86f57 !important; background: #fff8f4 !important; }
+    .dashboard-page input:focus { border-color: #d86f57 !important; --tw-ring-color: rgba(216, 111, 87, .12) !important; }
+    .dashboard-page [x-show="showModal"] + div > div > div { border-color: #d8d0c3 !important; border-radius: 3px !important; background: #fffdf8 !important; box-shadow: 10px 10px 0 #eee8dd !important; }
+
     .auth-page {
         --auth-paper: #f7f3ec;
         --auth-ink: #1f2925;

@@ -18,11 +18,11 @@
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
         .checklist-bar { height: 6px; border-radius: 3px; background: #E2E8F0; overflow: hidden; }
         .checklist-bar-fill { height: 100%; border-radius: 3px; background: #18212B; transition: width 0.3s ease; }
-        .neova-board .bg-white { background-color: #FFFFFF !important; }
+        .neova-board .bg-white { background-color: #FFFDF8 !important; }
         .neova-board .text-\[\#1A1D21\], .neova-board .text-\[\#18212B\] { color: #18212B !important; }
         .neova-board .text-\[\#18212B\], .neova-board .text-\[\#18212B\] { color: #18212B !important; }
         .neova-board .bg-\[\#18212B\], .neova-board .bg-\[\#18212B\] { background-color: #18212B !important; }
-        .neova-board .bg-\[\#F1F3F2\], .neova-board .bg-\[\#F1F3F2\] { background-color: #F1F3F2 !important; }
+        .neova-board .bg-\[\#F1F3F2\], .neova-board .bg-\[\#F1F3F2\] { background-color: #EEE8DD !important; }
         .neova-board .hover\:bg-\[\#253342\]:hover,
         .neova-board .hover\:bg-\[\#000000\]:hover,
         .neova-board .hover\:bg-\[\#000000\]:hover { background-color: #000000 !important; }
@@ -83,7 +83,7 @@
     </style>
 </head>
 <body
-    class="neova-board neova-product board-style-editorial min-h-screen overflow-x-hidden"
+    class="app-page neova-board neova-product board-style-editorial min-h-screen overflow-x-hidden"
     x-data="board()"
     x-init="init()"
     x-cloak
