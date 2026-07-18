@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f4f0e7">
+    <meta name="theme-color" content="#f7f4ec">
     <title>نئووا | مدیریت روشن کار تیمی</title>
     <meta name="description" content="نئووا کارها، مسئول‌ها، موعدها و گفت‌وگوهای هر پروژه را در یک جای روشن نگه می‌دارد.">
     <link rel="canonical" href="{{ url('/') }}">
@@ -27,290 +27,156 @@
         ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}
     </script>
 </head>
-<body class="neova-home" x-data="{ moved: false }">
+<body class="neova-home landing-page">
     <a href="#main-content" class="neova-skip-link">رفتن به محتوای اصلی</a>
 
-    <header class="neova-shell neova-header" aria-label="سربرگ">
-        <a href="{{ url('/') }}" class="neova-wordmark" aria-label="نئووا، صفحه اصلی">
-            <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-10 sm:h-11 w-auto object-contain">
+    <header class="landing-shell landing-header" aria-label="سربرگ">
+        <a href="{{ url('/') }}" class="landing-logo" aria-label="نئووا، صفحه اصلی">
+            <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-9 sm:h-10 w-auto object-contain">
         </a>
-
-        <nav class="neova-header-actions" aria-label="دسترسی سریع">
+        <nav class="landing-header-actions" aria-label="دسترسی سریع">
             @auth
-                <a href="{{ route('dashboard') }}" class="neova-text-link">داشبورد</a>
-                <a href="{{ route('dashboard') }}" class="neova-button neova-button--small">ادامه کار</a>
+                <a href="{{ route('dashboard') }}" class="landing-text-link">داشبورد</a>
+                <a href="{{ route('dashboard') }}" class="landing-button landing-button--small">ادامه کار</a>
             @else
-                <a href="{{ route('auth') }}" class="neova-text-link">ورود</a>
-                <a href="{{ route('auth') }}" class="neova-button neova-button--small">شروع رایگان</a>
+                <a href="{{ route('auth') }}" class="landing-text-link">ورود</a>
+                <a href="{{ route('auth') }}" class="landing-button landing-button--small">شروع رایگان</a>
             @endauth
         </nav>
     </header>
 
     <main id="main-content">
-        <section class="neova-shell neova-opening" aria-labelledby="home-title">
-            <div class="neova-opening-copy">
-                <nav class="neova-editorial-index" aria-label="معرفی کوتاه امکانات">
-                    <a href="#project-board"><strong>تخته پروژه</strong><span>کارها را همان‌جا که پیش می‌روند ببینید</span></a>
-                    <a href="#clear-work"><strong>فضای کاری</strong><span>پروژه‌ها و آدم‌ها کنار هم</span></a>
-                    <a href="#access"><strong>دعوت تیم</strong><span>با شماره موبایل، سریع و روشن</span></a>
-                    <a href="#access"><strong>نقش‌ها</strong><span>مالک، مدیر، عضو یا فقط مشاهده</span></a>
-                    <a href="#task-details"><strong>وظیفه‌ها</strong><span>مسئول، موعد، برچسب و چک‌لیست</span></a>
-                </nav>
-
-                <div class="neova-hero-copy">
-                    <h1 id="home-title">کار تیمی، بدون گم‌شدن بین پیام‌ها.</h1>
-                    <p>نئووا کارها، مسئول‌ها، موعدها و گفت‌وگوهای هر پروژه را در یک جای روشن نگه می‌دارد.</p>
-                    <div class="neova-hero-actions">
-                        <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="neova-button">
-                            {{ auth()->check() ? 'رفتن به داشبورد' : 'رایگان شروع کنید' }}
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                        </a>
-                        <span>ورود با شماره موبایل؛ بدون فرم‌های طولانی</span>
-                    </div>
+        <section class="landing-shell landing-hero" aria-labelledby="landing-title">
+            <div class="landing-hero-copy">
+                <p class="landing-eyebrow">برای تیم‌های کوچک و جدی</p>
+                <h1 id="landing-title">کار تیمی را روشن نگه دارید.</h1>
+                <p class="landing-lead">نئووا کارها، مسئول‌ها، موعدها و گفت‌وگوهای پروژه را کنار هم نگه می‌دارد؛ جایی که همه می‌دانند چه چیزی در جریان است و قدم بعدی چیست.</p>
+                <div class="landing-hero-actions">
+                    <a href="#product-preview" class="landing-button">اول تخته را ببینید <span aria-hidden="true">←</span></a>
+                    <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-text-link">{{ auth()->check() ? 'رفتن به داشبورد' : 'شروع رایگان' }}</a>
                 </div>
+                <p class="landing-reassurance">ورود با شماره موبایل؛ بدون فرم‌های طولانی و راه‌اندازی سنگین.</p>
             </div>
 
-            <div id="project-board" class="neova-board-wrap">
-                <div class="neova-note neova-note--board" aria-hidden="true">همه‌چیز جلوی چشم تیم</div>
-                <div class="neova-board" aria-label="نمونه تخته پروژه بازطراحی محصول">
-                    <div class="neova-board-head">
-                        <div>
-                            <span class="neova-board-kicker">محصول / NEO</span>
-                            <h2>بازطراحی محصول</h2>
-                        </div>
-                        <div class="neova-avatars" aria-label="سه عضو پروژه">
-                            <span>م</span><span>ر</span><span>س</span>
-                        </div>
+            <div id="product-preview" class="landing-product-frame" aria-label="نمونه واقعی تخته پروژه">
+                <div class="landing-product-bar">
+                    <div><small>محصول / NEO</small><strong>بازطراحی محصول</strong></div>
+                    <span class="landing-product-status">در جریان</span>
+                </div>
+                <div class="landing-board-grid">
+                    <div class="landing-board-column">
+                        <div class="landing-column-heading"><span><i class="landing-dot landing-dot--blue"></i>برای انجام</span><b>۲</b></div>
+                        <article class="landing-task"><small>NEO-014</small><strong>تحقیق کاربران</strong><span>تحقیق · ۲۸ خرداد</span></article>
+                        <article class="landing-task"><small>NEO-018</small><strong>متن صفحه معرفی</strong><span>محتوا · ۳۰ خرداد</span></article>
                     </div>
-                    <div class="neova-board-grid">
-                        <div class="neova-column">
-                            <div class="neova-column-head"><span><i class="is-blue"></i>برای انجام</span><b>۲</b></div>
-                            <article class="neova-task">
-                                <small>NEO-014</small>
-                                <h3>تحقیق کاربران</h3>
-                                <div class="neova-task-meta"><span class="is-mint">تحقیق</span><time>۲۸ خرداد</time></div>
-                            </article>
-                            <article class="neova-task">
-                                <small>NEO-018</small>
-                                <h3>متن صفحه معرفی</h3>
-                                <div class="neova-task-meta"><span>محتوا</span><time>۳۰ خرداد</time></div>
-                            </article>
-                        </div>
-                        <div class="neova-column">
-                            <div class="neova-column-head"><span><i class="is-amber"></i>در حال انجام</span><b>۲</b></div>
-                            <article class="neova-task neova-task--active">
-                                <small>NEO-021</small>
-                                <h3>طراحی جریان ثبت‌نام</h3>
-                                <div class="neova-progress"><i style="width: 66%"></i></div>
-                                <div class="neova-task-meta"><span>طراحی</span><time>امروز</time></div>
-                            </article>
-                            <article class="neova-task">
-                                <small>NEO-024</small>
-                                <h3>اتصال پیامک دعوت</h3>
-                                <div class="neova-task-meta"><span class="is-mint">فنی</span><time>فردا</time></div>
-                            </article>
-                        </div>
-                        <div class="neova-column">
-                            <div class="neova-column-head"><span><i class="is-violet"></i>بازبینی</span><b>۱</b></div>
-                            <article class="neova-task">
-                                <small>NEO-027</small>
-                                <h3>آماده‌سازی انتشار</h3>
-                                <div class="neova-checkline"><span>۳ از ۴</span><i><b style="width: 75%"></b></i></div>
-                                <div class="neova-task-meta"><span>انتشار</span><time>۲ تیر</time></div>
-                            </article>
-                        </div>
-                        <div class="neova-column neova-column--done">
-                            <div class="neova-column-head"><span><i class="is-mint"></i>انجام شد</span><b>۱</b></div>
-                            <article class="neova-task">
-                                <small>NEO-009</small>
-                                <h3>تعریف مسیر پروژه</h3>
-                                <div class="neova-task-meta"><span class="is-mint">تمام</span><time>۲۵ خرداد</time></div>
-                            </article>
-                        </div>
+                    <div class="landing-board-column landing-board-column--active">
+                        <div class="landing-column-heading"><span><i class="landing-dot landing-dot--amber"></i>در حال انجام</span><b>۲</b></div>
+                        <article class="landing-task"><small>NEO-021</small><strong>طراحی جریان ثبت‌نام</strong><em><i></i></em><span>مسئول: محمد · امروز</span></article>
+                        <article class="landing-task"><small>NEO-024</small><strong>اتصال پیامک دعوت</strong><span>فنی · فردا</span></article>
+                    </div>
+                    <div class="landing-board-column">
+                        <div class="landing-column-heading"><span><i class="landing-dot landing-dot--green"></i>بازبینی</span><b>۱</b></div>
+                        <article class="landing-task"><small>NEO-027</small><strong>آماده‌سازی انتشار</strong><em><i style="width:75%"></i></em><span>۳ از ۴ مورد کامل</span></article>
                     </div>
                 </div>
+                <p class="landing-product-caption">تخته، مسئولیت و قدم بعدی؛ در یک نگاه.</p>
             </div>
         </section>
 
-        <section class="neova-proof-band" aria-label="ویژگی‌های اصلی">
-            <div class="neova-shell neova-proof-list">
-                <p><span>۰۱</span>هر پروژه یک تخته روشن دارد.</p>
-                <p><span>۰۲</span>هر کار یک مسئول و موعد مشخص دارد.</p>
-                <p><span>۰۳</span>بحث‌ها کنار خود کار می‌مانند.</p>
-                <p><span>۰۴</span>سطح دسترسی هر عضو معلوم است.</p>
+        <section class="landing-proof" aria-label="اصول نئووا">
+            <div class="landing-shell landing-proof-grid">
+                <p><b>یک جا</b><span>کارها و تصمیم‌ها کنار همان پروژه می‌مانند.</span></p>
+                <p><b>یک قدم بعدی</b><span>هر نفر می‌داند حالا باید چه کاری انجام دهد.</span></p>
+                <p><b>کم‌دردسر</b><span>ابزار نباید خودش به یک پروژه تازه تبدیل شود.</span></p>
             </div>
         </section>
 
-        <section class="neova-shell neova-letter-section">
-            <div class="neova-section-heading">
-                <h2>اگر کار تیم‌تان این‌طور پیش می‌رود، نئووا برای شماست.</h2>
-                <span class="neova-handline" aria-hidden="true"></span>
+        <section class="landing-shell landing-problem" aria-labelledby="problem-title">
+            <div class="landing-section-label">مسئله</div>
+            <div>
+                <h2 id="problem-title">کار تیمی نباید بین پیام‌ها، جلسه‌ها و حافظه آدم‌ها پخش شود.</h2>
+                <p>وقتی تصمیمی در گفتگو گم می‌شود، موعدی صاحب ندارد، یا کسی نمی‌داند اولویت چیست، مشکل از تلاش تیم نیست؛ مشکل از جایی است که کار را نگه می‌دارد.</p>
+                <p>نئووا یک جای روشن برای جریان واقعی کار می‌سازد: فضای کاری، پروژه، تخته، وظیفه، مسئول، موعد و گفت‌وگو.</p>
             </div>
-            <div class="neova-letter">
+        </section>
+
+        <section class="landing-shell landing-letter-section" aria-labelledby="letter-title">
+            <div class="landing-letter-heading">
+                <p class="landing-eyebrow">یک نامه از طرف نئووا</p>
+                <h2 id="letter-title">ابزار قرار است کار را روشن‌تر کند، نه اینکه خودش به یک کار تازه تبدیل شود.</h2>
+            </div>
+            <div class="landing-letter">
                 <p>سلام،</p>
                 <p>احتمالاً کار کم ندارید؛ مسئله این است که کارها بین پیام‌رسان، جلسه، فایل و حافظه آدم‌ها پخش شده‌اند.</p>
                 <p>یک نفر نمی‌داند چه چیزی اولویت دارد. یک کار موعد دارد اما صاحب ندارد. تصمیمی در گفتگو گرفته می‌شود و چند روز بعد کسی پیدایش نمی‌کند.</p>
                 <p>نئووا برای جمع‌کردن همین پراکندگی ساخته شده: هر تیم یک فضای کاری، هر جریان یک پروژه، هر پروژه یک تخته، و هر کار یک جای مشخص برای مسئول، موعد، توضیح، چک‌لیست و گفتگو.</p>
                 <p>قرار نیست برای مدیریت کار، خودِ ابزار به یک پروژه تازه تبدیل شود. نئووا باید سریع فهمیده شود، سبک بماند و هر روز واقعاً استفاده شود.</p>
-                <div class="neova-signature">
-                    <svg viewBox="0 0 150 50" aria-hidden="true"><path d="M5 38c18-4 22-30 28-25 4 3-8 22-2 20 8-3 17-20 22-16 4 3-8 16-3 17 7 1 14-18 20-14 4 3-7 14-1 15 9 2 19-11 28-8 4 2-1 8 8 8 13 0 22-5 38-4"/></svg>
-                    <strong>تیم نئووا</strong>
+                <div class="landing-letter-signature">
+                    <img src="{{ asset('assets/signatures/amir-mehrabian-signature.png') }}" alt="امضای امیر مهرابیان">
+                    <span>تیم نئووا</span>
                 </div>
             </div>
         </section>
 
-        <section id="clear-work" class="neova-shell neova-evidence-section">
-            <div class="neova-evidence-row">
-                <div class="neova-evidence-title">
-                    <span>ساختار</span>
-                    <h2>کار روشن، از ساختار روشن می‌آید.</h2>
-                </div>
-                <div class="neova-evidence-body">
-                    <p>فضاهای کاری تیم را جدا می‌کنند؛ پروژه‌ها جریان‌ها را؛ ستون‌ها وضعیت را؛ و وظیفه‌ها مسئولیت را.</p>
-                    <div class="neova-structure-map" aria-label="ساختار نئووا">
-                        <div><small>فضای کاری</small><strong>تیم محصول</strong><span>۸ عضو</span></div>
-                        <svg viewBox="0 0 60 20" aria-hidden="true"><path d="M4 10h48m-7-6 7 6-7 6"/></svg>
-                        <div><small>پروژه</small><strong>نسخه جدید</strong><span>۴ ستون</span></div>
-                        <svg viewBox="0 0 60 20" aria-hidden="true"><path d="M4 10h48m-7-6 7 6-7 6"/></svg>
-                        <div><small>وظیفه</small><strong>جریان ثبت‌نام</strong><span>در حال انجام</span></div>
-                    </div>
-                </div>
+        <section class="landing-shell landing-workflow" aria-labelledby="workflow-title">
+            <div class="landing-section-intro">
+                <p class="landing-eyebrow">چیزی که هر روز استفاده می‌کنید</p>
+                <h2 id="workflow-title">سه چیز را روشن کنید: ساختار، مسئولیت، جزئیات.</h2>
             </div>
 
-            <div id="access" class="neova-evidence-row">
-                <div class="neova-evidence-title">
-                    <span>دسترسی</span>
-                    <h2>دسترسی‌ها حدس‌زدنی نیستند.</h2>
-                </div>
-                <div class="neova-evidence-body">
-                    <p>مالک، مدیر، عضو و مشاهده‌گر هرکدام محدوده مشخصی دارند. دعوت‌ها با شماره موبایل ارسال و وضعیت آن‌ها پیگیری می‌شود.</p>
-                    <div class="neova-people-panel">
-                        <div class="neova-panel-head"><strong>اعضای فضای کاری</strong><button type="button">دعوت عضو</button></div>
-                        <div class="neova-person"><span class="neova-person-avatar">ن</span><p><strong>نیلوفر احمدی</strong><small>۰۹۱۲•••۴۶۳۱</small></p><b>مالک</b></div>
-                        <div class="neova-person"><span class="neova-person-avatar is-coral">م</span><p><strong>محمد رضایی</strong><small>۰۹۳۵•••۱۲۰۸</small></p><button type="button">مدیر <svg viewBox="0 0 12 8"><path d="m1 1 5 5 5-5"/></svg></button></div>
-                        <div class="neova-person"><span class="neova-person-avatar is-mint">س</span><p><strong>سارا میرزایی</strong><small>۰۹۹۱•••۸۰۷۲</small></p><button type="button">فقط مشاهده <svg viewBox="0 0 12 8"><path d="m1 1 5 5 5-5"/></svg></button></div>
-                    </div>
-                </div>
-            </div>
+            <article class="landing-workflow-row" id="structure">
+                <div class="landing-workflow-copy"><span>۰۱ / ساختار</span><h3>پروژه را قابل دیدن کنید.</h3><p>فضای کاری تیم را جدا می‌کند، پروژه جریان را، و ستون‌ها نشان می‌دهند کارها الان کجا هستند.</p></div>
+                <div class="landing-mini-panel landing-structure-panel"><div><small>فضای کاری</small><strong>تیم محصول</strong><span>۸ عضو</span></div><b>←</b><div><small>پروژه</small><strong>نسخه جدید</strong><span>۴ ستون</span></div><b>←</b><div><small>وضعیت</small><strong>در حال انجام</strong><span>۱۲ وظیفه</span></div></div>
+            </article>
 
-            <div id="task-details" class="neova-evidence-row">
-                <div class="neova-evidence-title">
-                    <span>جزئیات</span>
-                    <h2>هر چیز، کنار همان کاری می‌ماند که به آن مربوط است.</h2>
-                </div>
-                <div class="neova-evidence-body">
-                    <p>توضیح، برچسب، موعد، مسئول، چک‌لیست و گفتگو در صفحه همان وظیفه ثبت می‌شوند؛ نه در چند ابزار پراکنده.</p>
-                    <div class="neova-task-panel">
-                        <div class="neova-task-panel-main">
-                            <small>NEO-021 / در حال انجام</small>
-                            <h3>طراحی جریان ثبت‌نام</h3>
-                            <h4>چک‌لیست</h4>
-                            <label><input type="checkbox" checked disabled><span>متن پیامک تأیید</span></label>
-                            <label><input type="checkbox" checked disabled><span>حالت خطا</span></label>
-                            <label><input type="checkbox" disabled><span>بازبینی موبایل</span></label>
-                            <h4>گفتگو</h4>
-                            <div class="neova-comment"><span>م</span><p><strong>محمد</strong> نسخه موبایل را تا عصر بازبینی می‌کنم.</p></div>
-                        </div>
-                        <aside>
-                            <dl>
-                                <div><dt>مسئول‌ها</dt><dd><span>ن</span><span>م</span></dd></div>
-                                <div><dt>موعد</dt><dd>۳۰ خرداد</dd></div>
-                                <div><dt>برچسب‌ها</dt><dd><b>طراحی</b><b class="is-mint">ثبت‌نام</b></dd></div>
-                            </dl>
-                        </aside>
-                    </div>
-                </div>
-            </div>
+            <article class="landing-workflow-row" id="roles">
+                <div class="landing-workflow-copy"><span>۰۲ / مسئولیت</span><h3>مسئولیت را حدس‌زدنی نگذارید.</h3><p>برای هر کار مسئول و موعد مشخص کنید و برای هر عضو همان سطح دسترسی را بدهید که لازم دارد.</p></div>
+                <div class="landing-mini-panel landing-people-panel"><div class="landing-panel-heading"><strong>اعضای پروژه</strong><button type="button">دعوت عضو</button></div><div><i>ن</i><strong>نیلوفر احمدی</strong><span>مالک</span></div><div><i class="is-coral">م</i><strong>محمد رضایی</strong><span>مدیر</span></div><div><i class="is-mint">س</i><strong>سارا میرزایی</strong><span>فقط مشاهده</span></div></div>
+            </article>
+
+            <article class="landing-workflow-row" id="task-details">
+                <div class="landing-workflow-copy"><span>۰۳ / جزئیات</span><h3>جزئیات را کنار خود کار نگه دارید.</h3><p>توضیح، برچسب، چک‌لیست و گفتگو در صفحه همان وظیفه می‌مانند؛ نه در چند ابزار پراکنده.</p></div>
+                <div class="landing-mini-panel landing-task-panel"><small>NEO-021 / در حال انجام</small><strong>طراحی جریان ثبت‌نام</strong><div class="landing-check-item"><i class="is-done">✓</i>متن پیامک تأیید</div><div class="landing-check-item"><i class="is-done">✓</i>حالت خطا</div><div class="landing-check-item"><i></i>بازبینی موبایل</div><div class="landing-comment"><i>م</i><span><b>محمد</b> نسخه موبایل را تا عصر بازبینی می‌کنم.</span></div></div>
+            </article>
         </section>
 
         @php
             $questions = [
                 'می‌توانم برای هر تیم فضای کاری جدا داشته باشم؟',
                 'می‌توانم چند پروژه را در یک فضای کاری مدیریت کنم؟',
-                'می‌توانم وضعیت کارها را روی تخته ببینم؟',
-                'می‌توانم ستون‌های پروژه را متناسب با فرایند تیم بچینم؟',
-                'می‌توانم کارها را بین ستون‌ها جابه‌جا کنم؟',
                 'می‌توانم برای هر کار مسئول و موعد تعیین کنم؟',
-                'می‌توانم به کارها برچسب و اولویت بدهم؟',
-                'می‌توانم برای هر وظیفه چک‌لیست بسازم؟',
-                'می‌توانم گفتگو را کنار همان وظیفه نگه دارم؟',
-                'می‌توانم اعضا را با شماره موبایل دعوت کنم؟',
                 'می‌توانم نقش و سطح دسترسی اعضا را کنترل کنم؟',
-                'می‌توانم بعضی اعضا را فقط مشاهده‌گر کنم؟',
-                'می‌توانم اعلان دعوت‌ها را در خود نئووا ببینم؟',
+                'می‌توانم گفتگو را کنار همان وظیفه نگه دارم؟',
                 'می‌توانم با شماره موبایل و کد یک‌بارمصرف وارد شوم؟',
             ];
         @endphp
-        <section class="neova-capabilities">
-            <div class="neova-shell neova-capabilities-grid">
-                <div class="neova-capabilities-title">
-                    <h2>این سؤال‌ها یک جواب دارند: بله.</h2>
-                    <p>چیزهایی که یک تیم برای روشن نگه‌داشتن کار روزانه لازم دارد.</p>
-                </div>
-                <div class="neova-question-list">
+        <section class="landing-faq" aria-labelledby="faq-title">
+            <div class="landing-shell landing-faq-grid">
+                <div><p class="landing-eyebrow">سؤال‌های معمول</p><h2 id="faq-title">برای شروع، جواب بیشتر سؤال‌ها «بله» است.</h2><p>نئووا برای کار روزانه تیم ساخته شده؛ نه برای اینکه تیم روزهایش را صرف یادگیری ابزار کند.</p></div>
+                <div class="landing-question-list">
                     @foreach ($questions as $question)
-                        <p><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4 10-10"/></svg>{{ $question }}<strong>بله</strong></p>
+                        <p><span aria-hidden="true">✓</span>{{ $question }}</p>
                     @endforeach
-                    <a href="#project-board" class="neova-underlined-link">همه امکانات نئووا را ببینید</a>
                 </div>
             </div>
         </section>
 
-        <section class="neova-shell neova-closing">
-            <div class="neova-closing-copy">
-                <h2>یک پروژه واقعی را همین امروز وارد نئووا کنید.</h2>
-                <p>نه ارائه لازم است، نه جلسه راه‌اندازی. یک فضای کاری بسازید، پروژه‌تان را تعریف کنید و اولین کار را روی تخته بگذارید.</p>
-                <div class="neova-hero-actions">
-                    <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="neova-button">
-                        {{ auth()->check() ? 'رفتن به داشبورد' : 'شروع رایگان' }}
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-                    </a>
-                    @guest
-                        <a href="{{ route('auth') }}" class="neova-text-link">قبلاً حساب دارید؟ وارد شوید</a>
-                    @endguest
-                </div>
-                <small>بدون فرم طولانی؛ ورود با شماره موبایل</small>
-            </div>
-
-            <div class="neova-mini-board" @mouseenter="moved = true" @mouseleave="moved = false" @focusin="moved = true">
-                <div>
-                    <span>برای انجام</span>
-                    <article :class="{ 'is-moved': moved }">
-                        <small>NEO-001</small>
-                        <strong>اولین کار پروژه</strong>
-                        <i></i>
-                    </article>
-                </div>
-                <svg viewBox="0 0 48 24" aria-hidden="true"><path d="M3 12h38m-7-7 7 7-7 7"/></svg>
-                <div class="is-done">
-                    <span>انجام شد</span>
-                    <article :class="{ 'is-arrived': moved }">
-                        <small>NEO-001</small>
-                        <strong>اولین کار پروژه</strong>
-                        <i></i>
-                    </article>
-                </div>
+        <section class="landing-shell landing-closing" aria-labelledby="closing-title">
+            <p class="landing-eyebrow">قدم بعدی</p>
+            <h2 id="closing-title">یک پروژه واقعی را همین امروز وارد نئووا کنید.</h2>
+            <p>یک فضای کاری بسازید، پروژه‌تان را تعریف کنید و اولین کار را روی تخته بگذارید.</p>
+            <div class="landing-hero-actions">
+                <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-button">{{ auth()->check() ? 'رفتن به داشبورد' : 'شروع رایگان' }} <span aria-hidden="true">←</span></a>
+                @guest<a href="{{ route('auth') }}" class="landing-text-link">قبلاً حساب دارید؟ وارد شوید</a>@endguest
             </div>
         </section>
     </main>
 
-    <footer class="neova-footer">
-        <div class="neova-shell">
-            <div class="neova-footer-top">
-                <a href="{{ url('/') }}" class="neova-wordmark">
-                    <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-9 w-auto object-contain">
-                </a>
-                <nav aria-label="پیوندهای پایانی">
-                    <a href="#clear-work">درباره نئووا</a>
-                    <a href="#project-board">تخته پروژه</a>
-                    <a href="#access">دسترسی‌ها</a>
-                    <a href="{{ route('auth') }}">ورود</a>
-                </nav>
-            </div>
-            <div class="neova-footer-bottom">
-                <p>نئووا؛ کار تیمی روشن‌تر.</p>
-                <a href="#main-content">بازگشت به بالا <span aria-hidden="true">↑</span></a>
-            </div>
+    <footer class="landing-footer">
+        <div class="landing-shell landing-footer-inner">
+            <a href="{{ url('/') }}" class="landing-logo"><img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-8 w-auto object-contain"></a>
+            <nav aria-label="پیوندهای پایانی"><a href="#product-preview">تخته پروژه</a><a href="#structure">ساختار</a><a href="#roles">دسترسی‌ها</a><a href="{{ route('auth') }}">ورود</a></nav>
+            <p>نئووا؛ کار تیمی روشن‌تر.</p>
         </div>
     </footer>
 </body>

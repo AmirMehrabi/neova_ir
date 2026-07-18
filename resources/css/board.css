@@ -95,13 +95,84 @@
     background: var(--board-surface-muted);
 }
 
-.board-style-editorial .board-column-header-accent {
+.board-column-header,
+.board-column-mobile-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    margin-bottom: 12px;
+    padding: 0 4px;
+    border-bottom: 1px solid var(--board-line);
+}
+
+.board-column-header__identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+.board-column-header__title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--board-ink);
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.4;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.board-column-header__count {
+    flex: 0 0 auto;
+    color: var(--board-muted);
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.board-column-header__utilities {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    flex: 0 0 auto;
+}
+
+.board-column-header__button {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    color: #64748B;
+    transition: background-color var(--board-motion) ease, color var(--board-motion) ease;
+}
+
+.board-column-header__button:hover,
+.board-column-header__button:focus-visible {
+    background: #FFFFFF;
+    color: var(--board-ink);
+}
+
+.board-column-header__button--mobile {
+    width: 38px;
+    height: 38px;
+    background: #F1F0EC;
+}
+
+.board-column-header__button--mobile:active {
+    background: #E8E6DF;
+}
+
+.board-column-header-accent {
     display: block;
     width: 3px;
     height: 16px;
+    flex: 0 0 auto;
     border-radius: 2px;
     background: var(--column-accent, #94A3B8);
-    flex-shrink: 0;
 }
 
 /* Task cards — shared base */

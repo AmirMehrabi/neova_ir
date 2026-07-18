@@ -346,25 +346,24 @@
                         </div>
                         <span class="mt-auto text-[11px] font-bold text-[#64748B]">باز کردن</span>
                     </div>
-                    <div x-show="!column.collapsed" class="relative flex min-h-[44px] items-center justify-between mb-3 pb-1 px-1">
-                        <div class="flex items-center gap-2 min-w-0">
-                            <h2 class="text-[13px] font-black text-[#18212B] truncate" x-text="column.title"></h2>
+                    <div x-show="!column.collapsed" class="board-column-header">
+                        <div class="board-column-header__identity">
                             <span class="board-column-header-accent" aria-hidden="true"></span>
-
-                            {{-- <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="'background-color:' + column.dotHex"></span> --}}
+                            <h2 class="board-column-header__title" x-text="column.title"></h2>
+                            <span class="board-column-header__count" x-text="toPersianDigits(column.tasks.length) + ' وظیفه'"></span>
+                        </div>
+                        <div class="board-column-header__utilities">
                             @if ($canEdit)
-                                <button type="button" class="column-drag-handle w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#18212B] hover:bg-white cursor-grab active:cursor-grabbing shrink-0" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
+                                <button type="button" class="column-drag-handle board-column-header__button cursor-grab active:cursor-grabbing" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                                 </button>
                             @endif
-                            {{-- <span class="text-[11px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span> --}}
-                        </div>
-                        <div class="flex items-center gap-1 shrink-0">
-                            <button @click.stop="column.collapsed = true" class="w-8 h-8 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all shrink-0" title="جمع کردن ستون" aria-label="جمع کردن ستون"><svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m9 18 6-6-6-6"/></svg></button>
+
+                            <button @click.stop="column.collapsed = true" class="board-column-header__button" title="جمع کردن ستون" aria-label="جمع کردن ستون"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="m9 18 6-6-6-6"/></svg></button>
 
                             @if ($canEdit)
                                 <div class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
-                                    <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="w-9 h-9 rounded-lg flex items-center justify-center text-[#334155] hover:text-[#18212B] hover:bg-white transition-all" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
+                                    <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="board-column-header__button" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
                                     <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-32 rounded-xl border border-[#E8EBE9] bg-white py-1 shadow-xl z-20" @click.stop>
                                         <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش</button>
                                         <button @click="openColumnMenuId = null; confirmDeleteColumn(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-red-500 hover:bg-red-50">حذف</button>
@@ -505,16 +504,18 @@
                     :data-column-index="colIdx"
                     :aria-label="column.title"
                 >
-                    <div class="flex items-center justify-between mb-3 pb-1 px-1">
-                        <div class="flex items-center gap-2.5">
+                    <div class="board-column-mobile-header">
+                        <div class="board-column-header__identity">
+                            <span class="board-column-header-accent" aria-hidden="true"></span>
+                            <h2 class="board-column-header__title" x-text="column.title"></h2>
+                            <span class="board-column-header__count" x-text="toPersianDigits(column.tasks.length) + ' وظیفه'"></span>
+                        </div>
+                        <div class="board-column-header__utilities">
                             @if ($canEdit)
-                                <button type="button" class="column-drag-handle w-10 h-10 rounded-xl flex items-center justify-center text-[#64748B] bg-[#F1F3F2] active:bg-[#E8EBE9] cursor-grab" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
+                                <button type="button" class="column-drag-handle board-column-header__button board-column-header__button--mobile cursor-grab" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                                 </button>
                             @endif
-                            <span class="w-2.5 h-2.5 rounded-full shadow-sm" :style="'background-color:' + column.dotHex"></span>
-                            <h2 class="text-[14px] font-black text-[#172B4D]" x-text="column.title"></h2>
-                            <span class="text-[10px] font-bold min-w-[22px] text-center px-1.5 py-0.5 rounded-full" :class="column.badgeClass" x-text="toPersianDigits(column.tasks.length)"></span>
                         </div>
                     </div>
                     <div
@@ -2253,15 +2254,14 @@
                     const el = variant === 'mobile' ? this.$refs.mobileBoardTrack : document.getElementById('desktop-column-track');
                     if (!el) return;
                     const self = this;
+                    let columnDragStartIndex = null;
                     const instance = new Sortable(el, {
                         animation: 220,
                         ghostClass: 'sortable-ghost',
                         chosenClass: 'sortable-chosen',
                         dragClass: 'sortable-drag',
                         direction: 'horizontal',
-                        swapThreshold: 0.65,
-                        invertSwap: true,
-                        invertedSwapThreshold: 0.65,
+                        swapThreshold: 0.5,
                         draggable: variant === 'mobile' ? '.mobile-board-column' : '.board-column',
                         handle: '.column-drag-handle',
                         delay: variant === 'mobile' ? 140 : 50,
@@ -2274,13 +2274,24 @@
                         bubbleScroll: true,
                         scrollSensitivity: 72,
                         scrollSpeed: 14,
-                        onStart() {
+                        onMove(evt) {
+                            if (variant !== 'desktop' || !evt.related || columnDragStartIndex == null) return true;
+                            const columnElements = Array.from(el.children).filter(child => child.matches('.board-column'));
+                            const relatedIndex = columnElements.indexOf(evt.related);
+                            if (relatedIndex < 0) return true;
+
+                            // The board is RTL, so logical order is opposite to the visual x-axis.
+                            return columnDragStartIndex > relatedIndex ? -1 : 1;
+                        },
+                        onStart(evt) {
+                            columnDragStartIndex = evt.oldIndex;
                             if (variant === 'mobile') {
                                 self.mobileDragSuppressClickUntil = Date.now() + 500;
                                 el.classList.add('column-order-dragging');
                             }
                         },
                         onEnd(evt) {
+                            columnDragStartIndex = null;
                             if (variant === 'mobile') el.classList.remove('column-order-dragging');
                             if (evt.oldIndex === evt.newIndex || evt.oldIndex == null || evt.newIndex == null) return;
                             self.reorderColumns(evt.oldIndex, evt.newIndex);
