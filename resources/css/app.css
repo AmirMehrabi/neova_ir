@@ -181,7 +181,19 @@
     .landing-letter-section { display: grid; grid-template-columns: minmax(220px, .72fr) minmax(0, 1.28fr); gap: clamp(42px, 9vw, 126px); padding-block: 20px clamp(96px, 13vw, 160px); }
     .landing-letter-heading { padding-top: 10px; }
     .landing-letter-heading h2 { max-width: 360px; font-size: clamp(28px, 3.6vw, 44px); }
-    .landing-letter { position: relative; max-width: 640px; padding: clamp(28px, 5vw, 56px); border: 1px solid var(--landing-line); border-radius: 3px; background: #fffdf8; box-shadow: 8px 8px 0 var(--landing-paper-deep); }
+    .landing-letter {
+        position: relative;
+        max-width: 640px;
+        padding: clamp(28px, 5vw, 56px);
+        border: 1px solid var(--landing-line);
+        border-radius: 3px;
+        background-color: #fffdf8;
+        background-image:
+            linear-gradient(to left, transparent 0, transparent 38px, rgba(210, 126, 111, .18) 38px, rgba(210, 126, 111, .18) 39px, transparent 39px),
+            repeating-linear-gradient(to bottom, transparent 0, transparent 33px, rgba(120, 157, 170, .17) 34px, rgba(120, 157, 170, .17) 35px),
+            radial-gradient(circle at 20% 15%, rgba(255, 255, 255, .7), transparent 38%);
+        box-shadow: 8px 8px 0 var(--landing-paper-deep);
+    }
     .landing-letter::before { content: ''; position: absolute; inset: 18px; border: 1px solid rgba(216, 208, 195, .45); pointer-events: none; }
     .landing-letter p { position: relative; margin: 0 0 18px; color: #48534d; font-family: 'Estedad', sans-serif; font-size: 15px; line-height: 2.25; }
     .landing-letter p:first-child { color: var(--landing-ink); font-size: 17px; font-weight: 800; }
