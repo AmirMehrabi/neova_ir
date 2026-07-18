@@ -36,10 +36,8 @@
         </a>
         <nav class="landing-header-actions" aria-label="دسترسی سریع">
             @auth
-                <a href="{{ route('dashboard') }}" class="landing-text-link">داشبورد</a>
                 <a href="{{ route('dashboard') }}" class="landing-button landing-button--small">ادامه کار</a>
             @else
-                <a href="{{ route('auth') }}" class="landing-text-link">ورود</a>
                 <a href="{{ route('auth') }}" class="landing-button landing-button--small">شروع رایگان</a>
             @endauth
         </nav>
@@ -52,7 +50,7 @@
                 <h1 id="landing-title">کار تیمی را روشن نگه دارید.</h1>
                 <p class="landing-lead">نئووا کارها، مسئول‌ها، موعدها و گفت‌وگوهای پروژه را کنار هم نگه می‌دارد؛ جایی که همه می‌دانند چه چیزی در جریان است و قدم بعدی چیست.</p>
                 <div class="landing-hero-actions">
-                    <a href="#product-preview" class="landing-button">اول تخته را ببینید <span aria-hidden="true">←</span></a>
+                    <button type="button" class="landing-button" onclick="document.getElementById('product-preview')?.scrollIntoView({ behavior: 'smooth', block: 'center' })">اول تخته را ببینید <span aria-hidden="true">←</span></button>
                     <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-text-link">{{ auth()->check() ? 'رفتن به داشبورد' : 'شروع رایگان' }}</a>
                 </div>
                 <p class="landing-reassurance">ورود با شماره موبایل؛ بدون فرم‌های طولانی و راه‌اندازی سنگین.</p>
