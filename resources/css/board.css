@@ -222,16 +222,6 @@
     box-shadow: var(--board-card-shadow-hover);
 }
 
-.task-card__priority-edge {
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    width: 34px;
-    height: 4px;
-    border-radius: 0 0 4px 0;
-    box-shadow: 0 1px 2px rgba(24, 33, 43, 0.08);
-}
-
 .priority-high {
     background: #C86551 !important;
     color: #FFFFFF !important;
@@ -569,7 +559,32 @@
 .board-bulk-bar { background: #F5FAFF; border-bottom-color: #CFE4F5; }
 .board-column-header__wip { padding: 3px 6px; border: 1px solid #DCE8F2; border-radius: 999px; color: #718596; font-size: 9px; font-weight: 800; white-space: nowrap; }
 .board-column-header__wip.is-over { border-color: #B9D7EE; background: #F0F8FF; color: #0069D9; }
-.board-task-select { width: 15px; height: 15px; accent-color: #0069D9; cursor: pointer; }
+.board-task-select {
+    width: 15px;
+    height: 15px;
+    accent-color: #0069D9;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 140ms ease;
+}
+
+.task-card:hover .board-task-select,
+.task-card:focus-within .board-task-select,
+.task-card:focus-visible .board-task-select,
+.task-card.is-selected .board-task-select {
+    opacity: 1;
+}
+
+.task-card.is-selected {
+    border-color: #72AFE0;
+    background: #F4FAFF;
+    box-shadow: 0 0 0 2px rgba(0, 105, 217, .10), 0 6px 16px rgba(0, 105, 217, .08);
+}
+
+.task-card:focus-visible {
+    outline: 3px solid rgba(0, 105, 217, .18);
+    outline-offset: 2px;
+}
 
 /* Product UI refinement */
 .neova-board {

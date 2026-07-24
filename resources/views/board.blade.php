@@ -395,12 +395,12 @@
                         <template x-for="task in filteredTasks(column)" :key="task.dbId">
                             <div
                                 class="task-card group"
-                                :style="cardAccentStyle(task, column)"
+                                :class="isTaskSelected(task.dbId) ? 'is-selected' : ''"
+                                tabindex="0"
                                 :data-id="task.dbId"
                                 :data-column="column.id"
                                 @click="openEditModal(task, column.id)"
                             >
-                                <div class="task-card__priority-edge" :class="priorityEdgeClass(task.priority)"></div>
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2">
                                         <div class="flex items-center gap-2">
@@ -443,13 +443,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                @if ($canEdit)
-                                    <div class="absolute top-3 left-2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                        <button @click.stop="confirmDelete(column.id, task.dbId)" class="w-7 h-7 rounded-md flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-50 transition-all bg-white/90" title="حذف">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                        </button>
-                                    </div>
-                                @endif
                             </div>
                         </template>
                         <div x-show="column.tasks.length === 0" class="flex flex-col items-center justify-center py-8 text-center">
@@ -546,12 +539,12 @@
                         <template x-for="task in filteredTasks(column)" :key="'mobile-task-' + task.dbId">
                             <article
                                 class="task-card group"
-                                :style="cardAccentStyle(task, column)"
+                                :class="isTaskSelected(task.dbId) ? 'is-selected' : ''"
+                                tabindex="0"
                                 :data-id="task.dbId"
                                 :data-column="column.id"
                                 @click="if (canOpenTaskFromCard()) openEditModal(task, column.id)"
                             >
-                                <div class="task-card__priority-edge" :class="priorityEdgeClass(task.priority)"></div>
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2.5">
                                         <div class="flex flex-wrap gap-1">
@@ -1584,30 +1577,10 @@
                     return Math.max(0, tags.length - 3);
                 },
 
-                priorityEdgeClass(priority) {
-                    if (priority === 'بالا') return 'priority-high';
-                    if (priority === 'متوسط') return 'priority-medium';
-                    return 'priority-low';
-                },
-
                 priorityBadgeClass(priority) {
                     if (priority === 'بالا') return 'priority-high';
                     if (priority === 'متوسط') return 'priority-medium';
                     return 'priority-low';
-                },
-
-                cardAccentStyle(task, column) {
-                    const tag = (task.tags || [])[0];
-                    const tagColorMap = {
-                        'طراحی': '#8B5CF6',
-                        'توسعه': '#475569',
-                        'بک‌اند': '#F59E0B',
-                        'فرانت‌اند': '#22C55E',
-                        'باگ': '#EF4444',
-                        'بهبود': '#14B8A6',
-                    };
-                    const accent = tagColorMap[tag] || column?.dotHex || '#18212B';
-                    return '--card-accent:' + accent;
                 },
 
                 modalAccentStyle() {
