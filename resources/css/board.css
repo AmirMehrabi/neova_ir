@@ -380,6 +380,90 @@
     .task-modal-section--description { padding: 16px; }
 }
 
+/* Shared modal language and focused task creation */
+.neova-board .board-nav-control--add-card {
+    min-width: 122px;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.neova-board .board-nav-control--primary,
+.neova-board .board-nav-control--primary:hover,
+.neova-board .board-nav-control--primary:focus-visible {
+    border-color: #0069D9 !important;
+    background: #0069D9 !important;
+    color: #FFFFFF !important;
+    box-shadow: 0 4px 10px rgba(0,105,217,.14);
+}
+
+.neova-board .board-nav-control__label {
+    display: inline-block;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.neova-board .task-modal-shell--create { max-width: 680px; }
+.neova-board .task-modal-shell--editing { max-width: 980px; }
+.neova-board .task-modal-shell {
+    border: 1px solid #DCE8F2;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(16,42,67,.18);
+}
+.neova-board .task-modal-header {
+    min-height: 74px;
+    padding: 24px;
+    border-bottom: 1px solid #F1EFEA;
+    background: #FFFFFF;
+}
+.neova-board .task-modal-header__subtitle { margin-top: 4px; color: #64748B; font-size: 10px; line-height: 1.6; }
+.neova-board .task-modal-body--create { gap: 14px; }
+.neova-board .task-modal-body { background: #FFFFFF; }
+.neova-board .task-modal-section { border-color: #E8EBE9; background: #FFFFFF; }
+.neova-board .task-modal-section--description { border-color: #E8EBE9; background: #FFFFFF; }
+.neova-board .task-modal-body--create .task-modal-section { padding: 18px; }
+.neova-board .task-modal-title-input { min-height: 48px; }
+.neova-board .task-settings-grid { gap: 14px; }
+.neova-board .task-modal-footer { min-height: auto; gap: 12px; padding: 0 24px 24px; border-top: 0; }
+.neova-board .task-modal-primary,
+.neova-board .board-form-modal button[type="submit"] { background: #0069D9; }
+.neova-board .task-modal-primary:hover,
+.neova-board .board-form-modal button[type="submit"]:hover { background: #0052B3; }
+.neova-board .task-modal-cancel { min-height: 44px; }
+.neova-board .task-modal-primary { min-height: 44px; }
+
+.neova-board .board-form-modal {
+    border: 1px solid #DCE8F2;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgba(16,42,67,.18);
+}
+
+.neova-board .board-form-modal > div:first-child { border-color: #F1EFEA; background: #FFFFFF; }
+.neova-board .board-form-modal > div:first-child h4 { color: #18212B !important; }
+.neova-board .board-form-modal > div:first-child p { color: #64748B !important; }
+
+.neova-board .board-form-modal > div:last-child {
+    padding-top: 16px;
+    border-top: 1px solid #DCE8F2;
+    background: #FFFFFF;
+}
+
+.neova-board .board-form-modal input:focus,
+.neova-board .board-form-modal button:focus-visible,
+.neova-board .task-modal-footer button:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(0,105,217,.14);
+}
+
+@media (max-width: 767px) {
+    .neova-board .task-modal-shell--create,
+    .neova-board .task-modal-shell--editing { max-width: calc(100vw - 1rem); }
+    .neova-board .task-modal-header { padding: 20px 16px; }
+    .neova-board .task-modal-body--create .task-modal-section { padding: 15px; }
+    .neova-board .task-modal-footer { padding: 0 16px 16px; }
+    .neova-board .task-modal-footer > .flex { flex: 1; }
+    .neova-board .task-modal-footer > .flex button { flex: 1; }
+}
+
 .task-modal-header {
     background: #102A43;
     color: #fff;
@@ -679,4 +763,55 @@
     .neova-board .mobile-task-list { background: #F5FAFF !important; border-color: #DCE8F2 !important; }
     .neova-board .mobile-task-list .task-card { padding: 15px; }
     .neova-board .mobile-column-tabs { background: #F8FCFF; }
+}
+
+/* Final modal normalization */
+.neova-board .task-modal-shell,
+.neova-board .board-form-modal,
+.neova-board .board-confirm-modal {
+    border: 0 !important;
+    background: #FFFFFF !important;
+    border-radius: 12px;
+    box-shadow: 0 18px 44px rgba(24,33,43,.16);
+}
+
+.neova-board .task-modal-header {
+    background: #FFFFFF !important;
+    border-bottom: 0;
+    color: #18212B;
+}
+
+.neova-board .task-modal-header__subtitle { color: #64748B !important; }
+.neova-board .task-modal-section { border-color: #E8EBE9; }
+.neova-board .task-modal-section--description { border-color: #E8EBE9; background: #FFFFFF; }
+
+.neova-board .modal-close-button {
+    z-index: 2;
+    display: inline-flex;
+    width: 36px;
+    height: 36px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9px;
+    color: #64748B;
+    background: transparent;
+    transition: background-color 140ms ease, color 140ms ease;
+}
+
+.neova-board .modal-close-button:hover,
+.neova-board .modal-close-button:focus-visible {
+    outline: none;
+    background: #F8FAFC;
+    color: #18212B;
+    box-shadow: 0 0 0 3px rgba(0,105,217,.12);
+}
+
+.neova-board .board-form-modal > div:first-child {
+    border-bottom: 0;
+    background: #FFFFFF;
+}
+
+.neova-board .board-form-modal > div:last-child {
+    border-top: 0;
+    background: #FFFFFF;
 }
