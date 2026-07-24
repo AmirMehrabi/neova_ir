@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\WorkspaceInvitation;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
@@ -29,6 +30,18 @@ class NotificationController extends Controller
         $request->user()->unreadNotifications->markAsRead();
 
         return back();
+    }
+
+    public function markRead(Request $request, DatabaseNotification $notification): JsonResponse
+    {
+        abort_unless((int) $notification->notifiable_id === (int) $request->user()->id, 403);
+
+        $notification->markAsRead();
+
+        return response()->json([
+            'ok' => true,
+            'unread_count' => $request->user()->unreadNotifications()->count(),
+        ]);
     }
 
     public function open(Request $request, DatabaseNotification $notification): RedirectResponse

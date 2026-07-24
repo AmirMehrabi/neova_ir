@@ -9,7 +9,7 @@
     <style>
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; }
-        .sortable-ghost { opacity: 0.4; background: #F1F3F2 !important; border: 2px dashed #18212B !important; box-shadow: none !important; }
+        .sortable-ghost { opacity: 0.4; background: #F5FAFF !important; border: 2px dashed #0069D9 !important; box-shadow: none !important; }
         .sortable-chosen { box-shadow: 0 4px 12px rgba(24,33,43,0.09) !important; transform: translateY(-1px); z-index: 50; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         ::-webkit-scrollbar { width: 5px; }
@@ -17,25 +17,25 @@
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
         .checklist-bar { height: 6px; border-radius: 3px; background: #E2E8F0; overflow: hidden; }
-        .checklist-bar-fill { height: 100%; border-radius: 3px; background: #18212B; transition: width 0.3s ease; }
-        .neova-board .bg-white { background-color: #FFFDF8 !important; }
-        .neova-board .text-\[\#1A1D21\], .neova-board .text-\[\#18212B\] { color: #18212B !important; }
-        .neova-board .text-\[\#18212B\], .neova-board .text-\[\#18212B\] { color: #18212B !important; }
-        .neova-board .bg-\[\#18212B\], .neova-board .bg-\[\#18212B\] { background-color: #18212B !important; }
-        .neova-board .bg-\[\#F1F3F2\], .neova-board .bg-\[\#F1F3F2\] { background-color: #EEE8DD !important; }
+        .checklist-bar-fill { height: 100%; border-radius: 3px; background: #0069D9; transition: width 0.3s ease; }
+        .neova-board .bg-white { background-color: #FFFFFF !important; }
+        .neova-board .text-\[\#1A1D21\], .neova-board .text-\[\#18212B\] { color: #102A43 !important; }
+        .neova-board .text-\[\#18212B\], .neova-board .text-\[\#18212B\] { color: #102A43 !important; }
+        .neova-board .bg-\[\#18212B\], .neova-board .bg-\[\#18212B\] { background-color: #0069D9 !important; }
+        .neova-board .bg-\[\#F1F3F2\], .neova-board .bg-\[\#F1F3F2\] { background-color: #F5FAFF !important; }
         .neova-board .hover\:bg-\[\#253342\]:hover,
         .neova-board .hover\:bg-\[\#000000\]:hover,
-        .neova-board .hover\:bg-\[\#000000\]:hover { background-color: #000000 !important; }
+        .neova-board .hover\:bg-\[\#000000\]:hover { background-color: #0052B3 !important; }
         .neova-board .border-\[\#D7DDDA\] { border-color: #D7DDDA !important; }
-        .neova-board .focus\:border-\[\#18212B\]:focus { border-color: #18212B !important; }
-        .neova-board .focus\:ring-\[\#18212B\]\/20:focus { --tw-ring-color: rgb(24 33 43 / 0.2) !important; }
+        .neova-board .focus\:border-\[\#18212B\]:focus { border-color: #0069D9 !important; }
+        .neova-board .focus\:ring-\[\#18212B\]\/20:focus { --tw-ring-color: rgb(0 105 217 / 0.2) !important; }
         .neova-board {
             margin: 0;
             padding: 0;
             border: 0;
             border-radius: 0;
-            background: var(--neova-paper);
-            color: var(--neova-ink);
+            background: #FBFDFF;
+            color: #102A43;
         }
         .neova-board .border-\[\#E2E8F0\], .neova-board .border-\[\#E8EBE9\] { border-color: #E8EBE9 !important; }
         .neova-board .text-\[\#64748B\] { color: #66717A !important; }
@@ -91,7 +91,7 @@
 
     {{-- Top Navigation Bar --}}
     <x-navbar light fluid board-shell>
-        <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-9 h-9 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] hover:text-[#18212B] hover:bg-white transition-colors shrink-0" aria-label="بازگشت">
+        <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="board-nav-control board-nav-control--icon shrink-0" aria-label="بازگشت">
             <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -165,7 +165,7 @@
                 <button
                     type="button"
                     @click="filterPanelOpen = !filterPanelOpen"
-                    class="inline-flex items-center gap-1.5 h-9 px-3 text-[11px] font-bold text-[#475569] bg-[#F1EFEA] hover:bg-white border border-[#E7E3DA] rounded-xl transition-colors"
+                    class="board-nav-control"
                     :class="activeFilterCount() > 0 ? 'ring-2 ring-[#18212B]/15 border-[#18212B]/30' : ''"
                     :aria-expanded="filterPanelOpen"
                 >
@@ -209,7 +209,7 @@
                 <button
                     @click="openProjectDrawer()"
                     aria-label="مدیریت پروژه"
-                    class="hidden md:flex items-center justify-center w-9 h-9 text-[#64748B] hover:text-[#18212B] bg-[#F1EFEA] hover:bg-white border border-[#E7E3DA] rounded-xl transition-colors"
+                    class="board-nav-control board-nav-control--icon hidden md:flex"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
                 </button>
@@ -217,9 +217,10 @@
             @if ($canEdit)
                 <button
                     @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)"
-                    class="hidden md:inline-flex items-center gap-1.5 h-9 px-3.5 bg-[#18212B] hover:bg-[#253342] text-white rounded-xl transition-all duration-150 shadow-md shadow-[#18212B]/25 hover:shadow-lg hover:shadow-[#18212B]/30 active:scale-[0.97] text-[11px] font-black"
+                    class="board-nav-control board-nav-control--primary hidden md:inline-flex"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                    افزودن کارت
                 </button>
             @else
                 <span class="hidden md:inline-flex text-[11px] font-bold text-[#64748B] bg-[#F1EFEA] border border-[#E7E3DA] rounded-md px-2.5 py-1.5">فقط مشاهده</span>
