@@ -57,8 +57,8 @@
     <style>
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; position: fixed; width: 100%; }
-        .project-card { transition: background-color 0.18s ease, box-shadow 0.18s ease; }
-        .project-card:hover { background: #F5F7F6; box-shadow: inset -3px 0 0 #18212B; }
+        .project-card { transition: background-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease; }
+        .project-card:hover { background: #F7FBFF; box-shadow: inset -3px 0 0 #0069D9; }
         .neova-dashboard .bg-white { background-color: #FFFDF8 !important; }
         .neova-dashboard .text-\[\#071B33\] { color: #18212B !important; }
         .neova-dashboard .text-\[\#18212B\], .neova-dashboard .text-\[\#18212B\] { color: #18212B !important; }
@@ -66,6 +66,35 @@
         .neova-dashboard .bg-\[\#F1F3F2\], .neova-dashboard .bg-\[\#F1F3F2\] { background-color: #EEE8DD !important; }
         .neova-dashboard .border-\[\#D8E0EB\], .neova-dashboard .border-\[\#E6EBF2\] { border-color: #E8EBE9 !important; }
         .neova-dashboard .text-\[\#64748B\] { color: #66717A !important; }
+        .dashboard-page { --dashboard-ink: #102A43; --dashboard-muted: #64788A; --dashboard-line: #DCE8F2; --dashboard-blue: #0069D9; --dashboard-wash: #F5FAFF; }
+        .dashboard-content { padding-top: 2.5rem; }
+        .dashboard-hero { align-items: flex-end; padding-bottom: 1.75rem; border-bottom: 1px solid var(--dashboard-line); }
+        .dashboard-hero h1 { color: var(--dashboard-ink) !important; letter-spacing: -.045em; }
+        .dashboard-primary-action { border-color: var(--dashboard-blue) !important; color: var(--dashboard-blue) !important; box-shadow: 0 5px 14px rgba(0,105,217,.10) !important; }
+        .dashboard-primary-action:hover { background: var(--dashboard-blue) !important; color: #fff !important; border-color: var(--dashboard-blue) !important; }
+        .dashboard-invitations h2 { color: var(--dashboard-ink) !important; }
+        .dashboard-invitation { border-color: #CFE4F5 !important; background: #F8FCFF !important; box-shadow: 0 8px 24px rgba(0,105,217,.06) !important; }
+        .dashboard-invitation .dashboard-invitation-avatar { background: #EAF5FF !important; color: var(--dashboard-blue) !important; }
+        .dashboard-invitation .dashboard-invitation-name { color: var(--dashboard-blue) !important; }
+        .dashboard-workspaces { border-color: var(--dashboard-line) !important; box-shadow: 0 14px 34px rgba(16,42,67,.06) !important; }
+        .dashboard-workspaces, .dashboard-project-card { background: #FFFFFF !important; }
+        .dashboard-workspace { border-color: var(--dashboard-line) !important; }
+        .dashboard-workspace-header { background: var(--dashboard-wash) !important; border-color: var(--dashboard-line) !important; }
+        .dashboard-workspace-header h2 { color: var(--dashboard-ink) !important; }
+        .dashboard-workspace-avatar { background: #EAF5FF !important; color: var(--dashboard-blue) !important; }
+        .dashboard-project-card { min-height: 104px; }
+        .dashboard-project-mark { background: var(--dashboard-ink) !important; }
+        .dashboard-project-progress { background: #E7F1F9 !important; }
+        .dashboard-project-progress > div { background: var(--dashboard-blue) !important; }
+        .dashboard-project-arrow { background: var(--dashboard-wash) !important; color: var(--dashboard-blue) !important; }
+        .dashboard-project-card:hover .dashboard-project-arrow { background: var(--dashboard-blue) !important; }
+        .dashboard-empty { background: linear-gradient(180deg, #fff, #F8FCFF); }
+        .dashboard-empty-icon { background: #EAF5FF !important; color: var(--dashboard-blue) !important; }
+        .dashboard-modal { border-color: var(--dashboard-line) !important; }
+        .dashboard-modal input:focus { border-color: var(--dashboard-blue) !important; box-shadow: 0 0 0 4px rgba(0,105,217,.10); }
+        .dashboard-modal-primary { background: var(--dashboard-blue) !important; }
+        .dashboard-modal-primary:hover { background: #0052B3 !important; }
+        @media (max-width: 640px) { .dashboard-content { padding-top: 1.5rem; } .dashboard-hero { align-items: stretch; padding-bottom: 1.25rem; } .dashboard-project-card { min-height: 88px; } }
         @media (prefers-reduced-motion: reduce) {
             .project-card { transition: none; }
         }
@@ -183,14 +212,14 @@
             <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold rounded-xl px-4 py-3">{{ session('success') }}</div>
         @endif
 
-        <div class="flex items-center justify-between gap-5 mb-8 sm:mb-10">
+        <div class="dashboard-hero flex items-center justify-between gap-5 mb-8 sm:mb-10">
             <div>
                 <h1 class="text-2xl sm:text-[32px] leading-tight font-black tracking-[-0.035em] text-[#071B33]">داشبورد</h1>
                 <p class="text-[12px] sm:text-[13px] font-medium text-[#64748B] mt-2">{{ $workspaces->sum('projects_count') }} پروژه در {{ $workspaces->count() }} فضای کاری</p>
             </div>
             <button
                 @click="modalType = 'workspace'; showModal = true"
-                class="flex items-center gap-2 border border-[#B8C4D4] bg-white hover:border-[#071B33] hover:text-[#071B33] text-[#42526A] text-[12px] font-bold px-4 py-2.5 rounded-[10px] shadow-sm transition-all active:scale-[0.98] shrink-0"
+                class="dashboard-primary-action flex items-center gap-2 border border-[#B8C4D4] bg-white hover:border-[#071B33] hover:text-[#071B33] text-[#42526A] text-[12px] font-bold px-4 py-2.5 rounded-[10px] shadow-sm transition-all active:scale-[0.98] shrink-0"
             >
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                 <span class="hidden sm:inline">فضای کاری جدید</span>
@@ -204,14 +233,14 @@
                     دعوت‌نامه‌های در انتظار
                 </h2>
                 @foreach ($invitations as $invitation)
-                    <div class="bg-white border border-[#FDE68A] rounded-2xl p-4 sm:p-5 shadow-[0_4px_16px_rgba(245,158,11,0.1)]" x-data="{ processing: false }">
+                    <div class="dashboard-invitation bg-white border border-[#FDE68A] rounded-2xl p-4 sm:p-5 shadow-[0_4px_16px_rgba(245,158,11,0.1)]" x-data="{ processing: false }">
                         <div class="flex items-start gap-4">
-                            <div class="w-11 h-11 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center text-sm font-black shrink-0">
+                            <div class="dashboard-invitation-avatar w-11 h-11 rounded-xl bg-[#FEF3C7] text-[#D97706] flex items-center justify-center text-sm font-black shrink-0">
                                 {{ mb_substr($invitation->inviter->full_name, 0, 1) }}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <p class="text-[13px] font-bold text-[#071B33]">
-                                    <span class="text-[#D97706]">{{ $invitation->inviter->full_name }}</span>
+                                    <span class="dashboard-invitation-name text-[#D97706]">{{ $invitation->inviter->full_name }}</span>
                                     شما را به فضای کاری
                                     <span class="text-[#D97706]">{{ $invitation->workspace->name }}</span>
                                     دعوت کرده است
@@ -249,16 +278,16 @@
             </div>
         @endif
 
-        <div class="dashboard-workspace-list overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_12px_30px_rgba(7,27,51,0.06)]">
+        <div class="dashboard-workspaces dashboard-workspace-list overflow-hidden rounded-2xl border border-[#D8E0EB] bg-white shadow-[0_12px_30px_rgba(7,27,51,0.06)]">
         @forelse ($workspaces as $workspace)
             @php
                 $role = $workspace->getAttribute('user_role');
                 $canManage = in_array($role, ['owner', 'admin'], true);
             @endphp
-            <section class="border-b border-[#D8E0EB] last:border-b-0">
-                <div class="flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 bg-[#F8FAFC] border-b border-[#E6EBF2]">
+            <section class="dashboard-workspace border-b border-[#D8E0EB] last:border-b-0">
+                <div class="dashboard-workspace-header flex items-center justify-between gap-3 px-4 py-4 sm:px-5 sm:py-5 bg-[#F8FAFC] border-b border-[#E6EBF2]">
                     <div class="flex items-center gap-3 min-w-0">
-                        <div class="w-10 h-10 rounded-[10px] bg-[#F1F3F2] text-[#18212B] flex items-center justify-center text-sm font-black shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
+                        <div class="dashboard-workspace-avatar w-10 h-10 rounded-[10px] bg-[#F1F3F2] text-[#18212B] flex items-center justify-center text-sm font-black shrink-0">{{ mb_substr($workspace->name, 0, 1) }}</div>
                         <div class="min-w-0">
                             <h2 class="text-[15px] sm:text-[17px] font-black text-[#071B33] truncate">{{ $workspace->name }}</h2>
                             <p class="text-[10px] sm:text-[11px] font-medium text-[#7C899B] mt-0.5">{{ $workspace->projects_count }} پروژه · {{ $workspace->members_count ?? 0 }} عضو</p>
@@ -279,9 +308,9 @@
                         @foreach ($workspace->projects as $project)
                             <a
                                 href="{{ route('board', [$workspace->slug, $project->slug]) }}"
-                                class="project-card group flex items-center gap-3 sm:gap-5 bg-white px-4 py-4 sm:px-5 sm:py-5 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#18212B]/15"
+                                class="project-card dashboard-project-card group flex items-center gap-3 sm:gap-5 bg-white px-4 py-4 sm:px-5 sm:py-5 focus:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[#18212B]/15"
                             >
-                                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-[11px] bg-[#071B33] flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
+                                <div class="dashboard-project-mark w-12 h-12 sm:w-14 sm:h-14 rounded-[11px] bg-[#071B33] flex items-center justify-center shrink-0 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.08)]">
                                     <span class="text-white font-black text-[11px] sm:text-[12px] tracking-wide">{{ $project->key ?: mb_substr($project->name, 0, 2) }}</span>
                                 </div>
 
@@ -319,7 +348,7 @@
                                             <span class="text-[10px] font-semibold text-[#94A3B8]">هنوز وظیفه‌ای ثبت نشده</span>
                                         @endif
                                     </div>
-                                    <div class="h-2 bg-[#E8EDF4] rounded-full overflow-hidden">
+                                    <div class="dashboard-project-progress h-2 bg-[#E8EDF4] rounded-full overflow-hidden">
                                         <div class="h-full bg-[#18212B] rounded-full" style="width: {{ $project->progress_percentage }}%"></div>
                                     </div>
                                 </div>
@@ -350,7 +379,7 @@
 
                                 <div class="flex items-center gap-2 shrink-0 text-[#18212B]">
                                     <span class="hidden xl:inline text-[11px] font-black">ورود به تخته</span>
-                                    <span class="w-9 h-9 rounded-[9px] bg-[#F1F3F2] group-hover:bg-[#18212B] group-hover:text-white flex items-center justify-center transition-colors">
+                                    <span class="dashboard-project-arrow w-9 h-9 rounded-[9px] bg-[#F1F3F2] group-hover:bg-[#18212B] group-hover:text-white flex items-center justify-center transition-colors">
                                         <svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M15 19l-7-7 7-7"/></svg>
                                     </span>
                                 </div>
@@ -367,7 +396,7 @@
                         @endif
                     </div>
                 @else
-                    <div class="flex flex-col items-center justify-center py-10 px-5 text-center">
+                    <div class="dashboard-empty flex flex-col items-center justify-center py-10 px-5 text-center">
                         <p class="text-[13px] text-[#94A3B8] mb-3">هنوز پروژه‌ای ساخته نشده</p>
                         @if ($canManage)
                             <button
@@ -380,7 +409,7 @@
             </section>
         @empty
             <div class="flex flex-col items-center justify-center py-24 text-center">
-                <div class="w-14 h-14 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mb-4">
+                <div class="dashboard-empty-icon w-14 h-14 rounded-2xl bg-[#F1F5F9] flex items-center justify-center mb-4">
                     <svg class="w-7 h-7 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                 </div>
                 <p class="text-[15px] font-bold text-[#172B4D] mb-1">فضای کاری ندارید</p>
@@ -396,7 +425,7 @@
         <div x-show="showModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 bg-[#0A1628]/60 backdrop-blur-sm" @click="showModal = false"></div>
         <div x-show="showModal" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 z-50 overflow-y-auto" @keydown.escape.window="showModal = false">
             <div class="min-h-screen flex items-center justify-center p-4">
-                <div class="relative bg-white w-full max-w-md rounded-2xl border border-[#D8E0EB] shadow-[0_28px_70px_rgba(7,27,51,0.28)] p-6 sm:p-7" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" @click.stop>
+                <div class="dashboard-modal relative bg-white w-full max-w-md rounded-2xl border border-[#D8E0EB] shadow-[0_28px_70px_rgba(7,27,51,0.28)] p-6 sm:p-7" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" @click.stop>
                     <template x-if="modalType === 'workspace'">
                         <div>
                             <h3 class="text-lg font-black text-[#071B33] mb-5">فضای کاری جدید</h3>
@@ -405,7 +434,7 @@
                                 <input name="name" type="text" required class="w-full text-sm font-semibold border-2 border-[#D8E0EB] rounded-xl px-4 py-3 focus:outline-none focus:border-[#18212B] focus:ring-4 focus:ring-[#18212B]/10 transition-colors mb-5 placeholder:text-[#AAB5C4]" placeholder="نام فضای کاری">
                                 <div class="flex gap-2 justify-end">
                                     <button type="button" @click="showModal = false" class="text-xs font-semibold text-[#64748B] px-4 py-2 rounded-xl border border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">انصراف</button>
-                                    <button type="submit" class="text-xs font-black text-white bg-[#071B33] hover:bg-[#0B2545] px-4 py-2.5 rounded-xl transition-all">ایجاد فضای کاری</button>
+                                    <button type="submit" class="dashboard-modal-primary text-xs font-black text-white bg-[#071B33] hover:bg-[#0B2545] px-4 py-2.5 rounded-xl transition-all">ایجاد فضای کاری</button>
                                 </div>
                             </form>
                         </div>
@@ -425,7 +454,7 @@
                                 </div>
                                 <div class="flex gap-2 justify-end">
                                     <button type="button" @click="showModal = false" class="text-xs font-semibold text-[#64748B] px-4 py-2 rounded-xl border border-[#E2E8F0] hover:bg-[#F8FAFC] transition-colors">انصراف</button>
-                                    <button type="submit" class="text-xs font-black text-white bg-[#18212B] hover:bg-[#000000] px-4 py-2.5 rounded-xl shadow-[0_5px_14px_rgba(24,33,43,0.20)] transition-all">ایجاد پروژه</button>
+                                    <button type="submit" class="dashboard-modal-primary text-xs font-black text-white bg-[#18212B] hover:bg-[#000000] px-4 py-2.5 rounded-xl shadow-[0_5px_14px_rgba(24,33,43,0.20)] transition-all">ایجاد پروژه</button>
                                 </div>
                             </form>
                         </div>
