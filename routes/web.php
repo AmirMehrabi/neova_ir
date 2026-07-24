@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
                 Route::middleware('workspace.editor')->group(function () {
                     Route::post('/{workspace}/{project}/task', [BoardController::class, 'storeTask'])->name('board.task.store');
+                    Route::patch('/{workspace}/{project}/tasks/bulk', [BoardController::class, 'bulkUpdateTasks'])->name('board.tasks.bulk');
                     Route::put('/{workspace}/{project}/task/{task}', [BoardController::class, 'updateTask'])->name('board.task.update');
                     Route::post('/{workspace}/{project}/task/{task}/comments', [BoardController::class, 'addComment'])->name('board.task.comments.store');
                     Route::delete('/{workspace}/{project}/task/{task}', [BoardController::class, 'destroyTask'])->name('board.task.destroy');

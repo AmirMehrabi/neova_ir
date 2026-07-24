@@ -171,6 +171,46 @@ class WorkspaceManagementTest extends TestCase
         ]);
     }
 
+    public function test_workspace_editor_can_apply_bulk_task_updates_within_project_scope(): void
+    {
+        $owner = User::factory()->create();
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'Product Team']);
+        $project = Project::create(['workspace_id' => $workspace->id, 'name' => 'First Project', 'key' => 'PRJ']);
+        $column = $project->columns()->create(['title' => 'در حال انجام', 'position' => 0]);
+        $first = Task::create(['column_id' => $column->id, 'title' => 'اول', 'priority' => 'پایین', 'position' => 1]);
+        $second = Task::create(['column_id' => $column->id, 'title' => 'دوم', 'priority' => 'پایین', 'position' => 2]);
+
+        $this->actingAs($owner)
+            ->patchJson(route('board.tasks.bulk', [$workspace->slug, $project->slug]), [
+                'task_ids' => [$first->id, $second->id],
+                'action' => 'priority',
+                'value' => 'بالا',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true, 'updated' => 2]);
+
+        $this->assertDatabaseHas('tasks', ['id' => $first->id, 'priority' => 'بالا']);
+        $this->assertDatabaseHas('tasks', ['id' => $second->id, 'priority' => 'بالا']);
+    }
+
+    public function test_project_manager_can_set_a_column_wip_limit(): void
+    {
+        $owner = User::factory()->create();
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'Product Team']);
+        $project = Project::create(['workspace_id' => $workspace->id, 'name' => 'First Project', 'key' => 'PRJ']);
+        $column = $project->columns()->create(['title' => 'در حال انجام', 'position' => 0]);
+
+        $this->actingAs($owner)
+            ->patchJson(route('board.column.update', [$workspace->slug, $project->slug, $column]), [
+                'title' => $column->title,
+                'color' => '#0069D9',
+                'wip_limit' => 5,
+            ])
+            ->assertOk();
+
+        $this->assertDatabaseHas('project_columns', ['id' => $column->id, 'wip_limit' => 5]);
+    }
+
     public function test_project_manager_can_manage_members_from_board_routes(): void
     {
         $owner = User::factory()->create();

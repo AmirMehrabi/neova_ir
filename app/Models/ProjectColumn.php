@@ -10,7 +10,7 @@ class ProjectColumn extends Model
 {
     protected $table = 'project_columns';
 
-    protected $fillable = ['project_id', 'title', 'position', 'color'];
+    protected $fillable = ['project_id', 'title', 'position', 'color', 'wip_limit'];
 
     public function project(): BelongsTo
     {

@@ -563,3 +563,10 @@
 .neova-board .jalali-picker__day:hover,
 .neova-board .jalali-picker__day--today { background: #f0f8ff; color: var(--board-ink); }
 .neova-board .jalali-picker__day--selected { background: #0069d9 !important; }
+
+/* Enterprise board hierarchy */
+.board-bulk-bar { border-bottom: 1px solid var(--board-line); background: #FFFFFF; }
+.board-bulk-bar { background: #F5FAFF; border-bottom-color: #CFE4F5; }
+.board-column-header__wip { padding: 3px 6px; border: 1px solid #DCE8F2; border-radius: 999px; color: #718596; font-size: 9px; font-weight: 800; white-space: nowrap; }
+.board-column-header__wip.is-over { border-color: #B9D7EE; background: #F0F8FF; color: #0069D9; }
+.board-task-select { width: 15px; height: 15px; accent-color: #0069D9; cursor: pointer; }

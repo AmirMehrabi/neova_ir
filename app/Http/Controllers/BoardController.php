@@ -31,19 +31,19 @@ class BoardController extends Controller
 
         $colColors = [
             'پس‌زمینه' => 'bg-[#94A3B8]',
-            'در حال انجام' => 'bg-[#0069FF]',
+            'در حال انجام' => 'bg-[#0069D9]',
             'بررسی' => 'bg-[#F59E0B]',
             'انجام شده' => 'bg-[#22C55E]',
         ];
         $colHexColors = [
             'پس‌زمینه' => '#94A3B8',
-            'در حال انجام' => '#0069FF',
+            'در حال انجام' => '#0069D9',
             'بررسی' => '#F59E0B',
             'انجام شده' => '#22C55E',
         ];
         $colBadge = [
             'پس‌زمینه' => 'bg-[#F1F5F9] text-[#64748B]',
-            'در حال انجام' => 'bg-[#E8F0FE] text-[#0069FF]',
+            'در حال انجام' => 'bg-[#F0F8FF] text-[#0069D9]',
             'بررسی' => 'bg-[#FEF3C7] text-[#D97706]',
             'انجام شده' => 'bg-[#DCFCE7] text-[#16A34A]',
         ];
@@ -51,6 +51,7 @@ class BoardController extends Controller
         $columnsData = $columns->map(fn ($c) => [
             'id' => (string) $c->id,
             'title' => $c->title,
+            'wipLimit' => $c->wip_limit,
             'dotColor' => $colColors[$c->title] ?? 'bg-[#94A3B8]',
             'dotHex' => $c->color ?: ($colHexColors[$c->title] ?? '#94A3B8'),
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
@@ -173,6 +174,60 @@ class BoardController extends Controller
         $activityLogger->taskUpdated($task, $before, $request->user());
 
         return response()->json($task);
+    }
+
+    public function bulkUpdateTasks(
+        Request $request,
+        string $workspace,
+        string $project,
+        ProjectActivityLogger $activityLogger,
+    ) {
+        $validated = $request->validate([
+            'task_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'task_ids.*' => ['integer', 'distinct'],
+            'action' => ['required', Rule::in(['priority', 'assignee', 'tag', 'due_date', 'column'])],
+            'value' => ['nullable'],
+        ]);
+
+        $projectModel = $request->attributes->get('project');
+        $tasks = Task::query()
+            ->whereIn('id', $validated['task_ids'])
+            ->whereIn('column_id', $projectModel->columns()->pluck('id'))
+            ->with('column')
+            ->get();
+
+        abort_unless($tasks->count() === count($validated['task_ids']), 422, 'یک یا چند وظیفه به این پروژه تعلق ندارد.');
+
+        $action = $validated['action'];
+        $value = $validated['value'] ?? null;
+        if ($action === 'priority') abort_unless(in_array($value, ['بالا', 'متوسط', 'پایین'], true), 422, 'اولویت معتبر نیست.');
+        if ($action === 'column') {
+            $targetColumn = ProjectColumn::findOrFail($value);
+            $this->ensureColumnInCurrentProject($request, $targetColumn);
+        }
+        if ($action === 'assignee') {
+            $allowed = $projectModel->members()->get()->map(fn ($member) => $member->full_name)->all();
+            abort_unless($value === null || in_array($value, $allowed, true), 422, 'مسئول انتخاب‌شده عضو تیم پروژه نیست.');
+        }
+
+        foreach ($tasks as $task) {
+            $before = $task->only(['title', 'description', 'priority', 'due_date', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
+            $changes = match ($action) {
+                'priority' => ['priority' => $value],
+                'assignee' => ['assignees' => $value ? [$value] : []],
+                'tag' => ['tags' => collect($task->tags ?? [])->push((string) $value)->unique()->values()->all()],
+                'due_date' => ['due_date' => $value ?: null],
+                'column' => ['column_id' => (int) $value],
+            };
+            $task->update($changes);
+            $activityLogger->taskUpdated($task->refresh(), $before, $request->user());
+        }
+
+        return response()->json([
+            'success' => true,
+            'updated' => $tasks->count(),
+            'task_ids' => $tasks->pluck('id')->values(),
+        ]);
     }
 
     public function destroyTask(Request $request, string $workspace, string $project, string $task, ProjectActivityLogger $activityLogger)
@@ -410,6 +465,7 @@ class BoardController extends Controller
             'project_id' => 'required|exists:projects,id',
             'title' => 'required|string|max:100',
             'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'wip_limit' => ['nullable', 'integer', 'min:1', 'max:999'],
         ]);
 
         abort_unless((int) $request->project_id === (int) $request->attributes->get('project')->id, 403);
@@ -419,6 +475,7 @@ class BoardController extends Controller
             'project_id' => $request->project_id,
             'title' => $request->title,
             'color' => $request->input('color'),
+            'wip_limit' => $request->input('wip_limit'),
             'position' => $maxPosition + 1,
         ]);
         $activityLogger->columnChanged($column, $request->user(), 'column_created', "{$request->user()->full_name} ستون «{$column->title}» را ایجاد کرد.");
@@ -432,11 +489,13 @@ class BoardController extends Controller
         $validated = $request->validate([
             'title' => ['required', 'string', 'max:100'],
             'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'wip_limit' => ['nullable', 'integer', 'min:1', 'max:999'],
         ]);
         $before = $column->only(['title', 'color']);
         $column->update([
             'title' => trim($validated['title']),
             'color' => $validated['color'] ?? $column->color,
+            'wip_limit' => $validated['wip_limit'] ?? null,
         ]);
         foreach ($before as $field => $value) {
             if ($value != $column->{$field}) {

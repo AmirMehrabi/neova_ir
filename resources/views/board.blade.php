@@ -258,6 +258,21 @@
         @endslot
     </x-navbar>
 
+    <div x-show="selectedTaskIds.length > 0" x-cloak class="board-bulk-bar">
+        <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 px-3 sm:px-6 py-2.5">
+            <strong class="text-[11px] text-[#102A43]" x-text="toPersianDigits(selectedTaskIds.length) + ' وظیفه انتخاب شده' "></strong>
+            <select x-model="bulkAction" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px] font-bold text-[#475569]">
+                <option value="">عملیات گروهی</option><option value="priority">تغییر اولویت</option><option value="assignee">تعیین مسئول</option><option value="tag">افزودن برچسب</option><option value="column">انتقال به ستون</option><option value="due_date">پاک کردن سررسید</option>
+            </select>
+            <select x-show="bulkAction === 'priority'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><option value="بالا">بالا</option><option value="متوسط">متوسط</option><option value="پایین">پایین</option></select>
+            <select x-show="bulkAction === 'assignee'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><option value="">بدون مسئول</option><template x-for="member in projectMembers" :key="'bulk-' + member.id"><option :value="member.name" x-text="member.name"></option></template></select>
+            <select x-show="bulkAction === 'column'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><template x-for="column in columns" :key="'bulk-col-' + column.id"><option :value="column.id" x-text="column.title"></option></template></select>
+            <input x-show="bulkAction === 'tag'" x-model="bulkValue" class="h-8 w-28 rounded-lg border border-[#DCE8F2] px-2 text-[10px]" placeholder="نام برچسب">
+            <button type="button" @click="applyBulkAction()" :disabled="!bulkAction || bulkLoading" class="h-8 rounded-lg bg-[#0069D9] px-3 text-[10px] font-black text-white disabled:opacity-40">اعمال</button>
+            <button type="button" @click="clearSelection()" class="mr-auto text-[10px] font-bold text-[#64788A]">لغو انتخاب</button>
+        </div>
+    </div>
+
     {{-- Active filters strip --}}
     <div x-show="activeFilterCount() > 0" x-cloak class="board-filter-bar">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5">
@@ -352,6 +367,7 @@
                             <span class="board-column-header-accent" aria-hidden="true"></span>
                             <h2 class="board-column-header__title" x-text="column.title"></h2>
                             <span class="board-column-header__count" x-text="toPersianDigits(column.tasks.length) + ' وظیفه'"></span>
+                            <span x-show="column.wipLimit" class="board-column-header__wip" :class="column.wipLimit && column.tasks.length > column.wipLimit ? 'is-over' : ''" x-text="column.wipLimit ? 'ظرفیت ' + toPersianDigits(column.wipLimit) : ''"></span>
                         </div>
                         <div class="board-column-header__utilities">
                             @if ($canEdit)
@@ -387,7 +403,10 @@
                                 <div class="task-card__priority-edge" :class="priorityEdgeClass(task.priority)"></div>
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2">
-                                        <span class="text-[11px] font-bold text-[#94A3B8]" x-text="task.id"></span>
+                                        <div class="flex items-center gap-2">
+                                            <input type="checkbox" :checked="isTaskSelected(task.dbId)" @click.stop="toggleTaskSelection(task.dbId)" class="board-task-select" aria-label="انتخاب وظیفه">
+                                            <span class="text-[11px] font-bold text-[#94A3B8]" x-text="task.id"></span>
+                                        </div>
                                         <div class="flex flex-wrap gap-1 justify-end">
                                             <span
                                                 class="task-card__priority-badge"
@@ -494,7 +513,7 @@
         <div
             x-ref="mobileBoardTrack"
             @scroll.passive="handleMobileBoardScroll()"
-            class="mobile-board-track md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory px-3 pt-4 pb-8"
+            class="mobile-board-track flex gap-3 overflow-x-auto snap-x snap-mandatory px-3 pt-4 pb-8"
             style="direction: rtl;"
             aria-label="تخته پروژه"
             x-init="$nextTick(() => initColumnSortable('mobile'))"
@@ -536,6 +555,7 @@
                                 <div class="pr-2">
                                     <div class="flex items-start justify-between gap-2 mb-2.5">
                                         <div class="flex flex-wrap gap-1">
+                                            <input type="checkbox" :checked="isTaskSelected(task.dbId)" @click.stop="toggleTaskSelection(task.dbId)" class="board-task-select" aria-label="انتخاب وظیفه">
                                             <span class="task-card__priority-badge" :class="priorityBadgeClass(task.priority)" x-text="task.priority"></span>
                                             <template x-for="tag in visibleTags(task)" :key="tag">
                                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
@@ -1227,7 +1247,7 @@
         <div class="absolute inset-0 bg-[#18212B]/45" @click="closeColumnModal()"></div>
         <form @submit.prevent="addColumn()" class="relative bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-labelledby="column-modal-title" @keydown="trapModalFocus($event)">
             <div class="p-6 border-b border-[#F1EFEA]"><h4 id="column-modal-title" class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام ستون را برای نمایش بهتر جریان کار تغییر دهید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
-            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">رنگ نشان ستون</label><div class="flex flex-wrap gap-2"><template x-for="color in columnColors" :key="color.hex"><button type="button" @click="columnFormColor = color.hex" class="group inline-flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[10px] font-bold transition-all" :class="columnFormColor === color.hex ? 'border-[#18212B] bg-[#FBFAF7] text-[#18212B] ring-2 ring-[#18212B]/10' : 'border-[#E8EBE9] text-[#64748B] hover:bg-[#FBFAF7]'"><span class="h-4 w-4 rounded-full shadow-sm" :style="'background-color:' + color.hex"></span><span x-text="color.name"></span></button></template></div></div><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p></div>
+            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">ظرفیت کار هم‌زمان <span class="font-normal text-[#94A3B8]">(اختیاری)</span></label><input x-model="columnFormWipLimit" type="number" min="1" max="999" class="w-full h-11 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً ۵"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">رنگ نشان ستون</label><div class="flex flex-wrap gap-2"><template x-for="color in columnColors" :key="color.hex"><button type="button" @click="columnFormColor = color.hex" class="group inline-flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[10px] font-bold transition-all" :class="columnFormColor === color.hex ? 'border-[#18212B] bg-[#FBFAF7] text-[#18212B] ring-2 ring-[#18212B]/10' : 'border-[#E8EBE9] text-[#64748B] hover:bg-[#FBFAF7]'"><span class="h-4 w-4 rounded-full shadow-sm" :style="'background-color:' + color.hex"></span><span x-text="color.name"></span></button></template></div></div><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p></div>
             <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" :disabled="columnSaving" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button type="submit" :disabled="columnSaving" :aria-busy="columnSaving" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait" x-text="columnSaving ? 'در حال ذخیره…' : (columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون')"></button></div>
         </form>
     </div>
@@ -1337,6 +1357,10 @@
                 filterByAssignee: [],
                 filterByPriority: [],
                 filterByTag: [],
+                selectedTaskIds: [],
+                bulkAction: '',
+                bulkValue: '',
+                bulkLoading: false,
                 activityTab: 'members',
                 activitySearch: '',
                 activityItems: [],
@@ -1355,6 +1379,7 @@
                 columnDeleteTarget: { id: null, title: '', taskCount: 0 },
                 columnFormTitle: '',
                 columnFormColor: '#94A3B8',
+                columnFormWipLimit: '',
                 columnEditingId: null,
                 toast: { show: false, message: '' },
                 newCheckItem: '',
@@ -1470,6 +1495,65 @@
 
                 activeFilterCount() {
                     return this.filterByAssignee.length + this.filterByPriority.length + this.filterByTag.length;
+                },
+
+                isTaskSelected(taskId) {
+                    return this.selectedTaskIds.includes(Number(taskId));
+                },
+
+                toggleTaskSelection(taskId) {
+                    const id = Number(taskId);
+                    this.selectedTaskIds = this.selectedTaskIds.includes(id)
+                        ? this.selectedTaskIds.filter(selected => selected !== id)
+                        : [...this.selectedTaskIds, id];
+                },
+
+                clearSelection() {
+                    this.selectedTaskIds = [];
+                    this.bulkAction = '';
+                    this.bulkValue = '';
+                },
+
+                async applyBulkAction() {
+                    if (!this.bulkAction || !this.selectedTaskIds.length || this.bulkLoading) return;
+                    if (this.bulkAction === 'tag' && !this.bulkValue.trim()) return;
+                    this.bulkLoading = true;
+                    try {
+                        const response = await fetch('{{ route("board.tasks.bulk", [$workspace->slug, $project->slug], false) }}', {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ task_ids: this.selectedTaskIds, action: this.bulkAction, value: this.bulkValue || null }),
+                        });
+                        if (!response.ok) throw new Error('bulk update failed');
+                        const selected = new Set(this.selectedTaskIds);
+                        for (const column of this.columns) {
+                            for (const task of column.tasks) {
+                                if (!selected.has(Number(task.dbId))) continue;
+                                if (this.bulkAction === 'priority') task.priority = this.bulkValue;
+                                if (this.bulkAction === 'assignee') task.assignees = this.bulkValue ? [this.bulkValue] : [];
+                                if (this.bulkAction === 'tag' && !(task.tags || []).includes(this.bulkValue.trim())) task.tags = [...(task.tags || []), this.bulkValue.trim()];
+                                if (this.bulkAction === 'due_date') task.dueDate = '';
+                            }
+                        }
+                        if (this.bulkAction === 'column') {
+                            const target = this.columns.find(column => String(column.id) === String(this.bulkValue));
+                            const moved = [];
+                            this.columns.forEach(column => {
+                                column.tasks = column.tasks.filter(task => {
+                                    if (!selected.has(Number(task.dbId))) return true;
+                                    moved.push(task);
+                                    return false;
+                                });
+                            });
+                            target?.tasks.push(...moved);
+                        }
+                        this.showToast('تغییرات گروهی ذخیره شد');
+                        this.clearSelection();
+                    } catch (error) {
+                        this.showToast('ذخیره تغییرات گروهی انجام نشد');
+                    } finally {
+                        this.bulkLoading = false;
+                    }
                 },
 
                 clearAllFilters() {
@@ -2604,6 +2688,7 @@
                     this.columnEditingId = null;
                     this.columnFormTitle = '';
                     this.columnFormColor = '#94A3B8';
+                    this.columnFormWipLimit = '';
                     this.columnError = '';
                     this.showColumnModal = true;
                     this.$nextTick(() => this.$refs.columnTitle?.focus());
@@ -2614,6 +2699,7 @@
                     this.columnEditingId = column.id;
                     this.columnFormTitle = column.title;
                     this.columnFormColor = column.dotHex || '#94A3B8';
+                    this.columnFormWipLimit = column.wipLimit || '';
                     this.columnError = '';
                     this.showColumnModal = true;
                     this.$nextTick(() => this.$refs.columnTitle?.focus());
@@ -2624,6 +2710,7 @@
                     this.columnFormTitle = '';
                     this.columnEditingId = null;
                     this.columnFormColor = '#94A3B8';
+                    this.columnFormWipLimit = '';
                 },
 
                 async addColumn() {
@@ -2642,15 +2729,15 @@
                         const response = await fetch(url, {
                             method: editing ? 'PATCH' : 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                            body: JSON.stringify(editing ? { title: this.columnFormTitle.trim(), color: this.columnFormColor } : { project_id: {{ $project->id }}, title: this.columnFormTitle.trim(), color: this.columnFormColor }),
+                            body: JSON.stringify(editing ? { title: this.columnFormTitle.trim(), color: this.columnFormColor, wip_limit: this.columnFormWipLimit || null } : { project_id: {{ $project->id }}, title: this.columnFormTitle.trim(), color: this.columnFormColor, wip_limit: this.columnFormWipLimit || null }),
                         });
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره ستون انجام نشد.');
                         if (editing) {
                             const column = this.columns.find(item => item.id === String(data.id));
-                            if (column) { column.title = data.title; column.dotHex = data.color || this.columnFormColor; }
+                            if (column) { column.title = data.title; column.dotHex = data.color || this.columnFormColor; column.wipLimit = data.wip_limit || null; }
                         } else {
-                            this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', dotHex: data.color || this.columnFormColor, badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
+                            this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', dotHex: data.color || this.columnFormColor, wipLimit: data.wip_limit || null, badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
                         }
                         this.closeColumnModal();
                         this.showToast(editing ? 'نام ستون ویرایش شد' : 'ستون جدید اضافه شد');
