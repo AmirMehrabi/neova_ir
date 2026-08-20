@@ -91,7 +91,7 @@
 
     {{-- Top Navigation Bar --}}
     <x-navbar light fluid board-shell>
-        <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="board-nav-control board-nav-control--icon shrink-0" aria-label="بازگشت">
+        <a href="{{ route('projects.index', $workspace->slug) }}" class="board-nav-control board-nav-control--icon shrink-0" aria-label="بازگشت">
             <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
@@ -161,6 +161,8 @@
         @endslot
 
         @slot('actions')
+            <a href="{{ route('today', $workspace->slug) }}" class="board-nav-control hidden lg:inline-flex">امروز</a>
+            <a href="{{ route('team.index', $workspace->slug) }}" class="board-nav-control hidden lg:inline-flex">تیم</a>
             <div class="relative hidden md:block" @click.away="filterPanelOpen = false">
                 <button
                     type="button"
@@ -229,7 +231,7 @@
 
         @slot('mobile')
             <div class="w-full px-2.5 sm:px-4 py-2.5 flex items-center gap-2.5">
-                <a href="{{ route('dashboard', ['workspace' => $workspace->slug]) }}" class="w-11 h-11 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] shrink-0 active:bg-white" aria-label="بازگشت">
+                <a href="{{ route('projects.index', $workspace->slug) }}" class="w-11 h-11 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] shrink-0 active:bg-white" aria-label="بازگشت">
                     <svg class="w-4.5 h-4.5 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
@@ -395,7 +397,7 @@
                         <template x-for="task in filteredTasks(column)" :key="task.dbId">
                             <div
                                 class="task-card group"
-                                :class="isTaskSelected(task.dbId) ? 'is-selected' : ''"
+                                :class="[isTaskSelected(task.dbId) ? 'is-selected' : '', task.isBlocked ? 'is-blocked' : '']"
                                 tabindex="0"
                                 :data-id="task.dbId"
                                 :data-column="column.id"
@@ -413,6 +415,7 @@
                                                 :class="priorityBadgeClass(task.priority)"
                                                 x-text="task.priority"
                                             ></span>
+                                            <span x-show="task.isBlocked" class="task-card__blocked">مسدود</span>
                                             <template x-for="tag in visibleTags(task)" :key="tag">
                                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
                                             </template>
@@ -539,7 +542,7 @@
                         <template x-for="task in filteredTasks(column)" :key="'mobile-task-' + task.dbId">
                             <article
                                 class="task-card group"
-                                :class="isTaskSelected(task.dbId) ? 'is-selected' : ''"
+                                :class="[isTaskSelected(task.dbId) ? 'is-selected' : '', task.isBlocked ? 'is-blocked' : '']"
                                 tabindex="0"
                                 :data-id="task.dbId"
                                 :data-column="column.id"
@@ -550,6 +553,7 @@
                                         <div class="flex flex-wrap gap-1">
                                             <input type="checkbox" :checked="isTaskSelected(task.dbId)" @click.stop="toggleTaskSelection(task.dbId)" class="board-task-select" aria-label="انتخاب وظیفه">
                                             <span class="task-card__priority-badge" :class="priorityBadgeClass(task.priority)" x-text="task.priority"></span>
+                                            <span x-show="task.isBlocked" class="task-card__blocked">مسدود</span>
                                             <template x-for="tag in visibleTags(task)" :key="tag">
                                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
                                             </template>
@@ -747,6 +751,30 @@
                         <label class="board-field-label">توضیحات پروژه</label>
                         <textarea x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
                     </div>
+                    <div class="border-t border-[#E8EBE9] pt-5">
+                        <label class="board-field-label">چرخه کاری <span class="font-normal text-[#94A3B8]">(اختیاری)</span></label>
+                        <div class="flex items-center gap-2">
+                            <select x-model="cycleLength" class="flex-1 text-xs border-2 border-[#E2E8F0] rounded-xl px-3 py-2.5 bg-white">
+                                <option value="">بدون چرخه</option><option value="1">یک هفته</option><option value="2">دو هفته</option>
+                            </select>
+                            <button type="button" @click="saveCycleConfig()" class="text-[10px] font-bold text-[#0069D9] border border-[#BFD8EC] rounded-lg px-3 py-2.5">ذخیره</button>
+                        </div>
+                        <div x-show="activeCycle" class="mt-3 rounded-xl border border-[#DCE8F2] bg-[#F8FCFF] p-3">
+                            <p class="text-xs font-black" x-text="activeCycle ? 'چرخه ' + toPersianDigits(activeCycle.number) : ''"></p>
+                            <p class="mt-1 text-[10px] text-[#64748B]" x-text="activeCycle ? activeCycle.startsOn + ' تا ' + activeCycle.endsOn : ''"></p>
+                            <button type="button" @click="finishCycle()" class="mt-3 text-[10px] font-bold text-white bg-[#0069D9] rounded-lg px-3 py-2">پایان و شروع چرخه بعد</button>
+                        </div>
+                        <button x-show="!activeCycle && cycleLength" type="button" @click="startCycle()" class="mt-3 text-[10px] font-bold text-[#0069D9]">شروع چرخه با وظیفه‌های باز فعلی</button>
+                    </div>
+                    <div class="border-t border-[#E8EBE9] pt-5">
+                        <label class="board-field-label">نقش ستون‌ها در گردش کار</label>
+                        <p class="text-[10px] leading-5 text-[#94A3B8] mb-3">نام ستون‌ها آزاد است؛ نئووا از این نقش‌ها برای امروز، کار فعال و انجام‌شده استفاده می‌کند.</p>
+                        <div class="space-y-2">
+                            <template x-for="column in columns" :key="'role-' + column.id">
+                                <label class="flex items-center justify-between gap-3 text-[11px] font-bold text-[#334155]"><span x-text="column.title"></span><select x-model="column.workflowRole" @change="saveColumnRole(column)" class="text-[10px] border border-[#DCE8F2] rounded-lg px-2 py-1.5 bg-white"><option value="backlog">پس‌زمینه</option><option value="ready">آماده</option><option value="active">در حال انجام</option><option value="done">انجام شده</option><option value="other">سایر</option></select></label>
+                            </template>
+                        </div>
+                    </div>
                     <div>
                         <label class="board-field-label">برچسب‌های پروژه</label>
                         <p class="text-[11px] text-[#94A3B8] mb-2 leading-6">برچسب‌های سفارشی برای این پروژه. برچسب‌های پیش‌فرض همیشه در دسترس هستند.</p>
@@ -874,7 +902,7 @@
         @click="requestCloseModal()"
         @keydown.escape.window="requestCloseModal()"
     >
-        <div class="min-h-screen flex items-start justify-center p-4 pt-8 pb-8 md:pt-12 md:pb-12">
+        <div class="min-h-screen flex items-stretch justify-start p-0">
             <div
                 class="task-modal-shell relative my-auto"
                 :class="editingTask ? 'task-modal-shell--editing' : 'task-modal-shell--create'"
@@ -1215,15 +1243,40 @@
                         </div>
                         @endif
                     </section>
+
+                    {{-- Attachments --}}
+                    <section x-show="editingTask" x-cloak class="task-modal-section" aria-labelledby="task-attachments-title">
+                        <div class="task-modal-section__heading">
+                            <div class="task-modal-section__title" id="task-attachments-title">پیوست‌ها</div>
+                            <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.attachments.length) + ' فایل'"></span>
+                        </div>
+                        <div class="space-y-2">
+                            <template x-for="attachment in form.attachments" :key="attachment.id">
+                                <div class="flex items-center gap-3 border border-[#E8EBE9] rounded-lg px-3 py-2">
+                                    <a :href="attachment.url" class="min-w-0 flex-1 text-[11px] font-bold text-[#334155] truncate" x-text="attachment.name"></a>
+                                    <span class="text-[9px] text-[#94A3B8]" x-text="formatFileSize(attachment.size)"></span>
+                                    @if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[9px] text-red-500">حذف</button>@endif
+                                </div>
+                            </template>
+                            <p x-show="form.attachments.length === 0" class="text-[11px] text-[#94A3B8]">فایلی پیوست نشده است.</p>
+                        </div>
+                        @if ($canEdit)
+                            <label class="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[#BFD8EC] px-3 py-2 text-[10px] font-bold text-[#0069D9]">
+                                <span x-text="attachmentUploading ? 'در حال بارگذاری…' : '+ افزودن فایل'"></span>
+                                <input type="file" class="hidden" :disabled="attachmentUploading" @change="uploadAttachment($event)">
+                            </label>
+                        @endif
+                    </section>
                 </div>
 
                 {{-- Footer --}}
                 <div class="task-modal-footer sticky bottom-0 bg-white border-t border-[#E2E8F0] px-4 md:px-6 py-3 flex items-center justify-between">
                     @if ($canEdit)
-                        <button x-show="editingTask" type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="flex items-center gap-1.5 text-[11px] font-semibold text-[#94A3B8] hover:text-red-500 disabled:opacity-50 px-3 py-2 rounded-xl border border-[#E2E8F0] hover:border-red-200 hover:bg-red-50 transition-all">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                            <span x-text="'حذف کارت'"></span>
-                        </button>
+                        <div x-show="editingTask" class="flex items-center gap-2">
+                            <button type="button" @click="stateTask(form.workflowRole === 'done' ? 'reopen' : 'complete')" class="text-[10px] font-bold text-[#0069D9] border border-[#BFD8EC] rounded-lg px-3 py-2" x-text="form.workflowRole === 'done' ? 'باز کردن دوباره' : 'انجام شد'"></button>
+                            <button type="button" @click="stateTask(form.isBlocked ? 'unblock' : 'block')" class="text-[10px] font-bold rounded-lg px-3 py-2 border" :class="form.isBlocked ? 'text-emerald-700 border-emerald-200' : 'text-amber-700 border-amber-200'" x-text="form.isBlocked ? 'رفع انسداد' : 'مسدود کردن'"></button>
+                            <button type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="text-[10px] font-semibold text-[#94A3B8] hover:text-red-500 px-2 py-2">حذف</button>
+                        </div>
                         <div x-show="!editingTask"></div>
                         <div class="flex items-center gap-2">
                             <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
@@ -1374,6 +1427,8 @@
                 activityMeta: { current_page: 1, last_page: 1, total: 0 },
                 projectMemberSaving: null,
                 projectSettingsSaving: false,
+                cycleLength: @json($project->cycle_length_weeks ?? ''),
+                activeCycle: @json($activeCycle),
                 editingTask: null,
                 editingDescription: false,
                 descriptionBeforeEdit: '',
@@ -1387,6 +1442,7 @@
                 newCheckItem: '',
                 newComment: '',
                 commentPosting: false,
+                attachmentUploading: false,
                 mentionOpen: false,
                 showTagManager: false,
                 newTagName: '',
@@ -1398,7 +1454,7 @@
                 mentionIndex: 0,
                 mentionStart: null,
                 mentionCursor: null,
-                form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: '', dueDate: '', tags: [], checklist: [], comments: [] },
+                form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: '', dueDate: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' },
                 jalaliDatePicker: { open: false, year: 1400, month: 1 },
                 jalaliWeekdays: ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'],
 
@@ -1433,7 +1489,7 @@
                     { name: 'فیروزه‌ای', hex: '#14B8A6' },
                 ],
 
-                columns: serverColumns.map(column => ({ ...column, collapsed: false })),
+                columns: serverColumns.map(column => Object.assign({}, column, { collapsed: false })),
                 sortableInstances: [],
                 columnSortableInstances: [],
 
@@ -1508,7 +1564,7 @@
                     const id = Number(taskId);
                     this.selectedTaskIds = this.selectedTaskIds.includes(id)
                         ? this.selectedTaskIds.filter(selected => selected !== id)
-                        : [...this.selectedTaskIds, id];
+                        : this.selectedTaskIds.concat([id]);
                 },
 
                 clearSelection() {
@@ -1534,7 +1590,7 @@
                                 if (!selected.has(Number(task.dbId))) continue;
                                 if (this.bulkAction === 'priority') task.priority = this.bulkValue;
                                 if (this.bulkAction === 'assignee') task.assignees = this.bulkValue ? [this.bulkValue] : [];
-                                if (this.bulkAction === 'tag' && !(task.tags || []).includes(this.bulkValue.trim())) task.tags = [...(task.tags || []), this.bulkValue.trim()];
+                                if (this.bulkAction === 'tag' && !(task.tags || []).includes(this.bulkValue.trim())) task.tags = (task.tags || []).concat([this.bulkValue.trim()]);
                                 if (this.bulkAction === 'due_date') task.dueDate = '';
                             }
                         }
@@ -1548,7 +1604,7 @@
                                     return false;
                                 });
                             });
-                            target?.tasks.push(...moved);
+                            if (target) target.tasks = target.tasks.concat(moved);
                         }
                         this.showToast('تغییرات گروهی ذخیره شد');
                         this.clearSelection();
@@ -1690,10 +1746,14 @@
                         if ((event.key === '/' && !typing) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
                             event.preventDefault();
                             this.$nextTick(() => {
-                                const search = [...document.querySelectorAll('[data-board-search]')]
+                                const search = Array.from(document.querySelectorAll('[data-board-search]'))
                                     .find(input => input.offsetParent !== null);
                                 search?.focus();
                             });
+                        }
+                        if (!typing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'c' && !this.showModal) {
+                            event.preventDefault();
+                            this.openAddModal(this.columns[this.activeColumnIndex]?.id || this.columns[0]?.id);
                         }
                         if (event.key === 'Escape' && !this.showModal && !this.showDeleteModal && !this.showColumnModal && !this.showColumnDeleteModal) {
                             this.clearBoardSearch();
@@ -1776,7 +1836,7 @@
                     const { year, month } = this.jalaliDatePicker;
                     const firstDay = moment(`${year}/${month}/1`, 'jYYYY/jM/jD').toDate();
                     const offset = (firstDay.getDay() + 1) % 7;
-                    return [...Array(offset).fill(null), ...Array.from({ length: this.jalaliMonthDays(year, month) }, (_, index) => index + 1)];
+                    return Array(offset).fill(null).concat(Array.from({ length: this.jalaliMonthDays(year, month) }, (_, index) => index + 1));
                 },
 
                 openJalaliDatePicker() {
@@ -1966,7 +2026,7 @@
                 mobileDropIndex(columnId, clientY) {
                     const list = document.getElementById('col-mobile-' + columnId);
                     if (!list) return 0;
-                    const cards = [...list.querySelectorAll(':scope > article[data-id]')];
+                    const cards = Array.from(list.querySelectorAll(':scope > article[data-id]'));
                     if (!cards.length || !Number.isFinite(clientY)) return cards.length;
                     const index = cards.findIndex(card => {
                         const rect = card.getBoundingClientRect();
@@ -2074,7 +2134,7 @@
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره تنظیمات انجام نشد.');
-                        this.projectForm = { ...this.projectForm, ...data.project };
+                        this.projectForm = Object.assign({}, this.projectForm, data.project);
                         if (data.project?.board_style) {
                             this.projectBoardStyleDefault = data.project.board_style;
                             this.setBoardStyle(data.project.board_style, { persistLocal: true });
@@ -2085,6 +2145,53 @@
                     } finally {
                         this.projectSettingsSaving = false;
                     }
+                },
+
+                async saveCycleConfig() {
+                    try {
+                        const response = await fetch('{{ route("cycles.configure", [$workspace->slug, $project->slug], false) }}', {
+                            method:'PATCH', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+                            body:JSON.stringify({cycle_length_weeks:this.cycleLength || null}),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'ذخیره چرخه انجام نشد.');
+                        this.cycleLength = data.cycleLengthWeeks || ''; this.showToast('تنظیم چرخه ذخیره شد');
+                    } catch (error) { this.showToast(error.message); }
+                },
+
+                async startCycle() {
+                    const taskIds = this.columns.filter(column => column.workflowRole !== 'done').flatMap(column => column.tasks.map(task => task.dbId));
+                    try {
+                        const response = await fetch('{{ route("cycles.start", [$workspace->slug, $project->slug], false) }}', {
+                            method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({task_ids:taskIds}),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'شروع چرخه انجام نشد.');
+                        this.activeCycle = { id:data.cycle.id, number:data.cycle.number, startsOn:data.cycle.startsOn, endsOn:data.cycle.endsOn, taskIds:data.cycle.tasks.map(task => task.id), openTaskIds:data.cycle.tasks.map(task => task.id) };
+                        this.showToast('چرخه شروع شد');
+                    } catch (error) { this.showToast(error.message); }
+                },
+
+                async finishCycle() {
+                    if (!this.activeCycle || !window.confirm('چرخه پایان یابد و همه کارهای باز به چرخه بعد منتقل شوند؟')) return;
+                    try {
+                        const url = '{{ route("cycles.finish", [$workspace->slug, $project->slug, "__CYCLE__"], false) }}'.replace('__CYCLE__', this.activeCycle.id);
+                        const response = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({carry_task_ids:this.activeCycle.openTaskIds || [],removed_task_ids:[],start_next:true}) });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'پایان چرخه انجام نشد.');
+                        this.activeCycle = data.nextCycle ? { id:data.nextCycle.id, number:data.nextCycle.number, startsOn:data.nextCycle.startsOn, endsOn:data.nextCycle.endsOn, taskIds:data.nextCycle.tasks.map(task => task.id), openTaskIds:data.nextCycle.tasks.map(task => task.id) } : null;
+                        this.showToast('چرخه جدید شروع شد');
+                    } catch (error) { this.showToast(error.message); }
+                },
+
+                async saveColumnRole(column) {
+                    try {
+                        const url = '{{ route("board.column.update", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', column.id);
+                        const response = await fetch(url, { method:'PATCH', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({title:column.title,color:column.dotHex,wip_limit:column.wipLimit || null,workflow_role:column.workflowRole}) });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'ذخیره نقش ستون انجام نشد.');
+                        column.workflowRole = data.workflow_role; this.showToast('نقش ستون ذخیره شد');
+                    } catch (error) { this.showToast(error.message); }
                 },
 
                 mentionableMembers() {
@@ -2140,7 +2247,7 @@
                 },
 
                 mentionIds(text) {
-                    return [...text.matchAll(/@\[[^\]]+\]\(user:(\d+)\)/gu)].map(match => Number(match[1]));
+                    return Array.from(text.matchAll(/@\[[^\]]+\]\(user:(\d+)\)/gu)).map(match => Number(match[1]));
                 },
 
                 formatMentionText(text) {
@@ -2162,14 +2269,14 @@
                 },
 
                 editableTags() {
-                    const hardcoded = this.allTags.map(t => ({ ...t, isCustom: false }));
+                    const hardcoded = this.allTags.map(t => Object.assign({}, t, { isCustom: false }));
                     const custom = (this.customTags || []).map(t => ({
                         name: t.name,
                         activeClass: `border-[${t.color}] bg-[${t.color}]/10 text-[${t.color}]`,
                         inactiveClass: `border-[#F1F5F9] text-[#94A3B8] hover:border-[${t.color}]/30`,
                         isCustom: true,
                     }));
-                    return [...hardcoded, ...custom];
+                    return hardcoded.concat(custom);
                 },
 
                 addCustomTag() {
@@ -2222,7 +2329,7 @@
                     if (this.form.assignees.length === this.assignees.length) {
                         this.form.assignees = [];
                     } else {
-                        this.form.assignees = [...this.assignees];
+                        this.form.assignees = this.assignees.slice();
                     }
                 },
 
@@ -2376,7 +2483,7 @@
 
                 async reorderColumns(oldIndex, newIndex) {
                     if (!this.canEdit || this.columnMovePending) return;
-                    const snapshot = [...this.columns];
+                    const snapshot = this.columns.slice();
                     const [movedColumn] = this.columns.splice(oldIndex, 1);
                     if (!movedColumn) return;
                     this.columns.splice(newIndex, 0, movedColumn);
@@ -2499,9 +2606,19 @@
                     if (idx === -1) return;
                     if (fromColId === toColId && Number(oldIndex) === Number(newIndex)) return;
 
+                    const moving = fromCol.tasks[idx];
+                    if (fromCol.workflowRole !== 'active' && toCol.workflowRole === 'active') {
+                        const overloaded = (moving.assignees || []).filter(name => this.columns
+                            .filter(column => column.workflowRole === 'active')
+                            .reduce((count, column) => count + column.tasks.filter(task => (task.assignees || []).includes(name)).length, 0) >= 3);
+                        if (overloaded.length && !window.confirm(overloaded.join('، ') + ' هم‌اکنون حداقل ۳ وظیفه در حال انجام دارد. با این حال شروع شود؟')) return;
+                    }
+                    if (toCol.wipLimit && fromColId !== toColId && toCol.tasks.length >= Number(toCol.wipLimit)
+                        && !window.confirm('ظرفیت پیشنهادی این ستون پر شده است. با این حال وظیفه منتقل شود؟')) return;
+
                     const snapshot = this.columns.map(column => ({
                         id: column.id,
-                        tasks: [...column.tasks],
+                        tasks: column.tasks.slice(),
                     }));
                     const [task] = fromCol.tasks.splice(idx, 1);
                     const safeIndex = Math.max(0, Math.min(Number(newIndex) || 0, toCol.tasks.length));
@@ -2522,7 +2639,7 @@
                     } catch (error) {
                         snapshot.forEach(savedColumn => {
                             const column = this.columns.find(item => item.id === savedColumn.id);
-                            if (column) column.tasks = [...savedColumn.tasks];
+                            if (column) column.tasks = savedColumn.tasks.slice();
                         });
                         this.showToast(error.message || 'انتقال وظیفه انجام نشد.');
                         this.destroySortables();
@@ -2541,7 +2658,7 @@
                     if (!this.canEdit) return;
                     this.editingTask = null;
                     this.editingDescription = false;
-                    this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', tags: [], checklist: [], comments: [] };
+                    this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' };
                     this.newCheckItem = '';
                     this.newComment = '';
                     this.taskError = '';
@@ -2560,9 +2677,10 @@
                     const taskAssignees = task.assignees || (task.assignee ? [task.assignee] : []);
                     this.form = {
                         id: task.id, title: task.title, description: task.description || '', priority: task.priority,
-                        assignees: [...taskAssignees], columnId: columnId, dueDate: task.dueDate || '',
-                        tags: [...(task.tags || [])], checklist: JSON.parse(JSON.stringify(task.checklist || [])),
-                        comments: JSON.parse(JSON.stringify(task.comments || []))
+                        assignees: Array.from(taskAssignees), columnId: columnId, dueDate: task.dueDate || '',
+                        tags: Array.from(task.tags || []), checklist: JSON.parse(JSON.stringify(task.checklist || [])),
+                        comments: JSON.parse(JSON.stringify(task.comments || [])), attachments: JSON.parse(JSON.stringify(task.attachments || [])), isBlocked: !!task.isBlocked,
+                        blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || ''
                     };
                     this.newCheckItem = '';
                     this.newComment = '';
@@ -2605,7 +2723,7 @@
                 trapModalFocus(event) {
                     if (event.key !== 'Tab') return;
                     const dialog = event.currentTarget;
-                    const focusable = [...dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])')];
+                    const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'));
                     if (!focusable.length) return;
                     const first = focusable[0];
                     const last = focusable[focusable.length - 1];
@@ -2640,7 +2758,7 @@
                             const response = await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
                             const data = await response.json().catch(() => ({}));
                             if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره وظیفه انجام نشد.');
-                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: [...this.form.assignees], dueDate: this.form.dueDate, tags: [...this.form.tags], checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
+                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
                             if (sourceCol && targetCol && sourceCol.id !== targetCol.id) {
                                 sourceCol.tasks = sourceCol.tasks.filter(item => item.dbId !== task.dbId);
                                 targetCol.tasks.push(task);
@@ -2665,6 +2783,65 @@
                     } finally {
                         this.taskSaving = false;
                     }
+                },
+
+                async stateTask(action) {
+                    if (!this.editingTask || this.taskSaving) return;
+                    let reason = null;
+                    if (action === 'block') {
+                        reason = window.prompt('دلیل انسداد چیست؟', this.form.blockedReason || '');
+                        if (!reason || !reason.trim()) return;
+                    }
+                    this.taskSaving = true;
+                    try {
+                        const response = await fetch('{{ route("today.task.state", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), {
+                            method: 'PATCH', headers: {'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
+                            body: JSON.stringify({ action, reason }),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'عملیات انجام نشد.');
+                        const source = this.columns.find(column => column.tasks.some(task => task.dbId === this.editingTask));
+                        const localTask = source?.tasks.find(task => task.dbId === this.editingTask);
+                        const target = this.columns.find(column => Number(column.id) === Number(data.task.column.id));
+                        if (localTask) {
+                            localTask.isBlocked = data.task.isBlocked;
+                            localTask.blockedReason = data.task.blockedReason;
+                            localTask.completedAt = data.task.completedAt;
+                            if (source && target && source.id !== target.id) { source.tasks = source.tasks.filter(task => task.dbId !== localTask.dbId); target.tasks.push(localTask); }
+                        }
+                        this.closeModal(); this.showToast(action === 'complete' ? 'وظیفه انجام شد' : 'وضعیت وظیفه تغییر کرد');
+                    } catch (error) { this.taskError = error.message; }
+                    finally { this.taskSaving = false; }
+                },
+
+                formatFileSize(bytes) {
+                    const value = Number(bytes) || 0;
+                    return value < 1024 * 1024 ? Math.max(1, Math.round(value / 1024)) + ' KB' : (value / 1024 / 1024).toFixed(1) + ' MB';
+                },
+
+                async uploadAttachment(event) {
+                    const file = event.target.files?.[0];
+                    if (!file || !this.editingTask || this.attachmentUploading) return;
+                    this.attachmentUploading = true;
+                    const body = new FormData(); body.append('file', file);
+                    try {
+                        const response = await fetch('{{ route("task.attachments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), { method:'POST', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'بارگذاری انجام نشد.');
+                        data.attachment.url = '{{ route("task.attachments.download", [$workspace->slug, $project->slug, "__TASK__", "__ATTACHMENT__"], false) }}'.replace('__TASK__', this.editingTask).replace('__ATTACHMENT__', data.attachment.id);
+                        this.form.attachments.push(data.attachment);
+                    } catch (error) { this.taskError = error.message; }
+                    finally { this.attachmentUploading = false; event.target.value = ''; }
+                },
+
+                async deleteAttachment(attachment) {
+                    if (!window.confirm('این پیوست حذف شود؟')) return;
+                    try {
+                        const url = '{{ route("task.attachments.destroy", [$workspace->slug, $project->slug, "__TASK__", "__ATTACHMENT__"], false) }}'.replace('__TASK__', this.editingTask).replace('__ATTACHMENT__', attachment.id);
+                        const response = await fetch(url, { method:'DELETE', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'} });
+                        if (!response.ok) throw new Error('حذف پیوست انجام نشد.');
+                        this.form.attachments = this.form.attachments.filter(item => item.id !== attachment.id);
+                    } catch (error) { this.taskError = error.message; }
                 },
 
                 openColumnModal() {

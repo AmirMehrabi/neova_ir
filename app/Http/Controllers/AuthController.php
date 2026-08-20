@@ -172,8 +172,12 @@ class AuthController extends Controller
     {
         $invitationCode = session('workspace_invitation_code');
 
-        return $invitationCode
-            ? route('invitations.show', $invitationCode)
-            : route('dashboard');
+        if ($invitationCode) {
+            return route('invitations.show', $invitationCode);
+        }
+
+        $workspace = Auth::user()->allWorkspaces()->first();
+
+        return $workspace ? route('today', $workspace->slug) : route('dashboard');
     }
 }

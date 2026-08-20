@@ -8,6 +8,8 @@ use App\Models\Task;
 use App\Models\User;
 use App\Services\ProjectActivityNotifier;
 use App\Services\ProjectActivityLogger;
+use App\Services\TaskAssignmentService;
+use App\Services\TaskWorkflowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -18,8 +20,9 @@ class BoardController extends Controller
     {
         $project = $request->attributes->get('project');
         $workspace = $request->attributes->get('workspace');
+        $request->session()->put("last_project.{$workspace->id}", $project->id);
 
-        $columns = $project->columns()->with('tasks')->orderBy('position')->get();
+        $columns = $project->columns()->with('tasks.attachments')->orderBy('position')->get();
 
         $members = $project->members()->orderBy('name')->get();
         $workspacePeople = collect([$workspace->owner])
@@ -52,6 +55,7 @@ class BoardController extends Controller
             'id' => (string) $c->id,
             'title' => $c->title,
             'wipLimit' => $c->wip_limit,
+            'workflowRole' => $c->workflow_role,
             'dotColor' => $colColors[$c->title] ?? 'bg-[#94A3B8]',
             'dotHex' => $c->color ?: ($colHexColors[$c->title] ?? '#94A3B8'),
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
@@ -63,9 +67,18 @@ class BoardController extends Controller
                 'priority' => $t->priority,
                 'assignees' => $t->assignees ?? [],
                 'dueDate' => $t->due_date?->format('Y-m-d') ?? '',
+                'isBlocked' => $t->is_blocked,
+                'blockedReason' => $t->blocked_reason,
+                'completedAt' => $t->completed_at?->toIso8601String(),
                 'tags' => $t->tags ?? [],
                 'checklist' => $t->checklist ?? [],
                 'comments' => $t->comments ?? [],
+                'attachments' => $t->attachments->map(fn ($attachment) => [
+                    'id' => $attachment->id,
+                    'name' => $attachment->original_name,
+                    'size' => $attachment->size,
+                    'url' => route('task.attachments.download', [$workspace->slug, $project->slug, $t->id, $attachment->id], false),
+                ])->values()->all(),
             ])->toArray(),
         ])->toArray();
 
@@ -86,6 +99,15 @@ class BoardController extends Controller
             : 'simple';
 
         $customTags = $project->custom_tags ?? [];
+        $activeCycleModel = $project->activeCycle()->with('tasks.column')->first();
+        $activeCycle = $activeCycleModel ? [
+            'id' => $activeCycleModel->id,
+            'number' => $activeCycleModel->number,
+            'startsOn' => $activeCycleModel->starts_on->format('Y-m-d'),
+            'endsOn' => $activeCycleModel->ends_on->format('Y-m-d'),
+            'taskIds' => $activeCycleModel->tasks->pluck('id')->values()->all(),
+            'openTaskIds' => $activeCycleModel->tasks->reject(fn ($task) => $task->column->workflow_role === 'done')->pluck('id')->values()->all(),
+        ] : null;
 
         return view('board', compact(
             'project',
@@ -99,6 +121,7 @@ class BoardController extends Controller
             'canManageProject',
             'boardStyle',
             'customTags',
+            'activeCycle',
         ));
     }
 
@@ -108,6 +131,7 @@ class BoardController extends Controller
         string $project,
         ProjectActivityNotifier $notifier,
         ProjectActivityLogger $activityLogger,
+        TaskAssignmentService $assignments,
     ) {
         $request->validate([
             'column_id' => 'required|exists:project_columns,id',
@@ -143,6 +167,8 @@ class BoardController extends Controller
             'comments' => $request->input('comments', []),
             'position' => $maxPosition + 1,
         ]);
+        $assignments->syncFromNames($task, $request->input('assignees', []));
+        $task->refresh();
         $notifier->taskCreated($task, $request->user());
         $activityLogger->taskCreated($task, $request->user());
 
@@ -156,22 +182,47 @@ class BoardController extends Controller
         string $task,
         ProjectActivityNotifier $notifier,
         ProjectActivityLogger $activityLogger,
+        TaskAssignmentService $assignments,
+        TaskWorkflowService $workflow,
     ) {
         $task = $this->findTaskInCurrentProject($request, $task);
+        $validated = $request->validate([
+            'title' => ['sometimes', 'required', 'string', 'max:500'],
+            'description' => ['sometimes', 'nullable', 'string', 'max:50000'],
+            'priority' => ['sometimes', Rule::in(['بالا', 'متوسط', 'پایین'])],
+            'due_date' => ['sometimes', 'nullable', 'date'],
+            'assignees' => ['sometimes', 'array'],
+            'assignees.*' => ['string', 'max:255'],
+            'tags' => ['sometimes', 'array'],
+            'checklist' => ['sometimes', 'array'],
+            'column_id' => ['sometimes', 'integer', 'exists:project_columns,id'],
+            'position' => ['sometimes', 'integer', 'min:0'],
+        ]);
         $this->ensureTaskInCurrentProject($request, $task);
         $this->validateAssignees($request, $task);
+        if (isset($validated['column_id'])) {
+            $this->ensureColumnInCurrentProject($request, ProjectColumn::findOrFail($validated['column_id']));
+        }
         $before = $task->only([
             'title', 'description', 'priority', 'due_date', 'assignees',
             'tags', 'checklist', 'comments', 'column_id',
         ]);
 
+        $targetColumnId = isset($validated['column_id']) ? (int) $validated['column_id'] : (int) $task->column_id;
         $task->update($request->only([
             'title', 'description', 'priority', 'due_date',
-            'assignees', 'tags', 'checklist', 'comments', 'column_id', 'position',
+            'tags', 'checklist', 'position',
         ]));
+        if ($request->has('assignees')) {
+            $assignments->syncFromNames($task, $request->input('assignees', []));
+        }
         $task = $task->refresh();
         $notifier->taskUpdated($task, $before, $request->user());
         $activityLogger->taskUpdated($task, $before, $request->user());
+        if ($targetColumnId !== (int) $task->column_id) {
+            $target = ProjectColumn::findOrFail($targetColumnId);
+            $task = $workflow->move($task, $target, $target->tasks()->count(), $request->user());
+        }
 
         return response()->json($task);
     }
@@ -181,6 +232,8 @@ class BoardController extends Controller
         string $workspace,
         string $project,
         ProjectActivityLogger $activityLogger,
+        TaskWorkflowService $workflow,
+        TaskAssignmentService $assignments,
     ) {
         $validated = $request->validate([
             'task_ids' => ['required', 'array', 'min:1', 'max:100'],
@@ -206,18 +259,25 @@ class BoardController extends Controller
             $this->ensureColumnInCurrentProject($request, $targetColumn);
         }
         if ($action === 'assignee') {
-            $allowed = $projectModel->members()->get()->map(fn ($member) => $member->full_name)->all();
+            $allowed = $projectModel->eligibleAssignees()->map(fn ($member) => $member->full_name)->all();
             abort_unless($value === null || in_array($value, $allowed, true), 422, 'مسئول انتخاب‌شده عضو تیم پروژه نیست.');
         }
 
         foreach ($tasks as $task) {
             $before = $task->only(['title', 'description', 'priority', 'due_date', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
+            if ($action === 'column') {
+                $workflow->move($task, $targetColumn, $targetColumn->tasks()->count(), $request->user());
+                continue;
+            }
+            if ($action === 'assignee') {
+                $assignments->syncFromNames($task, $value ? [$value] : []);
+                $activityLogger->taskUpdated($task->refresh(), $before, $request->user());
+                continue;
+            }
             $changes = match ($action) {
                 'priority' => ['priority' => $value],
-                'assignee' => ['assignees' => $value ? [$value] : []],
                 'tag' => ['tags' => collect($task->tags ?? [])->push((string) $value)->unique()->values()->all()],
                 'due_date' => ['due_date' => $value ?: null],
-                'column' => ['column_id' => (int) $value],
             };
             $task->update($changes);
             $activityLogger->taskUpdated($task->refresh(), $before, $request->user());
@@ -245,8 +305,7 @@ class BoardController extends Controller
         string $workspace,
         string $project,
         string $task,
-        ProjectActivityNotifier $notifier,
-        ProjectActivityLogger $activityLogger,
+        TaskWorkflowService $workflow,
     ) {
         $task = $this->findTaskInCurrentProject($request, $task);
         $this->ensureTaskInCurrentProject($request, $task);
@@ -256,63 +315,7 @@ class BoardController extends Controller
         ]);
         $targetColumn = ProjectColumn::findOrFail($request->column_id);
         $this->ensureColumnInCurrentProject($request, $targetColumn);
-        $sourceColumnTitle = $task->column->title;
-
-        DB::transaction(function () use ($request, $task) {
-            $oldColumnId = (int) $task->column_id;
-            $newColumnId = (int) $request->column_id;
-            $newIndex = max(0, (int) $request->position);
-
-            $columnIds = collect([$oldColumnId, $newColumnId])->unique()->values();
-            $columns = Task::whereIn('column_id', $columnIds)
-                ->orderBy('position')
-                ->orderBy('id')
-                ->lockForUpdate()
-                ->get()
-                ->groupBy('column_id');
-
-            $sourceTasks = $columns->get($oldColumnId, collect())
-                ->filter(fn (Task $candidate) => $candidate->id !== $task->id)
-                ->values()
-                ->all();
-
-            $movingTask = $task;
-            $movingTask->column_id = $newColumnId;
-
-            if ($oldColumnId === $newColumnId) {
-                $insertIndex = min($newIndex, count($sourceTasks));
-                array_splice($sourceTasks, $insertIndex, 0, [$movingTask]);
-
-                foreach ($sourceTasks as $index => $columnTask) {
-                    $columnTask->update([
-                        'column_id' => $oldColumnId,
-                        'position' => $index + 1,
-                    ]);
-                }
-
-                return;
-            }
-
-            $targetTasks = $columns->get($newColumnId, collect())->values()->all();
-            $insertIndex = min($newIndex, count($targetTasks));
-            array_splice($targetTasks, $insertIndex, 0, [$movingTask]);
-
-            foreach ($sourceTasks as $index => $columnTask) {
-                $columnTask->update([
-                    'position' => $index + 1,
-                ]);
-            }
-
-            foreach ($targetTasks as $index => $columnTask) {
-                $columnTask->update([
-                    'column_id' => $newColumnId,
-                    'position' => $index + 1,
-                ]);
-            }
-        });
-        $task = $task->refresh();
-        $notifier->taskMoved($task, $request->user(), $targetColumn->title);
-        $activityLogger->taskMoved($task, $sourceColumnTitle, $targetColumn->title, $request->user());
+        $workflow->move($task, $targetColumn, (int) $request->position, $request->user());
 
         return response()->json(['success' => true]);
     }
@@ -476,6 +479,7 @@ class BoardController extends Controller
             'title' => $request->title,
             'color' => $request->input('color'),
             'wip_limit' => $request->input('wip_limit'),
+            'workflow_role' => 'other',
             'position' => $maxPosition + 1,
         ]);
         $activityLogger->columnChanged($column, $request->user(), 'column_created', "{$request->user()->full_name} ستون «{$column->title}» را ایجاد کرد.");
@@ -490,12 +494,14 @@ class BoardController extends Controller
             'title' => ['required', 'string', 'max:100'],
             'color' => ['nullable', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'wip_limit' => ['nullable', 'integer', 'min:1', 'max:999'],
+            'workflow_role' => ['nullable', Rule::in(ProjectColumn::WORKFLOW_ROLES)],
         ]);
         $before = $column->only(['title', 'color']);
         $column->update([
             'title' => trim($validated['title']),
             'color' => $validated['color'] ?? $column->color,
             'wip_limit' => $validated['wip_limit'] ?? null,
+            'workflow_role' => $validated['workflow_role'] ?? $column->workflow_role,
         ]);
         foreach ($before as $field => $value) {
             if ($value != $column->{$field}) {
@@ -544,10 +550,8 @@ class BoardController extends Controller
     {
         $this->ensureColumnInCurrentProject($request, $column);
         abort_if($column->project->columns()->count() <= 1, 422, 'پروژه باید حداقل یک ستون داشته باشد.');
-        $deletedTasks = $column->tasks()->get();
-        foreach ($deletedTasks as $deletedTask) $activityLogger->taskDeleted($deletedTask, $request->user());
+        abort_if($column->tasks()->exists(), 422, 'پیش از حذف ستون، وظیفه‌های آن را به ستون دیگری منتقل کنید.');
         $activityLogger->columnChanged($column, $request->user(), 'column_deleted', "{$request->user()->full_name} ستون «{$column->title}» را حذف کرد.");
-        $column->tasks()->delete();
         $column->delete();
 
         $column->project->columns()->orderBy('position')->orderBy('id')->get()->each(function (ProjectColumn $remaining, int $index) {
@@ -586,8 +590,7 @@ class BoardController extends Controller
 
         $request->validate(['assignees' => ['array']]);
         $allowed = $request->attributes->get('project')
-            ->members()
-            ->get()
+            ->eligibleAssignees()
             ->map(fn ($member) => $member->full_name)
             ->all();
         $allowed = array_unique(array_merge($allowed, $task?->assignees ?? []));

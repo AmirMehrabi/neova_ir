@@ -72,6 +72,38 @@ class ProjectActivityLogger
         ]);
     }
 
+    public function taskCompleted(Task $task, User $actor): void
+    {
+        $this->log($task->column->project, $actor, 'task_completed', "{$actor->full_name} وظیفه «{$task->title}» را انجام داد.", $task, $task->column);
+    }
+
+    public function taskReopened(Task $task, User $actor): void
+    {
+        $this->log($task->column->project, $actor, 'task_reopened', "{$actor->full_name} وظیفه «{$task->title}» را دوباره باز کرد.", $task, $task->column);
+    }
+
+    public function taskBlocked(Task $task, User $actor, string $reason): void
+    {
+        $this->log($task->column->project, $actor, 'task_blocked', "{$actor->full_name} وظیفه «{$task->title}» را مسدود کرد.", $task, $task->column, ['reason' => $reason]);
+    }
+
+    public function taskUnblocked(Task $task, User $actor): void
+    {
+        $this->log($task->column->project, $actor, 'task_unblocked', "{$actor->full_name} انسداد وظیفه «{$task->title}» را برداشت.", $task, $task->column);
+    }
+
+    public function taskPlanned(Task $task, User $actor, string $date, string $bucket): void
+    {
+        $task->loadMissing('column.project');
+        $this->log($task->column->project, $actor, 'task_planned', "{$actor->full_name} وظیفه «{$task->title}» را برای برنامه روزانه انتخاب کرد.", $task, $task->column, ['planned_for' => $date, 'bucket' => $bucket]);
+    }
+
+    public function taskUnplanned(Task $task, User $actor, string $date): void
+    {
+        $task->loadMissing('column.project');
+        $this->log($task->column->project, $actor, 'task_unplanned', "{$actor->full_name} وظیفه «{$task->title}» را از برنامه روزانه برداشت.", $task, $task->column, ['planned_for' => $date]);
+    }
+
     public function projectChanged(Project $project, array $changes, User $actor): void
     {
         foreach ($changes as $field => [$before, $after]) {

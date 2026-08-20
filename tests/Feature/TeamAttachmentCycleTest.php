@@ -1,0 +1,85 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Project;
+use App\Models\Task;
+use App\Models\User;
+use App\Models\Workspace;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Tests\TestCase;
+
+class TeamAttachmentCycleTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function context(): array
+    {
+        $owner = User::factory()->create(['first_name' => 'امیر', 'last_name' => 'تست']);
+        $member = User::factory()->create(['first_name' => 'سارا', 'last_name' => 'تست']);
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'تیم']);
+        $workspace->members()->attach($member->id, ['role' => 'user']);
+        $project = Project::create(['workspace_id' => $workspace->id, 'name' => 'محصول', 'key' => 'PRD', 'cycle_length_weeks' => 1]);
+        $backlog = $project->columns()->create(['title' => 'پس‌زمینه', 'position' => 0, 'workflow_role' => 'backlog']);
+        $active = $project->columns()->create(['title' => 'در حال انجام', 'position' => 1, 'workflow_role' => 'active']);
+        $done = $project->columns()->create(['title' => 'انجام شده', 'position' => 2, 'workflow_role' => 'done']);
+        $task = Task::create(['column_id' => $active->id, 'task_number' => 1, 'title' => 'پیاده‌سازی امروز', 'position' => 1]);
+        $task->assignedUsers()->attach($member->id);
+        return compact('owner', 'member', 'workspace', 'project', 'backlog', 'active', 'done', 'task');
+    }
+
+    public function test_team_today_is_derived_from_active_and_blocked_tasks(): void
+    {
+        extract($this->context());
+
+        $this->actingAs($owner)->get(route('team.index', $workspace->slug))
+            ->assertOk()->assertSee('سارا تست')->assertSee('پیاده‌سازی امروز');
+
+        $task->update(['is_blocked' => true, 'blocked_reason' => 'منتظر ارائه‌دهنده']);
+        $this->actingAs($owner)->get(route('team.index', $workspace->slug))
+            ->assertOk()->assertSee('منتظر ارائه‌دهنده');
+    }
+
+    public function test_private_project_task_does_not_leak_to_unassigned_member(): void
+    {
+        extract($this->context());
+        $project->update(['visibility' => 'private']);
+
+        $this->actingAs($member)->get(route('team.index', $workspace->slug))
+            ->assertOk()->assertDontSee('پیاده‌سازی امروز');
+    }
+
+    public function test_authorized_user_can_upload_and_download_private_attachment(): void
+    {
+        Storage::fake('local');
+        extract($this->context());
+
+        $response = $this->actingAs($owner)->post(route('task.attachments.store', [$workspace->slug, $project->slug, $task]), [
+            'file' => UploadedFile::fake()->create('brief.pdf', 20, 'application/pdf'),
+        ])->assertCreated();
+        $attachment = $task->attachments()->findOrFail($response->json('attachment.id'));
+        Storage::disk('local')->assertExists($attachment->path);
+
+        $this->actingAs($owner)->get(route('task.attachments.download', [$workspace->slug, $project->slug, $task, $attachment]))->assertOk();
+    }
+
+    public function test_cycle_can_finish_and_carry_open_work_into_next_cycle(): void
+    {
+        extract($this->context());
+        $completed = Task::create(['column_id' => $done->id, 'task_number' => 2, 'title' => 'کار تمام', 'position' => 1, 'completed_at' => now()]);
+
+        $start = $this->actingAs($owner)->postJson(route('cycles.start', [$workspace->slug, $project->slug]), [
+            'task_ids' => [$task->id, $completed->id],
+        ])->assertCreated();
+
+        $cycleId = $start->json('cycle.id');
+        $this->actingAs($owner)->postJson(route('cycles.finish', [$workspace->slug, $project->slug, $cycleId]), [
+            'carry_task_ids' => [$task->id], 'removed_task_ids' => [], 'start_next' => true,
+        ])->assertOk()->assertJsonPath('cycle.status', 'completed')->assertJsonPath('nextCycle.number', 2);
+
+        $this->assertDatabaseHas('cycle_task', ['cycle_id' => $cycleId, 'task_id' => $task->id, 'outcome' => 'carried']);
+        $this->assertDatabaseHas('cycle_task', ['cycle_id' => $cycleId, 'task_id' => $completed->id, 'outcome' => 'completed']);
+    }
+}

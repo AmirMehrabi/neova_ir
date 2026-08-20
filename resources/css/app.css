@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import './board.css';
 
+@import './today.css';
+
 :root {
     --neova-paper: #FDFDFC;
     --neova-surface: #FFFFFF;

@@ -8,9 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ProjectColumn extends Model
 {
+    public const WORKFLOW_ROLES = ['backlog', 'ready', 'active', 'done', 'other'];
+
     protected $table = 'project_columns';
 
-    protected $fillable = ['project_id', 'title', 'position', 'color', 'wip_limit'];
+    protected $fillable = ['project_id', 'title', 'position', 'color', 'wip_limit', 'workflow_role'];
 
     public function project(): BelongsTo
     {

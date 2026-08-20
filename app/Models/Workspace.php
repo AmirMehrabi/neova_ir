@@ -10,7 +10,7 @@ use Illuminate\Support\Str;
 
 class Workspace extends Model
 {
-    protected $fillable = ['owner_id', 'name', 'slug', 'description'];
+    protected $fillable = ['owner_id', 'name', 'slug', 'description', 'timezone'];
 
     protected static function booted(): void
     {

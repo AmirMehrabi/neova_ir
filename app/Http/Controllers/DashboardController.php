@@ -17,10 +17,12 @@ class DashboardController extends Controller
         $user = $request->user();
 
         if ($user->ownedWorkspaces()->count() === 0 && $user->workspaces()->count() === 0) {
-            Workspace::create([
+            $workspace = Workspace::create([
                 'owner_id' => $user->id,
                 'name' => 'فضای کاری من',
             ]);
+
+            return redirect()->route('today', $workspace->slug);
         }
 
         $ownedIds = $user->ownedWorkspaces()->pluck('workspaces.id');
@@ -48,7 +50,7 @@ class DashboardController extends Controller
                 foreach ($visibleProjects as $project) {
                     $totalTasks = (int) $project->columns->sum('tasks_count');
                     $doneTasks = (int) $project->columns
-                        ->where('title', 'انجام شده')
+                        ->where('workflow_role', 'done')
                         ->sum('tasks_count');
 
                     $project->setAttribute('total_tasks', $totalTasks);
@@ -107,10 +109,10 @@ class DashboardController extends Controller
         ]);
 
         $defaultColumns = [
-            ['title' => 'پس‌زمینه', 'position' => 0, 'color' => '#94A3B8'],
-            ['title' => 'در حال انجام', 'position' => 1, 'color' => '#0069FF'],
-            ['title' => 'بررسی', 'position' => 2, 'color' => '#F59E0B'],
-            ['title' => 'انجام شده', 'position' => 3, 'color' => '#22C55E'],
+            ['title' => 'پس‌زمینه', 'position' => 0, 'color' => '#94A3B8', 'workflow_role' => 'backlog'],
+            ['title' => 'آماده', 'position' => 1, 'color' => '#64748B', 'workflow_role' => 'ready'],
+            ['title' => 'در حال انجام', 'position' => 2, 'color' => '#0069FF', 'workflow_role' => 'active'],
+            ['title' => 'انجام شده', 'position' => 3, 'color' => '#22C55E', 'workflow_role' => 'done'],
         ];
 
         foreach ($defaultColumns as $col) {
@@ -210,7 +212,6 @@ class DashboardController extends Controller
             })
             ->pluck('id');
         $columnIds = ProjectColumn::whereIn('project_id', $visibleProjectIds)->pluck('id');
-        $columnIds = ProjectColumn::whereIn('project_id', $projectIds)->pluck('id');
         $tasks = Task::whereIn('column_id', $columnIds)
             ->where('title', 'LIKE', "%{$query}%")
             ->with('column.project.workspace')

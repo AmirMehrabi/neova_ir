@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Storage;
+
+class TaskAttachment extends Model
+{
+    protected $fillable = ['task_id', 'uploaded_by', 'original_name', 'path', 'mime_type', 'size'];
+
+    public function task(): BelongsTo { return $this->belongsTo(Task::class); }
+    public function uploader(): BelongsTo { return $this->belongsTo(User::class, 'uploaded_by'); }
+
+    protected static function booted(): void
+    {
+        static::deleting(fn (TaskAttachment $attachment) => Storage::disk('local')->delete($attachment->path));
+    }
+}

@@ -7,6 +7,12 @@ use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\WorkspaceManagementController;
+use App\Http\Controllers\TodayController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\ProjectsController;
+use App\Http\Controllers\WorkspaceHomeController;
+use App\Http\Controllers\TaskAttachmentController;
+use App\Http\Controllers\CycleController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -56,10 +62,24 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::middleware('workspace')->group(function () {
+        Route::get('/{workspace}/today', [TodayController::class, 'index'])->name('today');
+        Route::get('/{workspace}/projects', [ProjectsController::class, 'index'])->name('projects.index');
+        Route::get('/{workspace}/team', [TeamController::class, 'index'])->name('team.index');
+        Route::get('/{workspace}/board', [WorkspaceHomeController::class, 'board'])->name('workspace.board');
+        Route::middleware('workspace.editor')->post('/{workspace}/today/tasks', [TodayController::class, 'quickCreate'])->name('today.tasks.store');
         Route::middleware('project')->group(function () {
             Route::middleware('project.access')->group(function () {
                 Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
+                Route::get('/{workspace}/{project}/task/{task}/attachments/{attachment}', [TaskAttachmentController::class, 'download'])->name('task.attachments.download');
                 Route::middleware('workspace.editor')->group(function () {
+                    Route::patch('/{workspace}/{project}/cycles/configure', [CycleController::class, 'configure'])->name('cycles.configure');
+                    Route::post('/{workspace}/{project}/cycles', [CycleController::class, 'start'])->name('cycles.start');
+                    Route::post('/{workspace}/{project}/cycles/{cycle}/finish', [CycleController::class, 'finish'])->name('cycles.finish');
+                    Route::post('/{workspace}/{project}/task/{task}/attachments', [TaskAttachmentController::class, 'store'])->name('task.attachments.store');
+                    Route::delete('/{workspace}/{project}/task/{task}/attachments/{attachment}', [TaskAttachmentController::class, 'destroy'])->name('task.attachments.destroy');
+                    Route::put('/{workspace}/{project}/task/{task}/plan', [TodayController::class, 'plan'])->name('today.task.plan');
+                    Route::delete('/{workspace}/{project}/task/{task}/plan', [TodayController::class, 'unplan'])->name('today.task.unplan');
+                    Route::patch('/{workspace}/{project}/task/{task}/state', [TodayController::class, 'state'])->name('today.task.state');
                     Route::post('/{workspace}/{project}/task', [BoardController::class, 'storeTask'])->name('board.task.store');
                     Route::patch('/{workspace}/{project}/tasks/bulk', [BoardController::class, 'bulkUpdateTasks'])->name('board.tasks.bulk');
                     Route::put('/{workspace}/{project}/task/{task}', [BoardController::class, 'updateTask'])->name('board.task.update');

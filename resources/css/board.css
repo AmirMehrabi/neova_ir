@@ -221,6 +221,11 @@
     border-color: color-mix(in srgb, #0069D9 28%, #E2E8F0);
     box-shadow: var(--board-card-shadow-hover);
 }
+.task-card.is-blocked { border-color: #E9B9AA; background: #FFFBF9; }
+.task-card__blocked { display:inline-flex; align-items:center; padding:2px 7px; border-radius:5px; background:#FFF0EB; color:#A94E3D; font-size:9px; font-weight:850; }
+.neova-board .task-card__desc,
+.neova-board .task-card__checklist-bar,
+.neova-board .task-card__checklist-count { display: none !important; }
 
 .priority-high {
     background: #C86551 !important;
@@ -403,7 +408,7 @@
 }
 
 .neova-board .task-modal-shell--create { max-width: 680px; }
-.neova-board .task-modal-shell--editing { max-width: 980px; }
+.neova-board .task-modal-shell--editing { max-width: 720px; min-height: 100vh; border-radius: 0 !important; margin: 0; }
 .neova-board .task-modal-shell {
     border: 1px solid #DCE8F2;
     border-radius: 16px;

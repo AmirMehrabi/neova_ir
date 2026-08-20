@@ -105,7 +105,7 @@
                 const rawValue = event.target.value.replace(/[^0-9]/g, '');
                 if (rawValue.length > 1) {
                     const autofilled = rawValue.slice(0, this.digits.length - index);
-                    [...autofilled].forEach((digit, offset) => { this.digits[index + offset] = digit; });
+                    Array.from(autofilled).forEach((digit, offset) => { this.digits[index + offset] = digit; });
                     event.target.value = this.digits[index];
                     this.errors.code = '';
                     this.focusOtp(Math.min(index + autofilled.length, this.digits.length - 1));
@@ -121,7 +121,7 @@
             handleOtpPaste(index, event) {
                 const pasted = event.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, this.digits.length - index);
                 if (!pasted) return;
-                [...pasted].forEach((digit, offset) => { this.digits[index + offset] = digit; });
+                Array.from(pasted).forEach((digit, offset) => { this.digits[index + offset] = digit; });
                 this.errors.code = '';
                 this.focusOtp(Math.min(index + pasted.length, this.digits.length - 1));
             },
