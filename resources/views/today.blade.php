@@ -27,8 +27,8 @@
                     <form class="today-capture" @submit.prevent="createTodayTask()">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-width="1.8" stroke-linecap="round"/></svg>
                         <input x-ref="captureTitle" x-model="quick.title" maxlength="500" placeholder="یک کار را سریع به امروز اضافه کنید…" aria-label="عنوان وظیفه جدید">
-                        <select x-model="quick.projectId" aria-label="پروژه" @if($projects->isEmpty()) disabled @endif>
-                            <template x-for="project in projects" :key="project.id"><option :value="project.id" x-text="project.name"></option></template>
+                        <select x-model="quick.projectId" aria-label="انتخاب پروژه">
+                            <template x-for="project in projects" :key="project.id"><option :value="project.id" x-text="'پروژه: ' + project.name"></option></template>
                         </select>
                         <button :disabled="saving || !quick.title.trim() || !quick.projectId" x-text="saving ? 'در حال افزودن…' : 'افزودن'"></button>
                     </form>
@@ -93,7 +93,12 @@
 
         <section class="today-section today-secondary-section" x-show="doneTasks.length">
             <div class="today-section__heading"><h2>انجام‌شده امروز</h2><span x-text="doneTasks.length"></span></div>
-            <template x-for="task in doneTasks" :key="task.dbId"><div class="today-row is-done"><span>✓</span><strong x-text="task.title"></strong><span class="today-row__project" x-text="task.project.name"></span></div></template>
+            <template x-for="task in doneTasks" :key="task.dbId">
+                <div class="today-row is-done" :class="busyTasks.includes(task.dbId) ? 'is-busy' : ''">
+                    <span>✓</span><strong x-text="task.title"></strong><span class="today-row__project" x-text="task.project.name"></span>
+                    @if ($canEdit)<button type="button" class="today-undo" @click="reopenTask(task)">برگرداندن</button>@endif
+                </div>
+            </template>
         </section>
 
         <div class="today-dialog" x-show="quickOpen" x-cloak @keydown.escape.window="quickOpen = false">
@@ -152,6 +157,7 @@
                 endpoint(task, kind) { const base = @js(route('today.task.state', [$workspace->slug, '__PROJECT__', '__TASK__'], false)); return base.replace('__PROJECT__', task.project.slug).replace('__TASK__', task.dbId).replace('/state', kind); },
                 async request(url, method, body) { const r = await fetch(url, { method, headers: {'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':@js(csrf_token())}, body: body ? JSON.stringify(body) : null }); const data = await r.json().catch(() => ({})); if (!r.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'عملیات انجام نشد.'); return data; },
                 async completeTask(task) { if (this.busyTasks.includes(task.dbId)) return; const snapshot = this.snapshot(); this.busy(task.dbId, true); this.removeLocal(task.dbId); this.doneTasks.unshift({...task, completedAt: new Date().toISOString()}); try { const data = await this.request(this.endpoint(task, '/state'), 'PATCH', {action:'complete'}); this.doneTasks = this.doneTasks.map(item => item.dbId === task.dbId ? data.task : item); this.flash('وظیفه انجام شد.'); } catch(e) { this.restore(snapshot); this.flash(e.message, 'error'); } finally { this.busy(task.dbId, false); } },
+                async reopenTask(task) { if (this.busyTasks.includes(task.dbId)) return; const snapshot = this.snapshot(); this.busy(task.dbId, true); this.doneTasks = this.doneTasks.filter(item => item.dbId !== task.dbId); this.mustTasks.push({...task, completedAt:null}); try { const data = await this.request(this.endpoint(task, '/state'), 'PATCH', {action:'reopen'}); this.mustTasks = this.mustTasks.map(item => item.dbId === task.dbId ? data.task : item); this.flash('وظیفه به فهرست امروز برگشت.'); } catch(e) { this.restore(snapshot); this.flash(e.message, 'error'); } finally { this.busy(task.dbId, false); } },
                 async removeTask(task) { if (this.busyTasks.includes(task.dbId)) return; const snapshot = this.snapshot(); this.busy(task.dbId, true); this.removeLocal(task.dbId); this.availableTasks.unshift({...task, plan:null}); try { await this.request(this.endpoint(task, '/plan'), 'DELETE', {planned_for:this.today}); this.flash('از فهرست امروز برداشته شد.'); } catch(e) { this.restore(snapshot); this.flash(e.message, 'error'); } finally { this.busy(task.dbId, false); } },
                 async moveTomorrow(task) { if (this.busyTasks.includes(task.dbId)) return; const snapshot = this.snapshot(); this.busy(task.dbId, true); this.removeLocal(task.dbId); try { await this.request(this.endpoint(task, '/plan/tomorrow'), 'PATCH'); this.flash('به فردا منتقل شد.'); } catch(e) { this.restore(snapshot); this.flash(e.message, 'error'); } finally { this.busy(task.dbId, false); } },
                 removeLocal(id) { for (const key of ['mustTasks','optionalTasks','blockedTasks']) this[key] = this[key].filter(t => t.dbId !== Number(id)); },

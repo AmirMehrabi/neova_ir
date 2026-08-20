@@ -129,6 +129,34 @@ class TodayWorkflowTest extends TestCase
         $this->assertNull($task->blocked_reason);
     }
 
+    public function test_completed_today_task_can_be_reopened_without_losing_its_plan(): void
+    {
+        extract($this->context());
+        $date = now($workspace->timezone)->toDateString();
+
+        $this->actingAs($user)->putJson(route('today.task.plan', [$workspace->slug, $project->slug, $task]), [
+            'planned_for' => $date,
+            'bucket' => 'must',
+        ])->assertOk();
+
+        $this->actingAs($user)->patchJson(route('today.task.state', [$workspace->slug, $project->slug, $task]), [
+            'action' => 'complete',
+        ])->assertOk();
+
+        $this->actingAs($user)->patchJson(route('today.task.state', [$workspace->slug, $project->slug, $task]), [
+            'action' => 'reopen',
+        ])->assertOk()->assertJsonPath('task.column.role', 'backlog');
+
+        $task->refresh();
+        $this->assertSame($backlog->id, $task->column_id);
+        $this->assertNull($task->completed_at);
+        $this->assertDatabaseHas('task_plans', [
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'planned_for' => $date.' 00:00:00',
+        ]);
+    }
+
     public function test_blocking_preserves_column_and_requires_reason(): void
     {
         extract($this->context());

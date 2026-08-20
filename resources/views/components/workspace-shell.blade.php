@@ -74,10 +74,9 @@
                     <button type="button" @click="workspaceCreating=true; mobileWorkspaceOpen=false">+ فضای کاری جدید</button>
                 </div>
             </div>
-            <div class="workspace-topbar__context">{{ $context ?? '' }}</div>
+            <button type="button" class="workspace-search-trigger" @click="searchOpen=true; $nextTick(() => $refs.searchInput.focus())" aria-label="جستجوی وظیفه یا پروژه"><span>⌕</span><b>جستجوی وظیفه یا پروژه…</b><kbd>/</kbd></button>
             <div class="workspace-topbar__actions">
                 {{ $toolbar ?? '' }}
-                <button type="button" class="workspace-search-trigger" @click="searchOpen=true; $nextTick(() => $refs.searchInput.focus())" aria-label="جستجو"><span>⌕</span><b>جستجو</b><kbd>/</kbd></button>
                 <x-notification-menu />
                 <div class="workspace-account-menu" @click.away="accountOpen=false">
                     <button type="button" class="workspace-profile-link" @click="accountOpen=!accountOpen" aria-label="حساب کاربری">
