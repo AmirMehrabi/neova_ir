@@ -85,7 +85,7 @@ class WorkspaceManagementTest extends TestCase
 
         $this->actingAs($invitee)
             ->post(route('invitations.accept', $invitation))
-            ->assertRedirect(route('dashboard', ['workspace' => $workspace->slug]));
+            ->assertRedirect(route('today', $workspace->slug));
 
         $this->assertDatabaseHas('workspace_members', [
             'workspace_id' => $workspace->id,

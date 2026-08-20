@@ -16,7 +16,7 @@
     <button
         type="button"
         @click="notificationsOpen = !notificationsOpen"
-        class="relative w-8 h-8 rounded-lg flex items-center justify-center text-white/75 hover:text-white hover:bg-white/10 transition-colors"
+        class="relative w-9 h-9 rounded-lg flex items-center justify-center text-[#64788A] hover:text-[#102A43] hover:bg-[#F1F7FC] transition-colors"
         aria-label="اعلان‌ها"
     >
         <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

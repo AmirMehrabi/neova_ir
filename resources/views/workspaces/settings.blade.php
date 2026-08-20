@@ -1,14 +1,9 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="neova-product min-h-screen bg-[#FDFDFC]" x-data="{ tab: 'general' }">
-    <x-navbar>
-        <x-breadcrumb :items="collect([
-            ['label' => 'داشبورد', 'url' => route('dashboard')],
-            ['label' => $workspace->name, 'url' => route('dashboard', ['workspace' => $workspace->slug])],
-            ['label' => 'تنظیمات'],
-        ])" />
-    </x-navbar>
+<x-workspace-shell :workspace="$workspace" active="settings">
+<x-slot:context>تنظیمات فضای کاری</x-slot:context>
+<div x-data="{ tab: 'general' }">
 
     <main class="max-w-6xl mx-auto px-4 sm:px-6 py-7">
         @if (session('success'))
@@ -217,4 +212,5 @@
         </section>
     </main>
 </div>
+</x-workspace-shell>
 @endsection

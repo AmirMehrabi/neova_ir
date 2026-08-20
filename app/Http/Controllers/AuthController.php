@@ -176,7 +176,7 @@ class AuthController extends Controller
             return route('invitations.show', $invitationCode);
         }
 
-        $workspace = Auth::user()->allWorkspaces()->first();
+        $workspace = app(\App\Services\WorkspaceContext::class)->resolve(Auth::user());
 
         return $workspace ? route('today', $workspace->slug) : route('dashboard');
     }

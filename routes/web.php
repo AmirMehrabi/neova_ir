@@ -13,6 +13,7 @@ use App\Http\Controllers\ProjectsController;
 use App\Http\Controllers\WorkspaceHomeController;
 use App\Http\Controllers\TaskAttachmentController;
 use App\Http\Controllers\CycleController;
+use App\Http\Controllers\WorkspaceSearchController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -35,7 +36,6 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile/notifications', [ProfileController::class, 'updateNotificationPreferences'])->name('profile.notifications');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/search', [DashboardController::class, 'search'])->name('dashboard.search');
     Route::post('/dashboard/workspace', [DashboardController::class, 'storeWorkspace'])->name('dashboard.workspace.store');
     Route::delete('/dashboard/workspace/{slug}', [DashboardController::class, 'destroyWorkspace'])->name('dashboard.workspace.destroy');
     Route::post('/dashboard/workspace/{workspaceSlug}/project', [DashboardController::class, 'storeProject'])->name('dashboard.project.store');
@@ -66,6 +66,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{workspace}/projects', [ProjectsController::class, 'index'])->name('projects.index');
         Route::get('/{workspace}/team', [TeamController::class, 'index'])->name('team.index');
         Route::get('/{workspace}/board', [WorkspaceHomeController::class, 'board'])->name('workspace.board');
+        Route::get('/{workspace}/search', WorkspaceSearchController::class)->name('workspace.search');
         Route::middleware('workspace.editor')->post('/{workspace}/today/tasks', [TodayController::class, 'quickCreate'])->name('today.tasks.store');
         Route::middleware('project')->group(function () {
             Route::middleware('project.access')->group(function () {

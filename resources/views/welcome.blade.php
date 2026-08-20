@@ -41,7 +41,7 @@
         </nav>
         <div class="landing-header-actions">
             @auth
-                <a href="{{ route('dashboard') }}" class="landing-text-link">داشبورد</a>
+                <a href="{{ route('dashboard') }}" class="landing-text-link">امروز من</a>
                 <a href="{{ route('dashboard') }}" class="landing-button landing-button--small">ادامه کار <span aria-hidden="true">←</span></a>
             @else
                 <a href="{{ route('auth') }}" class="landing-text-link">ورود</a>
@@ -57,7 +57,7 @@
                 <h1 id="landing-title">همه می‌دانند قدم بعدی چیست.</h1>
                 <p class="landing-lead">نئووا پروژه‌ها، وظایف و گفت‌وگوهای تیم را در یک فضای روشن و مشترک جمع می‌کند؛ تا کار جلو برود، نه اینکه بین پیام‌ها گم شود.</p>
                 <div class="landing-hero-actions">
-                    <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-button">{{ auth()->check() ? 'رفتن به داشبورد' : 'رایگان شروع کنید' }} <span aria-hidden="true">←</span></a>
+                    <a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-button">{{ auth()->check() ? 'رفتن به امروز' : 'رایگان شروع کنید' }} <span aria-hidden="true">←</span></a>
                     <a href="#product" class="landing-outline-button">محصول را ببینید <span aria-hidden="true">↓</span></a>
                 </div>
                 <p class="landing-reassurance"><span aria-hidden="true">✓</span> بدون کارت بانکی <span aria-hidden="true">✓</span> ورود با شماره موبایل</p>
@@ -120,7 +120,7 @@
         @endphp
         <section class="landing-faq landing-shell" id="faq" aria-labelledby="faq-title"><div class="landing-faq-grid"><div><div class="landing-section-label">سؤال‌های متداول</div><h2 id="faq-title">شروع کار ساده است.</h2><p>پاسخ چند سؤال رایج درباره استفاده از نئووا.</p></div><div class="landing-question-list">@foreach ($questions as $question)<p><span>+</span>{{ $question }}</p>@endforeach</div></div></section>
 
-        <section class="landing-closing" aria-labelledby="closing-title"><div class="landing-shell"><div class="landing-section-label">قدم بعدی</div><h2 id="closing-title">کمتر دنبال کار بگردید.<br>بیشتر کار را جلو ببرید.</h2><p>اولین فضای کاری خود را بسازید و پروژه‌تان را از همین امروز مرتب کنید.</p><a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-button landing-button--light">{{ auth()->check() ? 'رفتن به داشبورد' : 'رایگان شروع کنید' }} <span aria-hidden="true">←</span></a></div></section>
+        <section class="landing-closing" aria-labelledby="closing-title"><div class="landing-shell"><div class="landing-section-label">قدم بعدی</div><h2 id="closing-title">کمتر دنبال کار بگردید.<br>بیشتر کار را جلو ببرید.</h2><p>اولین فضای کاری خود را بسازید و پروژه‌تان را از همین امروز مرتب کنید.</p><a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="landing-button landing-button--light">{{ auth()->check() ? 'رفتن به امروز' : 'رایگان شروع کنید' }} <span aria-hidden="true">←</span></a></div></section>
     </main>
 
     <footer class="landing-footer"><div class="landing-shell landing-footer-inner"><a href="{{ url('/') }}" class="landing-logo"><img src="{{ asset('assets/logo/horizental-logo-white-transparent.png') }}" alt="نئووا"></a><nav aria-label="پیوندهای پایانی"><a href="#product">محصول</a><a href="#workflow">نحوه کار</a><a href="#faq">سؤال‌های متداول</a><a href="{{ route('auth') }}">ورود</a></nav><p>نئووا؛ کار تیمی، واضح و منظم.</p></div></footer>

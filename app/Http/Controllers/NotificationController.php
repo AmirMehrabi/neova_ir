@@ -8,11 +8,16 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\View\View;
+use App\Services\WorkspaceContext;
 
 class NotificationController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request, WorkspaceContext $context): View|RedirectResponse
     {
+        $workspace = $context->resolve($request->user());
+        if (! $workspace) {
+            return redirect()->route('dashboard');
+        }
         $invitations = WorkspaceInvitation::query()
             ->with(['workspace', 'inviter'])
             ->where('phone', $request->user()->phone)
@@ -22,7 +27,7 @@ class NotificationController extends Controller
 
         $notifications = $request->user()->notifications()->latest()->paginate(20, ['*'], 'notifications');
 
-        return view('notifications.index', compact('invitations', 'notifications'));
+        return view('notifications.index', compact('invitations', 'notifications', 'workspace'));
     }
 
     public function markAllRead(Request $request): RedirectResponse

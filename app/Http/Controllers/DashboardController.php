@@ -3,75 +3,20 @@
 namespace App\Http\Controllers;
 
 use App\Models\Project;
-use App\Models\ProjectColumn;
-use App\Models\Task;
 use App\Models\Workspace;
-use App\Models\WorkspaceInvitation;
+use App\Services\WorkspaceContext;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, WorkspaceContext $context)
     {
         $user = $request->user();
+        $workspace = $context->resolve($user);
 
-        if ($user->ownedWorkspaces()->count() === 0 && $user->workspaces()->count() === 0) {
-            $workspace = Workspace::create([
-                'owner_id' => $user->id,
-                'name' => 'فضای کاری من',
-            ]);
-
-            return redirect()->route('today', $workspace->slug);
-        }
-
-        $ownedIds = $user->ownedWorkspaces()->pluck('workspaces.id');
-        $memberIds = $user->workspaces()->pluck('workspaces.id');
-        $workspaceIds = $ownedIds->merge($memberIds)->unique();
-
-        $workspaces = Workspace::with(['projects' => function ($q) {
-            $q->with([
-                'columns' => fn ($query) => $query->withCount('tasks'),
-                'members' => fn ($m) => $m->select('users.id', 'users.name')->limit(3),
-            ])->withCount('members');
-        }])
-            ->withCount('projects')
-            ->whereIn('workspaces.id', $workspaceIds)
-            ->get()
-            ->each(function (Workspace $workspace) use ($user) {
-                $workspace->setAttribute('user_role', $workspace->roleFor($user));
-
-                $visibleProjects = $workspace->projects->filter(
-                    fn ($project) => $project->canUserView($user, $workspace)
-                )->values();
-                $workspace->setRelation('projects', $visibleProjects);
-                $workspace->setAttribute('projects_count', $visibleProjects->count());
-
-                foreach ($visibleProjects as $project) {
-                    $totalTasks = (int) $project->columns->sum('tasks_count');
-                    $doneTasks = (int) $project->columns
-                        ->where('workflow_role', 'done')
-                        ->sum('tasks_count');
-
-                    $project->setAttribute('total_tasks', $totalTasks);
-                    $project->setAttribute('done_tasks', $doneTasks);
-                    $project->setAttribute(
-                        'progress_percentage',
-                        $totalTasks > 0 ? (int) round(($doneTasks / $totalTasks) * 100) : 0
-                    );
-                }
-            });
-
-        $invitations = WorkspaceInvitation::query()
-            ->with(['workspace', 'inviter'])
-            ->where('phone', $user->phone)
-            ->where('status', 'pending')
-            ->where('expires_at', '>', now())
-            ->get()
-            ->each->markExpiredIfNeeded()
-            ->filter->isPending();
-
-        return view('dashboard', compact('workspaces', 'invitations'));
+        return $workspace
+            ? redirect()->route('today', $workspace->slug)
+            : view('dashboard');
     }
 
     public function storeWorkspace(Request $request)
@@ -85,7 +30,7 @@ class DashboardController extends Controller
             'name' => $request->name,
         ]);
 
-        return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
+        return redirect()->route('today', $workspace->slug);
     }
 
     public function storeProject(Request $request, string $workspaceSlug)
@@ -147,84 +92,7 @@ class DashboardController extends Controller
         $project = Project::where('workspace_id', $workspace->id)->where('slug', $projectSlug)->firstOrFail();
         $project->delete();
 
-        return redirect()->route('dashboard', ['workspace' => $workspace->slug]);
+        return redirect()->route('projects.index', $workspace->slug);
     }
 
-    public function search(Request $request)
-    {
-        $request->validate(['q' => 'required|string|min:1|max:100']);
-        $query = $request->q;
-        $user = $request->user();
-
-        $ownedIds = $user->ownedWorkspaces()->pluck('workspaces.id');
-        $memberIds = $user->workspaces()->pluck('workspaces.id');
-        $workspaceIds = $ownedIds->merge($memberIds)->unique();
-
-        $results = collect();
-
-        $workspaces = Workspace::whereIn('id', $workspaceIds)
-            ->where('name', 'LIKE', "%{$query}%")
-            ->limit(5)
-            ->get()
-            ->map(fn ($ws) => [
-                'type' => 'workspace',
-                'name' => $ws->name,
-                'subtitle' => $ws->projects_count ?? $ws->projects()->count().' پروژه',
-                'url' => route('dashboard', ['workspace' => $ws->slug], false),
-            ]);
-        $results = $results->merge($workspaces);
-
-        $projects = Project::whereIn('workspace_id', $workspaceIds)
-            ->where('name', 'LIKE', "%{$query}%")
-            ->where(function ($q) use ($user) {
-                $q->where('visibility', 'public')
-                    ->orWhere(function ($s) use ($user) {
-                        $s->where('visibility', 'private')
-                            ->where(function ($ss) use ($user) {
-                                $ss->where(fn ($sss) => $sss->whereIn('workspace_id', $user->ownedWorkspaces()->select('id')))
-                                    ->orWhere(fn ($sss) => $sss->whereIn('workspace_id', $user->workspaces()->wherePivot('role', 'admin')->select('id')))
-                                    ->orWhere(fn ($sss) => $sss->whereIn('id', DB::table('project_members')->where('user_id', $user->id)->select('project_id')));
-                            });
-                    });
-            })
-            ->with('workspace')
-            ->limit(5)
-            ->get()
-            ->map(fn ($p) => [
-                'type' => 'project',
-                'name' => $p->name,
-                'subtitle' => $p->workspace->name.' · '.$p->key,
-                'url' => route('board', [$p->workspace->slug, $p->slug], false),
-            ]);
-        $results = $results->merge($projects);
-
-        $visibleProjectIds = Project::whereIn('workspace_id', $workspaceIds)
-            ->where(function ($q) use ($user) {
-                $q->where('visibility', 'public')
-                    ->orWhere(function ($s) use ($user) {
-                        $s->where('visibility', 'private')
-                            ->where(function ($ss) use ($user) {
-                                $ss->where(fn ($sss) => $sss->whereIn('workspace_id', $user->ownedWorkspaces()->select('id')))
-                                    ->orWhere(fn ($sss) => $sss->whereIn('workspace_id', $user->workspaces()->wherePivot('role', 'admin')->select('id')))
-                                    ->orWhere(fn ($sss) => $sss->whereIn('id', DB::table('project_members')->where('user_id', $user->id)->select('project_id')));
-                            });
-                    });
-            })
-            ->pluck('id');
-        $columnIds = ProjectColumn::whereIn('project_id', $visibleProjectIds)->pluck('id');
-        $tasks = Task::whereIn('column_id', $columnIds)
-            ->where('title', 'LIKE', "%{$query}%")
-            ->with('column.project.workspace')
-            ->limit(5)
-            ->get()
-            ->map(fn ($t) => [
-                'type' => 'task',
-                'name' => $t->title,
-                'subtitle' => $t->column->project->workspace->name.' · '.$t->column->project->name,
-                'url' => route('board', [$t->column->project->workspace->slug, $t->column->project->slug], false),
-            ]);
-        $results = $results->merge($tasks);
-
-        return response()->json($results->values());
-    }
 }

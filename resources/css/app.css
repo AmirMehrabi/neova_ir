@@ -29,36 +29,6 @@
         box-shadow: 0 5px 18px rgba(16, 42, 67, .045) !important;
     }
 
-    .dashboard-page .dashboard-content { padding-top: clamp(34px, 5vw, 62px); padding-bottom: 72px; }
-    .dashboard-page .dashboard-content > div:first-child p { color: #64788a !important; }
-    .dashboard-page .dashboard-content h1,
-    .dashboard-page .dashboard-content h2,
-    .dashboard-page .dashboard-content h3 { color: #102a43 !important; line-height: 1.45; }
-    .dashboard-page .dashboard-content > div:first-child button,
-    .dashboard-page .dashboard-content > div:first-child a { border-color: #102a43 !important; color: #102a43 !important; background: transparent !important; border-radius: 999px !important; box-shadow: none !important; }
-    .dashboard-page .dashboard-content > div:first-child button:hover,
-    .dashboard-page .dashboard-content > div:first-child a:hover { color: #fff !important; background: #0069d9 !important; border-color: #0069d9 !important; }
-    .dashboard-page .dashboard-invitations > h2 { color: #102a43 !important; }
-    .dashboard-page .dashboard-invitations > h2 svg { color: #0069d9 !important; }
-    .dashboard-page .dashboard-invitations > div { border-color: #d8e7f3 !important; border-radius: 3px !important; background: #f8fbff !important; box-shadow: none !important; }
-    .dashboard-page .dashboard-invitations button[type="submit"] { background: #102a43 !important; border-radius: 999px !important; box-shadow: none !important; }
-    .dashboard-page .dashboard-invitations button[type="submit"]:hover { background: #0069d9 !important; }
-    .dashboard-page .dashboard-invitations form button:not([type="submit"]) { border-color: #e0eaf3 !important; border-radius: 999px !important; background: transparent !important; }
-    .dashboard-page .dashboard-workspace-list { border-color: #e0eaf3 !important; border-radius: 3px !important; background: #fff !important; box-shadow: 8px 8px 0 #f0f6fb !important; }
-    .dashboard-page .dashboard-workspace-list > section { border-color: #e0eaf3 !important; }
-    .dashboard-page .dashboard-workspace-list > section > div:first-child { border-color: #e0eaf3 !important; background: #f7faff !important; }
-    .dashboard-page .dashboard-workspace-list .project-card { background: #fff !important; }
-    .dashboard-page .dashboard-workspace-list .project-card:hover { background: #fbfdff !important; box-shadow: inset -3px 0 0 #0069d9 !important; }
-    .dashboard-page .dashboard-workspace-list .project-card > div:first-child { background: #102a43 !important; }
-    .dashboard-page .dashboard-workspace-list .project-card > div:last-child > span { background: #f1f7fc !important; color: #102a43 !important; }
-    .dashboard-page .dashboard-workspace-list .project-card p { color: #64788a !important; }
-    .dashboard-page .dashboard-workspace-list .project-card .bg-\[\#18212B\] { background: #102a43 !important; }
-    .dashboard-page .dashboard-workspace-list .project-card .bg-\[\#F1F3F2\] { background: #f2f8fd !important; color: #27658f !important; }
-    .dashboard-page .dashboard-workspace-list .border-dashed { border-color: #d4e3ee !important; color: #64788a !important; }
-    .dashboard-page .dashboard-workspace-list .border-dashed:hover { border-color: #0069d9 !important; color: #0069d9 !important; background: #f7fbff !important; }
-    .dashboard-page input:focus { border-color: #0069d9 !important; --tw-ring-color: rgba(0, 105, 217, .12) !important; }
-    .dashboard-page [x-show="showModal"] + div > div > div { border-color: #e0eaf3 !important; border-radius: 3px !important; background: #fff !important; box-shadow: 10px 10px 0 #f0f6fb !important; }
-
     .auth-page {
         --auth-paper: #fbfdff;
         --auth-ink: #102a43;

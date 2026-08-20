@@ -4,7 +4,7 @@
 <div class="neova-product min-h-screen bg-[#FDFDFC]">
     <x-navbar>
         <x-breadcrumb :items="collect([
-            ['label' => 'داشبورد', 'url' => route('dashboard')],
+            ['label' => 'خانه', 'url' => route('dashboard')],
             ['label' => 'دعوت به فضای کاری'],
         ])" />
     </x-navbar>

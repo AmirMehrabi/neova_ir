@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "targets": {
+    "/dashboard": {
+      "targetKind": "new-ui",
+      "projectId": "b33757d4-c211-4394-ab22-7325a1ae0216",
+      "activeDraftId": "33f1f8c6-c14f-4989-8726-b47bc2208221",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [
+        "public-assets-logo-horizental-logo-black-transparent.png"
+      ],
+      "brandAssets": {
+        "logo": {
+          "assetKey": "public-assets-logo-horizental-logo-black-transparent.png",
+          "url": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/b33757d4-c211-4394-ab22-7325a1ae0216/brand-assets/public-assets-logo-horizental-logo-black-transparent.png/horizental-logo-black-transparent.png",
+          "sourcePath": "public/assets/logo/horizental-logo-black-transparent.png"
+        }
+      },
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        "resources/views/today.blade.php",
+        "resources/views/components/workspace-shell.blade.php",
+        "resources/css/app.css:1:28",
+        "resources/css/today.css",
+        ".superdesign/init/theme.md"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "bd7c3f7a582bcd1cdabaaaa16489f4d0086d4cbfa975d9bef6ae73a8d4366994",
+        "resources/views/today.blade.php": "4cb671d83e63d0a2d7e4f762f4bf80dc23b3607dae6f7571bc1cc3be1e687e46",
+        "resources/views/components/workspace-shell.blade.php": "6740fca96719d1ad7146606a6e9c76bfb1f47aec385f57e2103b8e1f27f5c7e3",
+        "resources/css/app.css": "c13da06f81ab3b2458eef22828f23050c069372ac8b005297c5cb75f93a8a56c",
+        "resources/css/today.css": "36e491943548b69c6589f32d284454169813a010b6693957fa4f912e38a3c977",
+        ".superdesign/init/theme.md": "342de9b2c43e2300de348eff4070efa4fb726e518b312412a62968d0bb999c9b"
+      },
+      "components": [
+        {
+          "name": "WorkspaceShell",
+          "id": "c3e1e9e0-1c2d-4fbd-a803-8ea25ae01e62",
+          "sourcePath": "resources/views/components/workspace-shell.blade.php",
+          "logoAssetKey": "public-assets-logo-horizental-logo-black-transparent.png"
+        }
+      ],
+      "drafts": {
+        "33f1f8c6-c14f-4989-8726-b47bc2208221": {
+          "title": "Neova Monochrome Workspace Redesign",
+          "visualDirection": "premium tonal monochrome RTL workspace with warm-gray canvas, borderless white task surfaces, and team card",
+          "currentVersion": 5
+        }
+      },
+      "updatedAt": "2026-08-20T12:17:25Z"
+    }
+  }
+}

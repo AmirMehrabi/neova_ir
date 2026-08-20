@@ -88,14 +88,10 @@
     x-init="init()"
     x-cloak
 >
+    <x-workspace-shell :workspace="$workspace" active="board" board :active-project="$project->slug">
 
     {{-- Top Navigation Bar --}}
-    <x-navbar light fluid board-shell>
-        <a href="{{ route('projects.index', $workspace->slug) }}" class="board-nav-control board-nav-control--icon shrink-0" aria-label="بازگشت">
-            <svg class="w-4 h-4 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-            </svg>
-        </a>
+    <x-navbar light fluid board-shell embedded>
         <div class="min-w-0">
             <div class="flex items-center gap-2 min-w-0">
                 @if ($project->key)
@@ -161,8 +157,6 @@
         @endslot
 
         @slot('actions')
-            <a href="{{ route('today', $workspace->slug) }}" class="board-nav-control hidden lg:inline-flex">امروز</a>
-            <a href="{{ route('team.index', $workspace->slug) }}" class="board-nav-control hidden lg:inline-flex">تیم</a>
             <div class="relative hidden md:block" @click.away="filterPanelOpen = false">
                 <button
                     type="button"
@@ -231,11 +225,6 @@
 
         @slot('mobile')
             <div class="w-full px-2.5 sm:px-4 py-2.5 flex items-center gap-2.5">
-                <a href="{{ route('projects.index', $workspace->slug) }}" class="w-11 h-11 rounded-xl bg-[#F1EFEA] border border-[#E7E3DA] flex items-center justify-center text-[#475569] shrink-0 active:bg-white" aria-label="بازگشت">
-                    <svg class="w-4.5 h-4.5 scale-x-[-1]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </a>
                 <div class="min-w-0 flex-1">
                     <div class="flex items-center gap-2 min-w-0">
                         <span class="text-[#18212B] font-black text-[13px] truncate">{{ $project->name }}</span>
@@ -1743,7 +1732,7 @@
                     this.keyboardHandler = event => {
                         const target = event.target;
                         const typing = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
-                        if ((event.key === '/' && !typing) || ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k')) {
+                        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !typing) {
                             event.preventDefault();
                             this.$nextTick(() => {
                                 const search = Array.from(document.querySelectorAll('[data-board-search]'))
@@ -1787,6 +1776,13 @@
 
                     this.$nextTick(() => {
                         this.initJalaliDatePicker();
+                        const requestedTask = Number(@json(request()->query('task')) || 0);
+                        if (requestedTask) {
+                            for (const column of this.columns) {
+                                const task = column.tasks.find(item => Number(item.dbId) === requestedTask);
+                                if (task) { this.openEditModal(task, column.id); break; }
+                            }
+                        }
                     });
                 },
 
@@ -2976,5 +2972,7 @@
             };
         }
     </script>
+    </x-workspace-shell>
+    @stack('scripts')
 </body>
 </html>

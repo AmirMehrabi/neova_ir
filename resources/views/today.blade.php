@@ -2,6 +2,7 @@
 
 @section('body')
 <x-workspace-shell :workspace="$workspace" :projects="$projects" active="today">
+    <x-slot:context>امروز</x-slot:context>
     <div class="today-page" x-data="todayPage()" @keydown.window="handleShortcut($event)">
         <header class="today-header">
             <div>

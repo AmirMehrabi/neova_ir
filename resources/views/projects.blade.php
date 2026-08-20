@@ -2,6 +2,7 @@
 
 @section('body')
 <x-workspace-shell :workspace="$workspace" :projects="$projects" active="projects">
+    <x-slot:context>پروژه‌ها</x-slot:context>
     <div class="today-page projects-page">
         <header class="today-header">
             <div><p class="today-eyebrow">همه کارها در جای خودشان</p><h1>پروژه‌ها</h1><p>{{ $projects->count() }} پروژه در {{ $workspace->name }}</p></div>

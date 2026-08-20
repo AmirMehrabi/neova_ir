@@ -1,13 +1,8 @@
 @extends('layouts.app')
 
 @section('body')
-<div class="neova-product min-h-screen bg-[#FDFDFC]">
-    <x-navbar>
-        <x-breadcrumb :items="collect([
-            ['label' => 'داشبورد', 'url' => route('dashboard')],
-            ['label' => 'اعلان‌ها'],
-        ])" />
-    </x-navbar>
+<x-workspace-shell :workspace="$workspace" active="notifications">
+    <x-slot:context>اعلان‌ها</x-slot:context>
 
     <main class="max-w-4xl mx-auto px-4 sm:px-6 py-7">
         @if (session('success'))
@@ -73,5 +68,5 @@
             <div class="mt-4">{{ $notifications->links() }}</div>
         </section>
     </main>
-</div>
+</x-workspace-shell>
 @endsection

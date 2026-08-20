@@ -1,35 +1,146 @@
-@props(['workspace', 'projects' => collect(), 'active' => 'today'])
+@props(['workspace', 'projects' => null, 'active' => 'today', 'board' => false, 'activeProject' => null])
 
-<div class="workspace-shell min-h-screen bg-[#FBFDFF]">
-    <x-navbar light fluid>
-        <div class="hidden sm:flex items-center gap-2 text-[11px] text-[#64788A]">
-            <span class="text-[#DCE8F2]">/</span>
-            <span class="font-bold text-[#102A43]">{{ $workspace->name }}</span>
+@php
+    $workspaceContext = app(\App\Services\WorkspaceContext::class);
+    $shellWorkspaces = $workspaceContext->all(auth()->user());
+    $shellProjects = $workspaceContext->visibleProjects($workspace, auth()->user());
+    $canManageWorkspace = $workspace->canManageMembers(auth()->user());
+@endphp
+
+<div class="workspace-shell {{ $board ? 'workspace-shell--board' : '' }} min-h-screen bg-[#FBFDFF]"
+     x-data="workspaceShell({ board: {{ $board ? 'true' : 'false' }}, searchUrl: @js(route('workspace.search', $workspace->slug, false)) })"
+     :class="{ 'workspace-shell--collapsed': sidebarCollapsed }"
+     @keydown.slash.window="openSearch($event)">
+    <aside class="workspace-sidebar" :class="{ 'is-collapsed': sidebarCollapsed }">
+        <div class="workspace-sidebar__brand">
+            <a href="{{ route('today', $workspace->slug) }}" aria-label="خانه نئووا">
+                <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا">
+            </a>
+            @if ($board)
+                <button type="button" @click="toggleSidebar()" aria-label="باز و بسته کردن نوار کناری">☰</button>
+            @endif
         </div>
-    </x-navbar>
 
-    <div class="workspace-shell__body">
-        <aside class="workspace-sidebar">
-            <nav class="workspace-nav" aria-label="ناوبری اصلی">
-                <a href="{{ route('today', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'today' ? 'is-active' : '' }}">امروز</a>
-                <a href="{{ route('workspace.board', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'board' ? 'is-active' : '' }}">تخته</a>
-                <a href="{{ route('projects.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'projects' ? 'is-active' : '' }}">پروژه‌ها</a>
-                <a href="{{ route('team.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'team' ? 'is-active' : '' }}">تیم</a>
-            </nav>
-
-            <div class="workspace-sidebar__projects">
-                <p>پروژه‌ها</p>
-                @foreach ($projects as $project)
-                    <a href="{{ route('board', [$workspace->slug, $project->slug]) }}">
-                        <span>{{ mb_substr($project->name, 0, 1) }}</span>
-                        {{ $project->name }}
+        <div class="workspace-switcher" @click.away="workspaceOpen = false">
+            <button type="button" class="workspace-switcher__trigger" @click="workspaceOpen = !workspaceOpen" :aria-expanded="workspaceOpen">
+                <span class="workspace-switcher__mark">{{ mb_substr($workspace->name, 0, 1) }}</span>
+                <span class="workspace-switcher__copy"><strong>{{ $workspace->name }}</strong><small>تغییر فضای کاری</small></span>
+                <span class="workspace-switcher__chevron">⌄</span>
+            </button>
+            <div x-show="workspaceOpen" x-cloak x-transition class="workspace-switcher__menu">
+                <p>فضاهای کاری</p>
+                @foreach ($shellWorkspaces as $shellWorkspace)
+                    <a href="{{ route('today', $shellWorkspace->slug) }}" class="{{ $shellWorkspace->id === $workspace->id ? 'is-current' : '' }}">
+                        <span>{{ mb_substr($shellWorkspace->name, 0, 1) }}</span><strong>{{ $shellWorkspace->name }}</strong>
+                        @if ($shellWorkspace->id === $workspace->id)<i>✓</i>@endif
                     </a>
                 @endforeach
+                <button type="button" @click="workspaceCreating = true; workspaceOpen = false">+ فضای کاری جدید</button>
+                @if ($canManageWorkspace)
+                    <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="workspace-switcher__manage">تنظیمات فضای کاری</a>
+                @endif
             </div>
-        </aside>
+        </div>
 
-        <main class="workspace-main">
-            {{ $slot }}
-        </main>
+        <nav class="workspace-nav" aria-label="ناوبری اصلی">
+            <a href="{{ route('today', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'today' ? 'is-active' : '' }}"><span>☀</span><b>امروز</b></a>
+            <a href="{{ route('workspace.board', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'board' ? 'is-active' : '' }}"><span>▥</span><b>تخته</b></a>
+            <a href="{{ route('projects.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'projects' ? 'is-active' : '' }}"><span>▤</span><b>پروژه‌ها</b></a>
+            <a href="{{ route('team.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'team' ? 'is-active' : '' }}"><span>♙</span><b>تیم</b></a>
+        </nav>
+
+        <div class="workspace-sidebar__projects">
+            <div><p>پروژه‌ها</p>@if ($canManageWorkspace)<a href="{{ route('projects.index', $workspace->slug) }}" aria-label="پروژه جدید">+</a>@endif</div>
+            @foreach ($shellProjects as $shellProject)
+                <a href="{{ route('board', [$workspace->slug, $shellProject->slug]) }}" class="{{ (string) $activeProject === (string) $shellProject->slug ? 'is-active' : '' }}">
+                    <span>{{ mb_substr($shellProject->name, 0, 1) }}</span><b>{{ $shellProject->name }}</b>
+                </a>
+            @endforeach
+            @if ($shellProjects->isEmpty())<small>هنوز پروژه‌ای ساخته نشده است.</small>@endif
+        </div>
+
+        <div class="workspace-sidebar__account">
+            <a href="{{ route('profile') }}"><span>{{ auth()->user()->initials }}</span><b>{{ auth()->user()->full_name }}</b></a>
+        </div>
+    </aside>
+
+    <div class="workspace-stage">
+        <header class="workspace-topbar">
+            <div class="workspace-mobile-brand">
+                <img src="{{ asset('assets/logo/logo-black-transparent.png') }}" alt="نئووا">
+                <button type="button" @click="mobileWorkspaceOpen = !mobileWorkspaceOpen"><strong>{{ $workspace->name }}</strong><span>⌄</span></button>
+                <div x-show="mobileWorkspaceOpen" x-cloak @click.away="mobileWorkspaceOpen=false" class="workspace-mobile-switcher">
+                    @foreach ($shellWorkspaces as $shellWorkspace)<a href="{{ route('today', $shellWorkspace->slug) }}">{{ $shellWorkspace->name }}</a>@endforeach
+                    <button type="button" @click="workspaceCreating=true; mobileWorkspaceOpen=false">+ فضای کاری جدید</button>
+                </div>
+            </div>
+            <div class="workspace-topbar__context">{{ $context ?? '' }}</div>
+            <div class="workspace-topbar__actions">
+                {{ $toolbar ?? '' }}
+                <button type="button" class="workspace-search-trigger" @click="searchOpen=true; $nextTick(() => $refs.searchInput.focus())" aria-label="جستجو"><span>⌕</span><b>جستجو</b><kbd>/</kbd></button>
+                <x-notification-menu />
+                <div class="workspace-account-menu" @click.away="accountOpen=false">
+                    <button type="button" class="workspace-profile-link" @click="accountOpen=!accountOpen" aria-label="حساب کاربری">
+                        @if (auth()->user()->avatar)<img src="{{ asset('storage/avatars/'.auth()->user()->avatar) }}" alt="">@else<span>{{ auth()->user()->initials }}</span>@endif
+                    </button>
+                    <div x-show="accountOpen" x-cloak x-transition>
+                        <p><strong>{{ auth()->user()->full_name }}</strong><small>{{ auth()->user()->phone }}</small></p>
+                        <a href="{{ route('profile') }}">پروفایل و تنظیمات</a>
+                        <a href="{{ route('notifications.index') }}">اعلان‌ها</a>
+                        <form method="POST" action="{{ route('auth.logout') }}">@csrf<button>خروج</button></form>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <main class="workspace-main">{{ $slot }}</main>
+    </div>
+
+    <nav class="workspace-mobile-nav" aria-label="ناوبری موبایل">
+        <a href="{{ route('today', $workspace->slug) }}" class="{{ $active === 'today' ? 'is-active' : '' }}"><span>☀</span><b>امروز</b></a>
+        <a href="{{ route('workspace.board', $workspace->slug) }}" class="{{ $active === 'board' ? 'is-active' : '' }}"><span>▥</span><b>تخته</b></a>
+        <a href="{{ route('projects.index', $workspace->slug) }}" class="{{ $active === 'projects' ? 'is-active' : '' }}"><span>▤</span><b>پروژه‌ها</b></a>
+        <a href="{{ route('team.index', $workspace->slug) }}" class="{{ $active === 'team' ? 'is-active' : '' }}"><span>♙</span><b>تیم</b></a>
+    </nav>
+
+    <div x-show="searchOpen" x-cloak class="workspace-command" @keydown.escape.window="searchOpen=false">
+        <button class="workspace-command__backdrop" @click="searchOpen=false" aria-label="بستن"></button>
+        <section class="workspace-command__panel">
+            <div class="workspace-command__input"><span>⌕</span><input x-ref="searchInput" x-model="searchQuery" @input.debounce.250ms="search()" placeholder="جستجوی پروژه یا وظیفه…"><kbd>Esc</kbd></div>
+            <div class="workspace-command__results">
+                <p x-show="searchLoading">در حال جستجو…</p>
+                <p x-show="!searchLoading && searchQuery && searchResults.length === 0">نتیجه‌ای پیدا نشد.</p>
+                <template x-for="result in searchResults" :key="result.type + result.url">
+                    <a :href="result.url"><span x-text="result.type === 'project' ? 'پروژه' : 'وظیفه'"></span><div><strong x-text="result.name"></strong><small x-text="result.subtitle"></small></div></a>
+                </template>
+            </div>
+        </section>
+    </div>
+
+    <div x-show="workspaceCreating" x-cloak class="workspace-command" @keydown.escape.window="workspaceCreating=false">
+        <button class="workspace-command__backdrop" @click="workspaceCreating=false" aria-label="بستن"></button>
+        <form class="workspace-create-dialog" method="POST" action="{{ route('dashboard.workspace.store') }}">
+            @csrf
+            <h2>فضای کاری جدید</h2><p>یک خانه ساده برای پروژه‌ها و کارهای تیم.</p>
+            <input name="name" required maxlength="100" placeholder="نام فضای کاری">
+            <div><button type="button" @click="workspaceCreating=false">انصراف</button><button type="submit">ایجاد</button></div>
+        </form>
     </div>
 </div>
+
+@once
+@push('scripts')
+<script>
+function workspaceShell(config) {
+    return {
+        sidebarCollapsed: config.board ? localStorage.getItem('neova_board_sidebar') !== 'expanded' : false,
+        workspaceOpen: false, mobileWorkspaceOpen: false, workspaceCreating: false, accountOpen: false,
+        searchOpen: false, searchQuery: '', searchResults: [], searchLoading: false,
+        toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; localStorage.setItem('neova_board_sidebar', this.sidebarCollapsed ? 'collapsed' : 'expanded'); },
+        openSearch(event) { if (event.ctrlKey || event.metaKey || event.altKey || ['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName) || event.target.isContentEditable) return; event.preventDefault(); this.searchOpen=true; this.$nextTick(() => this.$refs.searchInput.focus()); },
+        async search() { if (!this.searchQuery.trim()) { this.searchResults=[]; return; } this.searchLoading=true; try { const response=await fetch(config.searchUrl+'?q='+encodeURIComponent(this.searchQuery), {headers:{Accept:'application/json'}}); this.searchResults=response.ok ? await response.json() : []; } finally { this.searchLoading=false; } }
+    };
+}
+</script>
+@endpush
+@endonce

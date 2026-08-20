@@ -35,7 +35,7 @@ class InvitationController extends Controller
         $invitations->accept($invitation->load(['workspace', 'inviter']), $request->user());
         $request->session()->forget('workspace_invitation_code');
 
-        return redirect()->route('dashboard', ['workspace' => $invitation->workspace->slug])
+        return redirect()->route('today', $invitation->workspace->slug)
             ->with('success', 'به فضای کاری پیوستید.');
     }
 

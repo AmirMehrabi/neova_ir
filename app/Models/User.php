@@ -7,11 +7,12 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['phone', 'email', 'first_name', 'last_name', 'national_code', 'name', 'password', 'avatar', 'notification_preferences', 'is_active'])]
+#[Fillable(['phone', 'email', 'first_name', 'last_name', 'national_code', 'name', 'password', 'avatar', 'notification_preferences', 'is_active', 'last_workspace_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -64,6 +65,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Workspace::class, 'workspace_members')
             ->withPivot('role')
             ->withTimestamps();
+    }
+
+    public function lastWorkspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class, 'last_workspace_id');
     }
 
     public function allWorkspaces()

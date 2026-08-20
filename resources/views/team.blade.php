@@ -2,6 +2,7 @@
 
 @section('body')
 <x-workspace-shell :workspace="$workspace" :projects="$projects" active="team">
+    <x-slot:context>امروز تیم</x-slot:context>
     <div class="today-page team-page">
         <header class="today-header"><div><p class="today-eyebrow">وضعیت واقعی کارها</p><h1>امروز تیم</h1><p>{{ $workspace->name }}</p></div></header>
         <div class="team-list">

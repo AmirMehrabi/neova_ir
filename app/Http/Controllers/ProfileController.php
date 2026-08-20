@@ -6,14 +6,20 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use App\Services\WorkspaceContext;
 
 class ProfileController extends Controller
 {
-    public function show(Request $request): View
+    public function show(Request $request, WorkspaceContext $context): View|RedirectResponse
     {
         $user = $request->user();
+        $workspace = $context->resolve($user);
 
-        return view('profile', compact('user'));
+        if (! $workspace) {
+            return redirect()->route('dashboard');
+        }
+
+        return view('profile', compact('user', 'workspace'));
     }
 
     public function update(Request $request): RedirectResponse

@@ -13,12 +13,14 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
+use App\Services\WorkspaceContext;
 
 class WorkspaceManagementController extends Controller
 {
     public function index(Request $request, string $workspace): View
     {
         $workspace = $this->workspace($request, $workspace);
+        app(WorkspaceContext::class)->remember($request->user(), $workspace);
 
         if (! $workspace->canManageMembers($request->user())) {
             abort(403);

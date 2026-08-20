@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Workspace;
+use App\Services\WorkspaceContext;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,6 +20,7 @@ class EnsureWorkspace
         }
 
         $request->attributes->set('workspace', $workspace);
+        app(WorkspaceContext::class)->remember($request->user(), $workspace);
 
         return $next($request);
     }
