@@ -3,49 +3,68 @@
 @section('body')
 <x-workspace-shell :workspace="$workspace" :projects="$projects" active="today">
     <x-slot:context>امروز</x-slot:context>
-    <div class="today-page" x-data="todayPage()" @keydown.window="handleShortcut($event)">
+    <div class="today-page today-dashboard" x-data="todayPage()" @keydown.window="handleShortcut($event)">
         <header class="today-header">
             <div>
-                <p class="today-eyebrow">برنامه روزانه</p>
-                <h1>صبح بخیر، {{ auth()->user()->first_name ?: auth()->user()->name }}</h1>
+                <h1>امروز</h1>
                 <p x-text="formattedDate"></p>
+                <small><span x-text="activeCount"></span> کار باقی مانده · <span x-text="doneTasks.length"></span> کار انجام شد</small>
             </div>
-            <button type="button" class="today-create" @click="quickOpen = true; $nextTick(() => $refs.quickTitle.focus())">وظیفه جدید <kbd>C</kbd></button>
+            <button type="button" class="today-create" @click="quickOpen = true; $nextTick(() => $refs.quickTitle.focus())">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke-width="1.8" stroke-linecap="round"/></svg>
+                وظیفه جدید <kbd>C</kbd>
+            </button>
         </header>
 
-        <section class="today-section">
-            <div class="today-section__heading"><h2>امروز من</h2><span x-text="activeCount + ' وظیفه فعال'"></span></div>
-            <div class="today-group">
-                <h3>حتماً انجام شود</h3>
-                <template x-for="task in mustTasks" :key="task.dbId"><div x-html="taskRow(task)"></div></template>
-                <p class="today-empty" x-show="mustTasks.length === 0">هنوز کاری برای امروز انتخاب نکرده‌اید.</p>
+        <div class="today-dashboard__grid">
+            <div>
+                <div class="today-section__heading"><h2>کارهای امروز</h2><span x-text="activeCount + ' وظیفه' || ''"></span></div>
+                <section class="today-section today-task-card">
+                    <div class="today-group">
+                        <template x-for="task in mustTasks" :key="task.dbId"><div x-html="taskRow(task)"></div></template>
+                        <template x-for="task in optionalTasks" :key="task.dbId"><div x-html="taskRow(task)"></div></template>
+                        <p class="today-empty" x-show="activeCount === 0">هنوز کاری برای امروز انتخاب نکرده‌اید.</p>
+                    </div>
+                </section>
+                <button class="today-add-existing" @click="existingOpen = true">+ افزودن وظیفه موجود</button>
             </div>
-            <div class="today-group" x-show="optionalTasks.length">
-                <h3>اگر وقت شد</h3>
-                <template x-for="task in optionalTasks" :key="task.dbId"><div x-html="taskRow(task)"></div></template>
-            </div>
-        </section>
 
-        <section class="today-section" x-show="blockedTasks.length">
+            <aside class="today-team-card">
+                <div class="today-section__heading"><h2>تیم</h2><a href="{{ route('team.index', $workspace->slug) }}">مشاهده همه</a></div>
+                <div class="today-team-list">
+                    @foreach ($teamPulse as $member)
+                        <div class="today-team-person {{ $member['blocked'] ? 'is-blocked' : '' }}">
+                            @if ($member['avatar'])
+                                <img src="{{ asset('storage/avatars/'.$member['avatar']) }}" alt="">
+                            @else
+                                <span>{{ $member['initials'] }}</span>
+                            @endif
+                            <div><strong>{{ $member['name'] }}</strong><small>{{ $member['focus'] ?: 'امروز کاری ثبت نکرده است' }}@if($member['project']) · {{ $member['project'] }}@endif</small></div>
+                            @if ($member['blocked'])<i title="مسدود">!</i>@endif
+                        </div>
+                    @endforeach
+                </div>
+            </aside>
+        </div>
+
+        <section class="today-section today-secondary-section" x-show="blockedTasks.length">
             <div class="today-section__heading"><h2>مسدود</h2></div>
             <template x-for="task in blockedTasks" :key="task.dbId">
                 <div class="today-row is-blocked"><span class="today-row__warning">!</span><div><strong x-text="task.title"></strong><small x-text="task.blockedReason || 'منتظر رفع مانع'"></small></div><span class="today-row__project" x-text="task.project.name"></span></div>
             </template>
         </section>
 
-        <section class="today-section" x-show="overdueTasks.length">
+        <section class="today-section today-secondary-section" x-show="overdueTasks.length">
             <div class="today-section__heading"><h2>عقب‌افتاده</h2><span x-text="overdueTasks.length"></span></div>
             <template x-for="task in overdueTasks" :key="task.dbId">
                 <div class="today-row"><span class="today-row__due">!</span><div><strong x-text="task.title"></strong><small x-text="task.project.name + ' · سررسید ' + task.dueDate"></small></div><button @click="addExisting(task, false)">افزودن به امروز</button></div>
             </template>
         </section>
 
-        <section class="today-section" x-show="doneTasks.length">
+        <section class="today-section today-secondary-section" x-show="doneTasks.length">
             <div class="today-section__heading"><h2>انجام‌شده امروز</h2><span x-text="doneTasks.length"></span></div>
             <template x-for="task in doneTasks" :key="task.dbId"><div class="today-row is-done"><span>✓</span><strong x-text="task.title"></strong><span class="today-row__project" x-text="task.project.name"></span></div></template>
         </section>
-
-        <button class="today-add-existing" @click="existingOpen = true">+ افزودن وظیفه موجود به امروز</button>
 
         <div class="today-dialog" x-show="quickOpen" x-cloak @keydown.escape.window="quickOpen = false">
             <div class="today-dialog__backdrop" @click="quickOpen = false"></div>
@@ -84,7 +103,7 @@
                 get formattedDate() { return new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(this.today + 'T12:00:00')); },
                 get activeCount() { return this.mustTasks.length + this.optionalTasks.length; },
                 get filteredAvailable() { const q = this.existingSearch.trim().toLowerCase(); return this.availableTasks.filter(t => !q || t.title.toLowerCase().includes(q) || t.project.name.toLowerCase().includes(q)); },
-                taskRow(task) { return `<div class="today-row" data-task="${task.dbId}"><button class="today-check" onclick="window.dispatchEvent(new CustomEvent('today-complete',{detail:${task.dbId}}))" aria-label="انجام شد"></button><div><strong>${this.escape(task.title)}</strong><small>${this.escape(task.project.name)}${task.dueDate ? ' · سررسید ' + task.dueDate : ''}</small></div><button onclick="window.dispatchEvent(new CustomEvent('today-tomorrow',{detail:${task.dbId}}))">فردا</button><button onclick="window.dispatchEvent(new CustomEvent('today-remove',{detail:${task.dbId}}))">برداشتن</button></div>`; },
+                taskRow(task) { const assignee = task.assignees?.[0]?.name || ''; const initials = assignee.split(' ').map(v => v[0]).join('').slice(0,2); return `<div class="today-row" data-task="${task.dbId}"><button class="today-check" onclick="window.dispatchEvent(new CustomEvent('today-complete',{detail:${task.dbId}}))" aria-label="انجام شد"></button><div><strong>${this.escape(task.title)}</strong><small>${this.escape(task.project.name)}${task.dueDate ? ' · ' + task.dueDate : ''}</small></div>${initials ? `<span class="today-row__avatar">${this.escape(initials)}</span>` : ''}<button onclick="window.dispatchEvent(new CustomEvent('today-tomorrow',{detail:${task.dbId}}))">فردا</button><button onclick="window.dispatchEvent(new CustomEvent('today-remove',{detail:${task.dbId}}))" aria-label="برداشتن">•••</button></div>`; },
                 escape(value) { const el = document.createElement('div'); el.textContent = value || ''; return el.innerHTML; },
                 init() { window.addEventListener('today-complete', e => this.state(e.detail, 'complete')); window.addEventListener('today-remove', e => this.remove(e.detail)); window.addEventListener('today-tomorrow', e => this.moveTomorrow(e.detail)); },
                 find(id) { return this.mustTasks.concat(this.optionalTasks, this.blockedTasks).find(t => t.dbId === Number(id)); },

@@ -55,6 +55,34 @@ class TodayController extends Controller
             ->reject(fn (Task $task) => $items->contains('dbId', $task->id))
             ->map(fn (Task $task) => $taskData->make($task))->values();
 
+        $workspacePeople = collect([$workspace->owner])
+            ->merge($workspace->members)
+            ->unique('id')
+            ->take(5)
+            ->values();
+        $teamPlans = TaskPlan::query()
+            ->whereIn('user_id', $workspacePeople->pluck('id'))
+            ->whereDate('planned_for', $date->toDateString())
+            ->whereHas('task.column', fn ($query) => $query->whereIn('project_id', $projectIds))
+            ->with('task.column.project')
+            ->orderBy('position')
+            ->get()
+            ->groupBy('user_id');
+        $teamPulse = $workspacePeople->map(function ($person) use ($teamPlans) {
+            $plans = $teamPlans->get($person->id, collect());
+            $focus = $plans->first(fn ($plan) => ! $plan->task->is_blocked && $plan->task->column->workflow_role !== 'done');
+            $blocked = $plans->first(fn ($plan) => $plan->task->is_blocked);
+
+            return [
+                'name' => $person->full_name,
+                'initials' => $person->initials,
+                'avatar' => $person->avatar,
+                'focus' => $blocked?->task->blocked_reason ?: $focus?->task->title,
+                'project' => ($blocked ?: $focus)?->task->column->project->name,
+                'blocked' => (bool) $blocked,
+            ];
+        });
+
         return view('today', [
             'workspace' => $workspace,
             'todayDate' => $date,
@@ -65,6 +93,7 @@ class TodayController extends Controller
             'overdueTasks' => $overdue,
             'projects' => $projects,
             'availableTasks' => $availableTasks,
+            'teamPulse' => $teamPulse,
         ]);
     }
 

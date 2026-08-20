@@ -91,3 +91,86 @@
 }
 
 @media (max-width:767px) { .workspace-shell--board .app-navbar--embedded { top:56px; } }
+
+/* Approved premium tonal workspace */
+.workspace-shell { --shell-sidebar:208px; background:#F7F7F5 !important; color:#111; }
+.workspace-shell--board:not(.workspace-shell--collapsed) { --shell-sidebar:208px; }
+.workspace-sidebar { border-left:0; background:#fff; padding:14px 12px; }
+.workspace-switcher__trigger { min-height:44px; border:0; border-radius:8px; background:#F0F0ED; }
+.workspace-switcher__mark,.workspace-sidebar__account span,.workspace-profile-link span { background:#111; }
+.workspace-switcher__copy strong,.workspace-topbar__context { color:#111; }
+.workspace-switcher__copy small,.workspace-switcher__chevron { color:#8A8A84; }
+.workspace-nav__item { min-height:38px; color:#555552; border-radius:7px; }
+.workspace-nav__item svg { width:17px; height:17px; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+.workspace-nav__item:hover,.workspace-nav__item.is-active { color:#111; background:#F0F0ED; }
+.workspace-sidebar__projects { border-top:0; }
+.workspace-sidebar__projects > a { color:#555552; }
+.workspace-sidebar__projects > a:hover,.workspace-sidebar__projects > a.is-active { background:#F0F0ED; color:#111; }
+.workspace-sidebar__projects > a span { background:#F0F0ED; color:#111; }
+.workspace-sidebar__account { border-top:0; }
+.workspace-topbar { height:56px; border-bottom:0; background:rgba(255,255,255,.96); }
+.workspace-search-trigger { height:34px; border:0; border-radius:7px; background:#F0F0ED; color:#555552; }
+.workspace-search-trigger kbd { border:0; background:#fff; color:#8A8A84; }
+.workspace-account-menu > div,.workspace-switcher__menu { border:0; box-shadow:0 18px 50px rgba(17,17,17,.12); }
+.workspace-command__panel,.workspace-create-dialog { border:0; box-shadow:0 18px 50px rgba(17,17,17,.15); }
+.workspace-command__results a:hover,.workspace-account-menu a:hover { background:#F0F0ED; }
+.workspace-command__results a > span { background:#F0F0ED; color:#111; }
+.workspace-create-dialog button[type=submit] { background:#111; }
+.workspace-create-dialog input:focus { border-color:#111; }
+
+.today-page { width:min(1080px,calc(100% - 48px)); padding:38px 0 80px; color:#111; }
+.today-header { align-items:center; padding-bottom:0; margin-bottom:38px; border-bottom:0; }
+.today-header h1 { font-size:28px; color:#111; }
+.today-header p:last-of-type { color:#8A8A84; }
+.today-header small { display:block; margin-top:4px; color:#8A8A84; font-size:10px; }
+.today-create { min-height:38px; padding:0 16px; border-radius:8px; background:#111; }
+.today-create:hover { background:#000; }
+.today-create svg { width:16px; height:16px; }
+.today-dashboard__grid { display:grid; grid-template-columns:minmax(0,2fr) minmax(260px,.9fr); gap:42px; align-items:start; }
+.today-section { border-bottom:0; }
+.today-task-card { padding:0; background:transparent; }
+.today-section__heading { margin-bottom:13px; padding-inline:2px; }
+.today-section__heading h2 { font-size:14px; }
+.today-section__heading a,.today-section__heading span { color:#8A8A84; font-size:9px; }
+.today-group { display:grid; gap:6px; }
+.today-row { min-height:54px; padding:7px 14px; border:0; border-radius:10px; background:#fff; }
+.today-row:hover { background:#F0F0ED; }
+.today-row strong { color:#111; font-size:12px; }
+.today-row small { color:#8A8A84; }
+.today-row > button:not(.today-check) { color:#8A8A84; }
+.today-row > button:hover { color:#111; }
+.today-check { border-color:#111; border-radius:4px; }
+.today-check:hover { border-color:#111; background:#F0F0ED; }
+.today-row__avatar { display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:#111; color:#fff; font-size:8px; font-weight:800; }
+.today-team-card { padding:19px; border-radius:12px; background:#fff; }
+.today-team-list { display:grid; gap:19px; }
+.today-team-person { display:grid; grid-template-columns:32px minmax(0,1fr) auto; align-items:center; gap:10px; }
+.today-team-person > span,.today-team-person > img { width:32px; height:32px; border-radius:50%; object-fit:cover; }
+.today-team-person > span { display:grid; place-items:center; background:#111; color:#fff; font-size:9px; font-weight:800; }
+.today-team-person strong,.today-team-person small { display:block; }
+.today-team-person strong { font-size:11px; }.today-team-person small { margin-top:2px; overflow:hidden; color:#555552; font-size:9px; text-overflow:ellipsis; white-space:nowrap; }
+.today-team-person i { display:grid; place-items:center; width:17px; height:17px; border-radius:50%; background:#9A4A3A; color:#fff; font-size:9px; font-style:normal; font-weight:800; }
+.today-secondary-section { margin-top:28px; padding:20px; border-radius:12px; background:#fff; }
+.today-row.is-blocked { background:#F3EAE7; }.today-row__warning,.today-row__due { background:#9A4A3A; color:#fff; }
+.today-row.is-done { background:#F0F0ED; color:#8A8A84; }
+.today-add-existing { margin-top:14px; color:#111; }
+.today-dialog__panel { border:0; box-shadow:0 18px 50px rgba(17,17,17,.15); }
+.today-dialog__panel input:focus,.today-dialog__panel select:focus { border-color:#111; box-shadow:0 0 0 3px rgba(17,17,17,.08); }
+.today-dialog__panel > div:last-child button:last-child { background:#111; }
+.today-existing-list em { color:#111; }
+
+.project-list { display:grid; gap:8px; margin-top:26px; border-top:0; }
+.project-list__row { min-height:74px; padding:12px 14px; border:0; border-radius:10px; background:#fff; }
+.project-list__row:hover { background:#F0F0ED; }
+.project-list__mark { background:#111; }
+.project-create-inline input { border-color:#D8D8D3; }.project-create-inline button { background:#111; }
+.team-list { gap:8px; }.team-member { padding:18px; border:0; border-radius:10px; background:#fff; }.team-member > header > span { background:#111; }.team-member__tasks i { color:#111; }.team-member__tasks .is-blocked,.team-member__tasks .is-blocked i { color:#9A4A3A; }
+
+@media (max-width:767px) {
+ .workspace-mobile-nav { border-top:0; box-shadow:0 -8px 24px rgba(17,17,17,.06); }
+ .workspace-mobile-nav a.is-active { color:#111; }
+ .today-page { width:min(100% - 28px,1080px); padding-top:28px; }
+ .today-dashboard__grid { grid-template-columns:1fr; gap:28px; }
+ .today-team-card { order:2; }
+ .today-header { margin-bottom:28px; }
+}

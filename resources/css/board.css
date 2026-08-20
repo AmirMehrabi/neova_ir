@@ -452,6 +452,25 @@
     background: #FFFFFF;
 }
 
+/* Premium monochrome board */
+.neova-board { --board-page:#F7F7F5; --board-surface:#FFFFFF; --board-soft:#F0F0ED; --board-ink:#111111; --board-muted:#555552; --board-line:#E2E2DE; background:#F7F7F5 !important; color:#111 !important; }
+.neova-board .app-navbar { border:0 !important; background:rgba(255,255,255,.96) !important; box-shadow:none !important; }
+.neova-board .board-nav-control { border:0; background:#F0F0ED; color:#111; box-shadow:none; }
+.neova-board .board-nav-control:hover,.neova-board .board-nav-control:focus-visible { border:0; background:#E8E8E4; color:#111; }
+.neova-board .board-nav-control--primary { background:#111; color:#fff; box-shadow:none; }
+.neova-board .board-nav-control--primary:hover { background:#000; color:#fff; }
+.neova-board .board-column-well,.neova-board .mobile-task-list { border-color:transparent !important; background:#F0F0ED !important; }
+.neova-board .board-column-shell { border-color:transparent !important; }
+.neova-board .task-card { border-color:transparent !important; box-shadow:none !important; }
+.neova-board .task-card:hover { border-color:transparent !important; box-shadow:none !important; background:#F7F7F5 !important; }
+.neova-board .board-column-footer { background:#F0F0ED; }
+.neova-board .board-column-footer button { border:0; background:#fff; color:#111 !important; }
+.neova-board .filter-chip { border:0; background:#F0F0ED; }
+.neova-board .filter-chip:hover,.neova-board .filter-chip:focus-visible,.neova-board .filter-chip.is-active { border:0; background:#111; color:#fff; box-shadow:none; }
+.neova-board .board-bulk-bar,.neova-board .board-filter-bar { border:0; background:#F0F0ED; box-shadow:none; }
+.neova-board .task-modal-section,.neova-board .task-modal-section--description { border-color:transparent; background:#F7F7F5; box-shadow:none; }
+.neova-board .modal-close-button:focus-visible { box-shadow:0 0 0 3px rgba(17,17,17,.08); }
+
 .neova-board .board-form-modal input:focus,
 .neova-board .board-form-modal button:focus-visible,
 .neova-board .task-modal-footer button:focus-visible {

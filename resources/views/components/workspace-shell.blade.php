@@ -43,10 +43,10 @@
         </div>
 
         <nav class="workspace-nav" aria-label="ناوبری اصلی">
-            <a href="{{ route('today', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'today' ? 'is-active' : '' }}"><span>☀</span><b>امروز</b></a>
-            <a href="{{ route('workspace.board', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'board' ? 'is-active' : '' }}"><span>▥</span><b>تخته</b></a>
-            <a href="{{ route('projects.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'projects' ? 'is-active' : '' }}"><span>▤</span><b>پروژه‌ها</b></a>
-            <a href="{{ route('team.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'team' ? 'is-active' : '' }}"><span>♙</span><b>تیم</b></a>
+            <a href="{{ route('today', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'today' ? 'is-active' : '' }}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span><b>امروز</b></a>
+            <a href="{{ route('workspace.board', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'board' ? 'is-active' : '' }}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16m6-16v16"/></svg></span><b>تخته</b></a>
+            <a href="{{ route('projects.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'projects' ? 'is-active' : '' }}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"/></svg></span><b>پروژه‌ها</b></a>
+            <a href="{{ route('team.index', $workspace->slug) }}" class="workspace-nav__item {{ $active === 'team' ? 'is-active' : '' }}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20m6-8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-1a3 3 0 0 1 3 3v1"/></svg></span><b>تیم</b></a>
         </nav>
 
         <div class="workspace-sidebar__projects">
@@ -97,10 +97,10 @@
     </div>
 
     <nav class="workspace-mobile-nav" aria-label="ناوبری موبایل">
-        <a href="{{ route('today', $workspace->slug) }}" class="{{ $active === 'today' ? 'is-active' : '' }}"><span>☀</span><b>امروز</b></a>
-        <a href="{{ route('workspace.board', $workspace->slug) }}" class="{{ $active === 'board' ? 'is-active' : '' }}"><span>▥</span><b>تخته</b></a>
-        <a href="{{ route('projects.index', $workspace->slug) }}" class="{{ $active === 'projects' ? 'is-active' : '' }}"><span>▤</span><b>پروژه‌ها</b></a>
-        <a href="{{ route('team.index', $workspace->slug) }}" class="{{ $active === 'team' ? 'is-active' : '' }}"><span>♙</span><b>تیم</b></a>
+        <a href="{{ route('today', $workspace->slug) }}" class="{{ $active === 'today' ? 'is-active' : '' }}"><span>○</span><b>امروز</b></a>
+        <a href="{{ route('workspace.board', $workspace->slug) }}" class="{{ $active === 'board' ? 'is-active' : '' }}"><span>□</span><b>تخته</b></a>
+        <a href="{{ route('projects.index', $workspace->slug) }}" class="{{ $active === 'projects' ? 'is-active' : '' }}"><span>◇</span><b>پروژه‌ها</b></a>
+        <a href="{{ route('team.index', $workspace->slug) }}" class="{{ $active === 'team' ? 'is-active' : '' }}"><span>◌</span><b>تیم</b></a>
     </nav>
 
     <div x-show="searchOpen" x-cloak class="workspace-command" @keydown.escape.window="searchOpen=false">

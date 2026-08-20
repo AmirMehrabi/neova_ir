@@ -9,7 +9,7 @@
     <style>
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; }
-        .sortable-ghost { opacity: 0.4; background: #F5FAFF !important; border: 2px dashed #0069D9 !important; box-shadow: none !important; }
+        .sortable-ghost { opacity: 0.4; background: #F0F0ED !important; border: 2px dashed #111111 !important; box-shadow: none !important; }
         .sortable-chosen { box-shadow: 0 4px 12px rgba(24,33,43,0.09) !important; transform: translateY(-1px); z-index: 50; }
         .line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         ::-webkit-scrollbar { width: 5px; }
@@ -17,25 +17,25 @@
         ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
         .checklist-bar { height: 6px; border-radius: 3px; background: #E2E8F0; overflow: hidden; }
-        .checklist-bar-fill { height: 100%; border-radius: 3px; background: #0069D9; transition: width 0.3s ease; }
+        .checklist-bar-fill { height: 100%; border-radius: 3px; background: #111111; transition: width 0.3s ease; }
         .neova-board .bg-white { background-color: #FFFFFF !important; }
-        .neova-board .text-\[\#1A1D21\], .neova-board .text-\[\#18212B\] { color: #102A43 !important; }
-        .neova-board .text-\[\#18212B\], .neova-board .text-\[\#18212B\] { color: #102A43 !important; }
-        .neova-board .bg-\[\#18212B\], .neova-board .bg-\[\#18212B\] { background-color: #0069D9 !important; }
-        .neova-board .bg-\[\#F1F3F2\], .neova-board .bg-\[\#F1F3F2\] { background-color: #F5FAFF !important; }
+        .neova-board .text-\[\#1A1D21\], .neova-board .text-\[\#18212B\] { color: #111111 !important; }
+        .neova-board .text-\[\#18212B\], .neova-board .text-\[\#18212B\] { color: #111111 !important; }
+        .neova-board .bg-\[\#18212B\], .neova-board .bg-\[\#18212B\] { background-color: #111111 !important; }
+        .neova-board .bg-\[\#F1F3F2\], .neova-board .bg-\[\#F1F3F2\] { background-color: #F0F0ED !important; }
         .neova-board .hover\:bg-\[\#253342\]:hover,
         .neova-board .hover\:bg-\[\#000000\]:hover,
-        .neova-board .hover\:bg-\[\#000000\]:hover { background-color: #0052B3 !important; }
+        .neova-board .hover\:bg-\[\#000000\]:hover { background-color: #000000 !important; }
         .neova-board .border-\[\#D7DDDA\] { border-color: #D7DDDA !important; }
-        .neova-board .focus\:border-\[\#18212B\]:focus { border-color: #0069D9 !important; }
+        .neova-board .focus\:border-\[\#18212B\]:focus { border-color: #111111 !important; }
         .neova-board .focus\:ring-\[\#18212B\]\/20:focus { --tw-ring-color: rgb(0 105 217 / 0.2) !important; }
         .neova-board {
             margin: 0;
             padding: 0;
             border: 0;
             border-radius: 0;
-            background: #FBFDFF;
-            color: #102A43;
+            background: #F7F7F5;
+            color: #111111;
         }
         .neova-board .border-\[\#E2E8F0\], .neova-board .border-\[\#E8EBE9\] { border-color: #E8EBE9 !important; }
         .neova-board .text-\[\#64748B\] { color: #66717A !important; }
@@ -251,7 +251,7 @@
 
     <div x-show="selectedTaskIds.length > 0" x-cloak class="board-bulk-bar">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 px-3 sm:px-6 py-2.5">
-            <strong class="text-[11px] text-[#102A43]" x-text="toPersianDigits(selectedTaskIds.length) + ' وظیفه انتخاب شده' "></strong>
+            <strong class="text-[11px] text-[#111111]" x-text="toPersianDigits(selectedTaskIds.length) + ' وظیفه انتخاب شده' "></strong>
             <select x-model="bulkAction" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px] font-bold text-[#475569]">
                 <option value="">عملیات گروهی</option><option value="priority">تغییر اولویت</option><option value="assignee">تعیین مسئول</option><option value="tag">افزودن برچسب</option><option value="column">انتقال به ستون</option><option value="due_date">پاک کردن سررسید</option>
             </select>
@@ -259,7 +259,7 @@
             <select x-show="bulkAction === 'assignee'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><option value="">بدون مسئول</option><template x-for="member in projectMembers" :key="'bulk-' + member.id"><option :value="member.name" x-text="member.name"></option></template></select>
             <select x-show="bulkAction === 'column'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><template x-for="column in columns" :key="'bulk-col-' + column.id"><option :value="column.id" x-text="column.title"></option></template></select>
             <input x-show="bulkAction === 'tag'" x-model="bulkValue" class="h-8 w-28 rounded-lg border border-[#DCE8F2] px-2 text-[10px]" placeholder="نام برچسب">
-            <button type="button" @click="applyBulkAction()" :disabled="!bulkAction || bulkLoading" class="h-8 rounded-lg bg-[#0069D9] px-3 text-[10px] font-black text-white disabled:opacity-40">اعمال</button>
+            <button type="button" @click="applyBulkAction()" :disabled="!bulkAction || bulkLoading" class="h-8 rounded-lg bg-[#111111] px-3 text-[10px] font-black text-white disabled:opacity-40">اعمال</button>
             <button type="button" @click="clearSelection()" class="mr-auto text-[10px] font-bold text-[#64788A]">لغو انتخاب</button>
         </div>
     </div>
@@ -694,7 +694,7 @@
                             >
                                 <div class="w-9 h-9 rounded-full bg-[#071B33] text-white flex items-center justify-center text-xs font-black" x-text="person.name.charAt(0)"></div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-[12px] font-bold text-[#172B4D] truncate" x-text="person.name"></p>
+                                    <p class="text-[12px] font-bold text-[#111111] truncate" x-text="person.name"></p>
                                     <p class="text-[10px] text-[#94A3B8] mt-0.5" x-text="person.phone"></p>
                                 </div>
                                 <span class="w-6 h-6 rounded-md flex items-center justify-center border-2" :class="isProjectMember(person.id) ? 'bg-[#18212B] border-[#18212B] text-white' : 'border-[#CBD5E1] text-transparent'">
@@ -746,14 +746,14 @@
                             <select x-model="cycleLength" class="flex-1 text-xs border-2 border-[#E2E8F0] rounded-xl px-3 py-2.5 bg-white">
                                 <option value="">بدون چرخه</option><option value="1">یک هفته</option><option value="2">دو هفته</option>
                             </select>
-                            <button type="button" @click="saveCycleConfig()" class="text-[10px] font-bold text-[#0069D9] border border-[#BFD8EC] rounded-lg px-3 py-2.5">ذخیره</button>
+                            <button type="button" @click="saveCycleConfig()" class="text-[10px] font-bold text-[#111111] border border-[#BFD8EC] rounded-lg px-3 py-2.5">ذخیره</button>
                         </div>
                         <div x-show="activeCycle" class="mt-3 rounded-xl border border-[#DCE8F2] bg-[#F8FCFF] p-3">
                             <p class="text-xs font-black" x-text="activeCycle ? 'چرخه ' + toPersianDigits(activeCycle.number) : ''"></p>
                             <p class="mt-1 text-[10px] text-[#64748B]" x-text="activeCycle ? activeCycle.startsOn + ' تا ' + activeCycle.endsOn : ''"></p>
-                            <button type="button" @click="finishCycle()" class="mt-3 text-[10px] font-bold text-white bg-[#0069D9] rounded-lg px-3 py-2">پایان و شروع چرخه بعد</button>
+                            <button type="button" @click="finishCycle()" class="mt-3 text-[10px] font-bold text-white bg-[#111111] rounded-lg px-3 py-2">پایان و شروع چرخه بعد</button>
                         </div>
-                        <button x-show="!activeCycle && cycleLength" type="button" @click="startCycle()" class="mt-3 text-[10px] font-bold text-[#0069D9]">شروع چرخه با وظیفه‌های باز فعلی</button>
+                        <button x-show="!activeCycle && cycleLength" type="button" @click="startCycle()" class="mt-3 text-[10px] font-bold text-[#111111]">شروع چرخه با وظیفه‌های باز فعلی</button>
                     </div>
                     <div class="border-t border-[#E8EBE9] pt-5">
                         <label class="board-field-label">نقش ستون‌ها در گردش کار</label>
@@ -935,14 +935,14 @@
                             x-model="form.title"
                             type="text"
                             :disabled="!canEdit"
-                            class="task-modal-title-input w-full text-base font-bold text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 mb-3 focus:outline-none focus:border-[#0069D9] transition-colors bg-white placeholder:text-[#CBD5E1]"
+                            class="task-modal-title-input w-full text-base font-bold text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 mb-3 focus:outline-none focus:border-[#111111] transition-colors bg-white placeholder:text-[#CBD5E1]"
                             placeholder="مثلاً طراحی صفحه ورود"
                         >
                         <textarea
                             x-model="form.description"
                             rows="5"
                             :disabled="!canEdit"
-                            class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#0069D9] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
+                            class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#111111] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
                             placeholder="توضیحات کارت را بنویسید..."
                             @input="handleMentionInput('description', $event)"
                             @keydown.down.prevent="moveMentionSelection(1)"
@@ -955,7 +955,7 @@
                                 <template x-for="(person, index) in mentionResults" :key="person.id">
                                     <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
                                         <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
-                                        <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
+                                        <span class="text-[11px] font-bold text-[#111111]" x-text="person.name"></span>
                                     </button>
                                 </template>
                             </div>
@@ -1220,7 +1220,7 @@
                                     <template x-for="(person, index) in mentionResults" :key="person.id">
                                         <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
                                             <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
-                                            <span class="text-[11px] font-bold text-[#172B4D]" x-text="person.name"></span>
+                                            <span class="text-[11px] font-bold text-[#111111]" x-text="person.name"></span>
                                         </button>
                                     </template>
                                 </div>
@@ -1250,7 +1250,7 @@
                             <p x-show="form.attachments.length === 0" class="text-[11px] text-[#94A3B8]">فایلی پیوست نشده است.</p>
                         </div>
                         @if ($canEdit)
-                            <label class="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[#BFD8EC] px-3 py-2 text-[10px] font-bold text-[#0069D9]">
+                            <label class="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[#BFD8EC] px-3 py-2 text-[10px] font-bold text-[#111111]">
                                 <span x-text="attachmentUploading ? 'در حال بارگذاری…' : '+ افزودن فایل'"></span>
                                 <input type="file" class="hidden" :disabled="attachmentUploading" @change="uploadAttachment($event)">
                             </label>
@@ -1262,7 +1262,7 @@
                 <div class="task-modal-footer sticky bottom-0 bg-white border-t border-[#E2E8F0] px-4 md:px-6 py-3 flex items-center justify-between">
                     @if ($canEdit)
                         <div x-show="editingTask" class="flex items-center gap-2">
-                            <button type="button" @click="stateTask(form.workflowRole === 'done' ? 'reopen' : 'complete')" class="text-[10px] font-bold text-[#0069D9] border border-[#BFD8EC] rounded-lg px-3 py-2" x-text="form.workflowRole === 'done' ? 'باز کردن دوباره' : 'انجام شد'"></button>
+                            <button type="button" @click="stateTask(form.workflowRole === 'done' ? 'reopen' : 'complete')" class="text-[10px] font-bold text-[#111111] border border-[#BFD8EC] rounded-lg px-3 py-2" x-text="form.workflowRole === 'done' ? 'باز کردن دوباره' : 'انجام شد'"></button>
                             <button type="button" @click="stateTask(form.isBlocked ? 'unblock' : 'block')" class="text-[10px] font-bold rounded-lg px-3 py-2 border" :class="form.isBlocked ? 'text-emerald-700 border-emerald-200' : 'text-amber-700 border-amber-200'" x-text="form.isBlocked ? 'رفع انسداد' : 'مسدود کردن'"></button>
                             <button type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="text-[10px] font-semibold text-[#94A3B8] hover:text-red-500 px-2 py-2">حذف</button>
                         </div>
