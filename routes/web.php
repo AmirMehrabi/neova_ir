@@ -68,6 +68,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/{workspace}/board', [WorkspaceHomeController::class, 'board'])->name('workspace.board');
         Route::get('/{workspace}/search', WorkspaceSearchController::class)->name('workspace.search');
         Route::middleware('workspace.editor')->post('/{workspace}/today/tasks', [TodayController::class, 'quickCreate'])->name('today.tasks.store');
+        Route::middleware('workspace.editor')->patch('/{workspace}/today/reorder', [TodayController::class, 'reorder'])->name('today.tasks.reorder');
         Route::middleware('project')->group(function () {
             Route::middleware('project.access')->group(function () {
                 Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
@@ -80,6 +81,7 @@ Route::middleware('auth')->group(function () {
                     Route::delete('/{workspace}/{project}/task/{task}/attachments/{attachment}', [TaskAttachmentController::class, 'destroy'])->name('task.attachments.destroy');
                     Route::put('/{workspace}/{project}/task/{task}/plan', [TodayController::class, 'plan'])->name('today.task.plan');
                     Route::delete('/{workspace}/{project}/task/{task}/plan', [TodayController::class, 'unplan'])->name('today.task.unplan');
+                    Route::patch('/{workspace}/{project}/task/{task}/plan/tomorrow', [TodayController::class, 'moveTomorrow'])->name('today.task.tomorrow');
                     Route::patch('/{workspace}/{project}/task/{task}/state', [TodayController::class, 'state'])->name('today.task.state');
                     Route::post('/{workspace}/{project}/task', [BoardController::class, 'storeTask'])->name('board.task.store');
                     Route::patch('/{workspace}/{project}/tasks/bulk', [BoardController::class, 'bulkUpdateTasks'])->name('board.tasks.bulk');

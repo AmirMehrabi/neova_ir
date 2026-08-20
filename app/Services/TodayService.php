@@ -53,4 +53,22 @@ class TodayService
             ->whereDate('planned_for', $date)->delete();
         if ($deleted) $this->activityLogger->taskUnplanned($task, $user, $date);
     }
+
+    public function move(Task $task, User $user, string $fromDate, string $toDate): TaskPlan
+    {
+        return DB::transaction(function () use ($task, $user, $fromDate, $toDate) {
+            $current = TaskPlan::query()
+                ->where('task_id', $task->id)
+                ->where('user_id', $user->id)
+                ->whereDate('planned_for', $fromDate)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $bucket = $current->bucket;
+            $current->delete();
+            $this->activityLogger->taskUnplanned($task, $user, $fromDate);
+
+            return $this->plan($task, $user, $toDate, $bucket);
+        });
+    }
 }

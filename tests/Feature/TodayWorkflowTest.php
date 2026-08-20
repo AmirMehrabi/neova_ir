@@ -56,6 +56,63 @@ class TodayWorkflowTest extends TestCase
         $this->assertDatabaseCount('task_plans', 0);
     }
 
+    public function test_task_can_be_moved_to_tomorrow_atomically(): void
+    {
+        extract($this->context());
+        $today = now($workspace->timezone)->startOfDay();
+
+        $this->actingAs($user)->putJson(route('today.task.plan', [$workspace->slug, $project->slug, $task]), [
+            'planned_for' => $today->toDateString(),
+            'bucket' => 'must',
+        ])->assertOk();
+
+        $this->actingAs($user)->patchJson(route('today.task.tomorrow', [$workspace->slug, $project->slug, $task]))
+            ->assertOk()
+            ->assertJsonPath('planned_for', $today->copy()->addDay()->toDateString());
+
+        $this->assertDatabaseMissing('task_plans', [
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'planned_for' => $today->toDateString().' 00:00:00',
+        ]);
+        $this->assertDatabaseHas('task_plans', [
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'planned_for' => $today->copy()->addDay()->toDateString().' 00:00:00',
+        ]);
+    }
+
+    public function test_today_tasks_can_be_reordered_and_normalized_into_one_priority_list(): void
+    {
+        extract($this->context());
+        $second = Task::create(['column_id' => $backlog->id, 'task_number' => 2, 'title' => 'کار دوم', 'position' => 2]);
+        $second->assignedUsers()->attach($user->id);
+        $date = now($workspace->timezone)->toDateString();
+
+        $this->actingAs($user)->putJson(route('today.task.plan', [$workspace->slug, $project->slug, $task]), [
+            'planned_for' => $date, 'bucket' => 'optional', 'position' => 1,
+        ])->assertOk();
+        $this->actingAs($user)->putJson(route('today.task.plan', [$workspace->slug, $project->slug, $second]), [
+            'planned_for' => $date, 'bucket' => 'must', 'position' => 1,
+        ])->assertOk();
+
+        $this->actingAs($user)->patchJson(route('today.tasks.reorder', $workspace->slug), [
+            'task_ids' => [$task->id, $second->id],
+        ])->assertOk()->assertJsonPath('task_ids', [$task->id, $second->id]);
+
+        $this->assertDatabaseHas('task_plans', ['task_id' => $task->id, 'bucket' => 'must', 'position' => 1]);
+        $this->assertDatabaseHas('task_plans', ['task_id' => $second->id, 'bucket' => 'must', 'position' => 2]);
+    }
+
+    public function test_reorder_rejects_tasks_that_are_not_in_the_active_today_list(): void
+    {
+        extract($this->context());
+
+        $this->actingAs($user)->patchJson(route('today.tasks.reorder', $workspace->slug), [
+            'task_ids' => [$task->id],
+        ])->assertUnprocessable();
+    }
+
     public function test_completing_from_today_moves_task_to_done_and_clears_block(): void
     {
         extract($this->context());

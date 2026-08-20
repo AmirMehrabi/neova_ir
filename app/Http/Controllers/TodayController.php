@@ -94,6 +94,7 @@ class TodayController extends Controller
             'projects' => $projects,
             'availableTasks' => $availableTasks,
             'teamPulse' => $teamPulse,
+            'canEdit' => $workspace->canEditBoards($user),
         ]);
     }
 
@@ -161,6 +162,51 @@ class TodayController extends Controller
         $validated = $request->validate(['planned_for' => ['required', 'date']]);
         $today->unplan($task, $request->user(), $validated['planned_for']);
         return response()->json(['success' => true]);
+    }
+
+    public function moveTomorrow(Request $request, string $workspace, string $project, Task $task, TodayService $today)
+    {
+        $this->ensureTask($request, $task);
+        $workspaceModel = $request->attributes->get('workspace');
+        $current = $today->date($workspaceModel);
+        $tomorrow = $current->addDay();
+        $today->move($task, $request->user(), $current->toDateString(), $tomorrow->toDateString());
+
+        return response()->json([
+            'success' => true,
+            'planned_for' => $tomorrow->toDateString(),
+        ]);
+    }
+
+    public function reorder(Request $request, string $workspace, TodayService $today)
+    {
+        $validated = $request->validate([
+            'task_ids' => ['required', 'array', 'min:1', 'max:100'],
+            'task_ids.*' => ['required', 'integer', 'distinct'],
+        ]);
+        $workspaceModel = $request->attributes->get('workspace');
+        $date = $today->date($workspaceModel)->toDateString();
+        $ids = collect($validated['task_ids'])->values();
+
+        $plans = TaskPlan::query()
+            ->where('user_id', $request->user()->id)
+            ->whereDate('planned_for', $date)
+            ->whereIn('task_id', $ids)
+            ->whereHas('task', fn ($query) => $query->where('is_blocked', false))
+            ->whereHas('task.column', fn ($query) => $query->where('workflow_role', '!=', 'done'))
+            ->whereHas('task.column.project', fn ($query) => $query->where('workspace_id', $workspaceModel->id))
+            ->get()
+            ->keyBy('task_id');
+
+        abort_unless($plans->count() === $ids->count(), 422, 'فهرست اولویت‌ها معتبر نیست.');
+
+        DB::transaction(function () use ($ids, $plans) {
+            $ids->each(function ($taskId, $index) use ($plans) {
+                $plans->get($taskId)->update(['bucket' => 'must', 'position' => $index + 1]);
+            });
+        });
+
+        return response()->json(['success' => true, 'task_ids' => $ids]);
     }
 
     public function state(Request $request, string $workspace, string $project, Task $task, TaskWorkflowService $workflow, TaskAssignmentService $assignments, TaskData $taskData)
