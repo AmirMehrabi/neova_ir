@@ -3,6 +3,8 @@ import Sortable from 'sortablejs'
 import flatpickr from 'flatpickr'
 import 'flatpickr/dist/flatpickr.min.css'
 import moment from 'jalali-moment'
+import './echo'
+import './realtime'
 
 window.Alpine = Alpine
 window.Sortable = Sortable

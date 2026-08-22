@@ -921,6 +921,13 @@
 
                 {{-- Body: Single column --}}
                 <div class="task-modal-body p-4 md:p-6 space-y-4" :class="editingTask ? 'task-modal-body--editing' : 'task-modal-body--create'" style="direction: rtl;">
+                    <div x-show="realtimeConflict" x-cloak class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
+                        <p x-text="realtimeTaskDeleted ? 'این وظیفه در همین حین حذف شده است. پیش‌نویس شما حفظ شد.' : 'این وظیفه توسط شخص دیگری تغییر کرده است. پیش‌نویس شما حفظ شد.'"></p>
+                        <div class="mt-2 flex gap-2">
+                            <button type="button" @click="loadRemoteTask()" class="rounded-lg bg-white px-3 py-1.5 font-bold border border-amber-300" x-text="realtimeTaskDeleted ? 'بستن پیش‌نویس' : 'بارگذاری نسخه جدید'"></button>
+                            <button x-show="!realtimeTaskDeleted" type="button" @click="keepLocalDraft()" class="rounded-lg bg-amber-800 px-3 py-1.5 font-bold text-white">حفظ پیش‌نویس و بازنویسی</button>
+                        </div>
+                    </div>
                     {{-- Title --}}
                     <div class="task-modal-section task-modal-section--description">
                         <div class="task-modal-section__heading">
@@ -1350,6 +1357,7 @@
         </div>
     </div>
 
+    @php($boardRealtimeSnapshotUrl = route('board.realtime.snapshot', [$workspace->slug, $project->slug], false))
     <script>
         function board() {
             const serverColumns = @json($columnsData);
@@ -1388,6 +1396,10 @@
                 columnDeleting: false,
                 modalLastFocused: null,
                 modalSnapshot: null,
+                realtimeRefresher: null,
+                realtimeConflict: false,
+                realtimeTaskDeleted: false,
+                forceRealtimeOverwrite: false,
                 showModal: false,
                 showDeleteModal: false,
                 showColumnModal: false,
@@ -1567,7 +1579,7 @@
                     if (this.bulkAction === 'tag' && !this.bulkValue.trim()) return;
                     this.bulkLoading = true;
                     try {
-                        const response = await fetch('{{ route("board.tasks.bulk", [$workspace->slug, $project->slug], false) }}', {
+                        const response = await window.neovaFetch('{{ route("board.tasks.bulk", [$workspace->slug, $project->slug], false) }}', {
                             method: 'PATCH',
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                             body: JSON.stringify({ task_ids: this.selectedTaskIds, action: this.bulkAction, value: this.bulkValue || null }),
@@ -1698,7 +1710,7 @@
                     this.activityLoading = true;
                     try {
                         const params = new URLSearchParams({ page, search: this.activitySearch, user_id: this.activityUserId, kind: this.activityKind });
-                        const res = await fetch('{{ route("board.activity", [$workspace->slug, $project->slug], false) }}?' + params.toString(), {
+                        const res = await window.neovaFetch('{{ route("board.activity", [$workspace->slug, $project->slug], false) }}?' + params.toString(), {
                             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                         });
                         const payload = await res.json();
@@ -1727,8 +1739,63 @@
                     return labels[kind] || kind;
                 },
 
+                applyRealtimeSnapshot(payload) {
+                    const collapsed = new Set(this.columns.filter(column => column.collapsed).map(column => String(column.id)));
+                    const remoteTask = this.editingTask
+                        ? payload.columns.flatMap(column => column.tasks).find(task => Number(task.dbId) === Number(this.editingTask))
+                        : null;
+                    const draftIsDirty = this.showModal && this.modalSnapshot && JSON.stringify(this.form) !== this.modalSnapshot;
+                    if (this.showModal && this.editingTask && draftIsDirty) {
+                        this.realtimeConflict = true;
+                        this.realtimeTaskDeleted = !remoteTask;
+                    }
+                    this.columns = payload.columns.map(column => ({ ...column, collapsed: collapsed.has(String(column.id)) }));
+                    this.projectMembers = payload.members;
+                    this.workspacePeople = payload.workspacePeople;
+                    this.assignees = payload.members.map(member => member.name);
+                    this.customTags = payload.project.customTags || [];
+                    this.activeCycle = payload.activeCycle;
+                    Object.assign(this.projectForm, {
+                        name: payload.project.name,
+                        key: payload.project.key,
+                        description: payload.project.description,
+                        board_style: payload.project.boardStyle,
+                    });
+                    if (this.showModal && this.editingTask && !draftIsDirty && remoteTask) {
+                        const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
+                        this.openEditModal(remoteTask, column.id);
+                    }
+                    this.destroySortables();
+                    this.destroyColumnSortables();
+                    this.$nextTick(() => {
+                        this.columns.forEach(column => this.initSortable(column.id, this.boardMediaQuery?.matches ? 'mobile' : 'desktop'));
+                        this.initColumnSortable(this.boardMediaQuery?.matches ? 'mobile' : 'desktop');
+                    });
+                },
+
+                loadRemoteTask() {
+                    const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
+                    const task = column?.tasks.find(item => Number(item.dbId) === Number(this.editingTask));
+                    if (!task) { this.closeModal(); return; }
+                    this.realtimeConflict = false;
+                    this.realtimeTaskDeleted = false;
+                    this.forceRealtimeOverwrite = false;
+                    this.openEditModal(task, column.id);
+                },
+
+                keepLocalDraft() {
+                    this.forceRealtimeOverwrite = true;
+                    this.realtimeConflict = false;
+                },
+
                 init() {
                     this.resolveBoardStyle();
+                    this.realtimeRefresher = window.createRealtimeRefresher({
+                        url: @json($boardRealtimeSnapshotUrl),
+                        apply: payload => this.applyRealtimeSnapshot(payload),
+                    });
+                    window.subscribeProjectRealtime(this.projectId, () => this.realtimeRefresher.schedule());
+                    window.addEventListener('neova:realtime-reconnected', () => this.realtimeRefresher.refreshNow());
                     this.keyboardHandler = event => {
                         const target = event.target;
                         const typing = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
@@ -2086,7 +2153,7 @@
                         ? '{{ route("board.project.members.destroy", [$workspace->slug, $project->slug, "__USER__"], false) }}'.replace('__USER__', person.id)
                         : '{{ route("board.project.members.store", [$workspace->slug, $project->slug], false) }}';
                     try {
-                        const response = await fetch(url, {
+                        const response = await window.neovaFetch(url, {
                             method: selected ? 'DELETE' : 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -2119,7 +2186,7 @@
                     if (!this.canManageProject || this.projectSettingsSaving) return;
                     this.projectSettingsSaving = true;
                     try {
-                        const response = await fetch('{{ route("board.project.update", [$workspace->slug, $project->slug], false) }}', {
+                        const response = await window.neovaFetch('{{ route("board.project.update", [$workspace->slug, $project->slug], false) }}', {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -2145,7 +2212,7 @@
 
                 async saveCycleConfig() {
                     try {
-                        const response = await fetch('{{ route("cycles.configure", [$workspace->slug, $project->slug], false) }}', {
+                        const response = await window.neovaFetch('{{ route("cycles.configure", [$workspace->slug, $project->slug], false) }}', {
                             method:'PATCH', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
                             body:JSON.stringify({cycle_length_weeks:this.cycleLength || null}),
                         });
@@ -2158,7 +2225,7 @@
                 async startCycle() {
                     const taskIds = this.columns.filter(column => column.workflowRole !== 'done').flatMap(column => column.tasks.map(task => task.dbId));
                     try {
-                        const response = await fetch('{{ route("cycles.start", [$workspace->slug, $project->slug], false) }}', {
+                        const response = await window.neovaFetch('{{ route("cycles.start", [$workspace->slug, $project->slug], false) }}', {
                             method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({task_ids:taskIds}),
                         });
                         const data = await response.json().catch(() => ({}));
@@ -2172,7 +2239,7 @@
                     if (!this.activeCycle || !window.confirm('چرخه پایان یابد و همه کارهای باز به چرخه بعد منتقل شوند؟')) return;
                     try {
                         const url = '{{ route("cycles.finish", [$workspace->slug, $project->slug, "__CYCLE__"], false) }}'.replace('__CYCLE__', this.activeCycle.id);
-                        const response = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({carry_task_ids:this.activeCycle.openTaskIds || [],removed_task_ids:[],start_next:true}) });
+                        const response = await window.neovaFetch(url, { method:'POST', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({carry_task_ids:this.activeCycle.openTaskIds || [],removed_task_ids:[],start_next:true}) });
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || 'پایان چرخه انجام نشد.');
                         this.activeCycle = data.nextCycle ? { id:data.nextCycle.id, number:data.nextCycle.number, startsOn:data.nextCycle.startsOn, endsOn:data.nextCycle.endsOn, taskIds:data.nextCycle.tasks.map(task => task.id), openTaskIds:data.nextCycle.tasks.map(task => task.id) } : null;
@@ -2183,7 +2250,7 @@
                 async saveColumnRole(column) {
                     try {
                         const url = '{{ route("board.column.update", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', column.id);
-                        const response = await fetch(url, { method:'PATCH', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({title:column.title,color:column.dotHex,wip_limit:column.wipLimit || null,workflow_role:column.workflowRole}) });
+                        const response = await window.neovaFetch(url, { method:'PATCH', headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body:JSON.stringify({title:column.title,color:column.dotHex,wip_limit:column.wipLimit || null,workflow_role:column.workflowRole}) });
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || 'ذخیره نقش ستون انجام نشد.');
                         column.workflowRole = data.workflow_role; this.showToast('نقش ستون ذخیره شد');
@@ -2291,7 +2358,7 @@
 
                 async saveCustomTags() {
                     try {
-                        await fetch('{{ route("board.project.update", [$workspace->slug, $project->slug], false) }}', {
+                        await window.neovaFetch('{{ route("board.project.update", [$workspace->slug, $project->slug], false) }}', {
                             method: 'PATCH',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -2375,7 +2442,7 @@
                     }
                     this.commentPosting = true;
                     try {
-                        const response = await fetch('{{ route("board.task.comments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), {
+                        const response = await window.neovaFetch('{{ route("board.task.comments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -2488,7 +2555,7 @@
                     this.setSortablesDisabled(true);
                     this.setColumnSortablesDisabled(true);
                     try {
-                        const response = await fetch('{{ route("board.columns.reorder", [$workspace->slug, $project->slug], false) }}', {
+                        const response = await window.neovaFetch('{{ route("board.columns.reorder", [$workspace->slug, $project->slug], false) }}', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                             body: JSON.stringify({ column_ids: this.columns.map(column => Number(column.id)) }),
@@ -2624,7 +2691,7 @@
                     this.setSortablesDisabled(true);
 
                     try {
-                        const response = await fetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), {
+                        const response = await window.neovaFetch('{{ route("board.task.move", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                             body: JSON.stringify({ column_id: parseInt(toColId), position: safeIndex }),
@@ -2660,6 +2727,9 @@
                     this.taskError = '';
                     this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
+                    this.realtimeConflict = false;
+                    this.realtimeTaskDeleted = false;
+                    this.forceRealtimeOverwrite = false;
                     this.showModal = true;
                     this.$nextTick(() => {
                         this.modalSnapshot = JSON.stringify(this.form);
@@ -2676,13 +2746,16 @@
                         assignees: Array.from(taskAssignees), columnId: columnId, dueDate: task.dueDate || '',
                         tags: Array.from(task.tags || []), checklist: JSON.parse(JSON.stringify(task.checklist || [])),
                         comments: JSON.parse(JSON.stringify(task.comments || [])), attachments: JSON.parse(JSON.stringify(task.attachments || [])), isBlocked: !!task.isBlocked,
-                        blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || ''
+                        blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || '', updatedAt: task.updatedAt || null
                     };
                     this.newCheckItem = '';
                     this.newComment = '';
                     this.taskError = '';
                     this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
+                    this.realtimeConflict = false;
+                    this.realtimeTaskDeleted = false;
+                    this.forceRealtimeOverwrite = false;
                     this.showModal = true;
                     this.$nextTick(() => {
                         this.modalSnapshot = JSON.stringify(this.form);
@@ -2750,11 +2823,16 @@
                             const targetCol = this.columns.find(c => c.id === this.form.columnId);
                             const task = sourceCol?.tasks.find(t => t.dbId === this.editingTask);
                             if (!task) throw new Error('وظیفه پیدا نشد.');
-                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId) };
-                            const response = await fetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
+                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId), expected_updated_at: this.form.updatedAt, force: this.forceRealtimeOverwrite };
+                            const response = await window.neovaFetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
                             const data = await response.json().catch(() => ({}));
+                            if (response.status === 409) {
+                                this.realtimeConflict = true;
+                                await this.realtimeRefresher.refreshNow();
+                                throw new Error(data.message || 'نسخه جدیدتری از این وظیفه وجود دارد.');
+                            }
                             if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره وظیفه انجام نشد.');
-                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)) });
+                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)), updatedAt: data.updated_at || data.updatedAt });
                             if (sourceCol && targetCol && sourceCol.id !== targetCol.id) {
                                 sourceCol.tasks = sourceCol.tasks.filter(item => item.dbId !== task.dbId);
                                 targetCol.tasks.push(task);
@@ -2766,7 +2844,7 @@
                             const col = this.columns.find(c => c.id === this.form.columnId);
                             if (!col) throw new Error('ستون وظیفه پیدا نشد.');
                             const payload = { column_id: parseInt(this.form.columnId), title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments };
-                            const res = await fetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
+                            const res = await window.neovaFetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
                             const data = await res.json().catch(() => ({}));
                             if (!res.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ایجاد وظیفه انجام نشد.');
                             col.tasks.push({ id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [] });
@@ -2790,7 +2868,7 @@
                     }
                     this.taskSaving = true;
                     try {
-                        const response = await fetch('{{ route("today.task.state", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), {
+                        const response = await window.neovaFetch('{{ route("today.task.state", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), {
                             method: 'PATCH', headers: {'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'},
                             body: JSON.stringify({ action, reason }),
                         });
@@ -2821,7 +2899,7 @@
                     this.attachmentUploading = true;
                     const body = new FormData(); body.append('file', file);
                     try {
-                        const response = await fetch('{{ route("task.attachments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), { method:'POST', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body });
+                        const response = await window.neovaFetch('{{ route("task.attachments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), { method:'POST', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body });
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'بارگذاری انجام نشد.');
                         data.attachment.url = '{{ route("task.attachments.download", [$workspace->slug, $project->slug, "__TASK__", "__ATTACHMENT__"], false) }}'.replace('__TASK__', this.editingTask).replace('__ATTACHMENT__', data.attachment.id);
@@ -2834,7 +2912,7 @@
                     if (!window.confirm('این پیوست حذف شود؟')) return;
                     try {
                         const url = '{{ route("task.attachments.destroy", [$workspace->slug, $project->slug, "__TASK__", "__ATTACHMENT__"], false) }}'.replace('__TASK__', this.editingTask).replace('__ATTACHMENT__', attachment.id);
-                        const response = await fetch(url, { method:'DELETE', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'} });
+                        const response = await window.neovaFetch(url, { method:'DELETE', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'} });
                         if (!response.ok) throw new Error('حذف پیوست انجام نشد.');
                         this.form.attachments = this.form.attachments.filter(item => item.id !== attachment.id);
                     } catch (error) { this.taskError = error.message; }
@@ -2883,7 +2961,7 @@
                         ? '{{ route("board.column.update", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', this.columnEditingId)
                         : '{{ route("board.column.store", [$workspace->slug, $project->slug], false) }}';
                     try {
-                        const response = await fetch(url, {
+                        const response = await window.neovaFetch(url, {
                             method: editing ? 'PATCH' : 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                             body: JSON.stringify(editing ? { title: this.columnFormTitle.trim(), color: this.columnFormColor, wip_limit: this.columnFormWipLimit || null } : { project_id: {{ $project->id }}, title: this.columnFormTitle.trim(), color: this.columnFormColor, wip_limit: this.columnFormWipLimit || null }),
@@ -2918,7 +2996,7 @@
                     this.columnDeleting = true;
                     this.columnError = '';
                     try {
-                        const response = await fetch('{{ route("board.column.destroy", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', columnId), {
+                        const response = await window.neovaFetch('{{ route("board.column.destroy", [$workspace->slug, $project->slug, "__COLUMN__"], false) }}'.replace('__COLUMN__', columnId), {
                             method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
                         });
                         const data = await response.json().catch(() => ({}));
@@ -2951,7 +3029,7 @@
                         if (!col) throw new Error('وظیفه پیدا نشد.');
                         const task = col.tasks.find(t => t.dbId === this.deleteTarget.taskId);
                         if (!task) throw new Error('وظیفه پیدا نشد.');
-                        const response = await fetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
+                        const response = await window.neovaFetch('{{ route("board.task.destroy", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || 'حذف وظیفه انجام نشد.');
                         col.tasks = col.tasks.filter(t => t.dbId !== this.deleteTarget.taskId);

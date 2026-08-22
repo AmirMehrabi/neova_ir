@@ -63,6 +63,7 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('workspace')->group(function () {
         Route::get('/{workspace}/today', [TodayController::class, 'index'])->name('today');
+        Route::get('/{workspace}/today/realtime-snapshot', [TodayController::class, 'snapshot'])->name('today.realtime.snapshot');
         Route::get('/{workspace}/projects', [ProjectsController::class, 'index'])->name('projects.index');
         Route::get('/{workspace}/team', [TeamController::class, 'index'])->name('team.index');
         Route::get('/{workspace}/board', [WorkspaceHomeController::class, 'board'])->name('workspace.board');
@@ -72,6 +73,7 @@ Route::middleware('auth')->group(function () {
         Route::middleware('project')->group(function () {
             Route::middleware('project.access')->group(function () {
                 Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
+                Route::get('/{workspace}/{project}/board/realtime-snapshot', [BoardController::class, 'snapshot'])->name('board.realtime.snapshot');
                 Route::get('/{workspace}/{project}/task/{task}/attachments/{attachment}', [TaskAttachmentController::class, 'download'])->name('task.attachments.download');
                 Route::middleware('workspace.editor')->group(function () {
                     Route::patch('/{workspace}/{project}/cycles/configure', [CycleController::class, 'configure'])->name('cycles.configure');

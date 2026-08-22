@@ -79,6 +79,7 @@ class BoardController extends Controller
                     'size' => $attachment->size,
                     'url' => route('task.attachments.download', [$workspace->slug, $project->slug, $t->id, $attachment->id], false),
                 ])->values()->all(),
+                'updatedAt' => $t->updated_at->toIso8601String(),
             ])->toArray(),
         ])->toArray();
 
@@ -123,6 +124,26 @@ class BoardController extends Controller
             'customTags',
             'activeCycle',
         ));
+    }
+
+    public function snapshot(Request $request)
+    {
+        $data = $this->show($request)->getData();
+
+        return response()->json([
+            'columns' => $data['columnsData'],
+            'members' => $data['membersData'],
+            'workspacePeople' => $data['workspacePeopleData'],
+            'project' => [
+                'name' => $data['project']->name,
+                'key' => $data['project']->key,
+                'description' => $data['project']->description ?? '',
+                'boardStyle' => $data['boardStyle'],
+                'customTags' => $data['customTags'],
+            ],
+            'activeCycle' => $data['activeCycle'],
+            'generatedAt' => now()->toIso8601String(),
+        ]);
     }
 
     public function storeTask(
@@ -197,8 +218,17 @@ class BoardController extends Controller
             'checklist' => ['sometimes', 'array'],
             'column_id' => ['sometimes', 'integer', 'exists:project_columns,id'],
             'position' => ['sometimes', 'integer', 'min:0'],
+            'expected_updated_at' => ['sometimes', 'nullable', 'date'],
+            'force' => ['sometimes', 'boolean'],
         ]);
         $this->ensureTaskInCurrentProject($request, $task);
+        if (! $request->boolean('force') && isset($validated['expected_updated_at'])
+            && $task->updated_at->toIso8601String() !== \Illuminate\Support\Carbon::parse($validated['expected_updated_at'])->toIso8601String()) {
+            return response()->json([
+                'message' => 'این وظیفه توسط شخص دیگری تغییر کرده است.',
+                'conflict' => true,
+            ], 409);
+        }
         $this->validateAssignees($request, $task);
         if (isset($validated['column_id'])) {
             $this->ensureColumnInCurrentProject($request, ProjectColumn::findOrFail($validated['column_id']));

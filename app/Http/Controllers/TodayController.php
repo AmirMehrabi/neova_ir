@@ -132,6 +132,31 @@ class TodayController extends Controller
         ]);
     }
 
+    public function snapshot(Request $request, TodayService $today, TaskData $taskData)
+    {
+        $data = $this->index($request, $today, $taskData)->getData();
+
+        return response()->json([
+            'mustTasks' => $data['mustTasks'],
+            'optionalTasks' => $data['optionalTasks'],
+            'blockedTasks' => $data['blockedTasks'],
+            'doneTasks' => $data['doneTasks'],
+            'overdueTasks' => $data['overdueTasks'],
+            'availableTasks' => $data['availableTasks'],
+            'teamDays' => $data['teamDays'],
+            'projects' => $data['projects']->map(fn ($project) => [
+                'id' => $project->id,
+                'name' => $project->name,
+                'eligibleUserIds' => $data['projectEligibility']->get($project->id, []),
+            ])->values(),
+            'people' => $data['workspacePeople']->map(fn ($person) => [
+                'id' => $person->id,
+                'name' => $person->full_name,
+            ])->values(),
+            'generatedAt' => now()->toIso8601String(),
+        ]);
+    }
+
     public function quickCreate(
         Request $request,
         string $workspace,

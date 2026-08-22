@@ -192,7 +192,23 @@
                 get activeTasks() { return this.mustTasks.concat(this.optionalTasks); },
                 get eligibleProjects() { const id=Number(this.quick.userId); return this.projects.filter(p => p.eligibleUserIds.includes(id)); },
                 get filteredAvailable() { const q = this.existingSearch.trim().toLowerCase(); const member=this.teamDays.find(m=>m.id===Number(this.existingTargetId)); const planned = new Set(member ? this.teamActive(member).concat(member.doneTasks).map(t=>t.dbId) : this.activeTasks.concat(this.blockedTasks).map(t => t.dbId)); return this.availableTasks.filter(t => t.eligibleUserIds.includes(Number(this.existingTargetId)) && !planned.has(t.dbId) && (!q || t.title.toLowerCase().includes(q) || t.project.name.toLowerCase().includes(q))); },
-                init() { this.$watch('quick.userId', () => { if(!this.eligibleProjects.some(p=>p.id===Number(this.quick.projectId))) this.quick.projectId=this.eligibleProjects[0]?.id || ''; }); this.$nextTick(() => { this.setupSortable(); this.setupTeamSortables(); }); },
+                realtimeRefresher: null,
+                init() {
+                    this.$watch('quick.userId', () => { if(!this.eligibleProjects.some(p=>p.id===Number(this.quick.projectId))) this.quick.projectId=this.eligibleProjects[0]?.id || ''; });
+                    this.realtimeRefresher = window.createRealtimeRefresher({
+                        url: @js(route('today.realtime.snapshot', $workspace->slug, false)),
+                        apply: payload => this.applyRealtimeSnapshot(payload),
+                    });
+                    window.subscribeTodayRealtime(@js($workspace->id), () => this.realtimeRefresher.schedule());
+                    window.addEventListener('neova:realtime-reconnected', () => this.realtimeRefresher.refreshNow());
+                    this.$nextTick(() => { this.setupSortable(); this.setupTeamSortables(); });
+                },
+                applyRealtimeSnapshot(payload) {
+                    for (const key of ['mustTasks','optionalTasks','blockedTasks','doneTasks','overdueTasks','availableTasks','teamDays','projects','people']) {
+                        if (payload[key] !== undefined) this[key] = payload[key];
+                    }
+                    this.$nextTick(() => { this.setupSortable(); this.setupTeamSortables(); });
+                },
                 teamActive(member) { return member.mustTasks.concat(member.optionalTasks); },
                 teamRemaining(member) { return this.teamActive(member).length + member.blockedTasks.length; },
                 openExistingFor(userId) { this.existingTargetId=Number(userId); this.existingSearch=''; this.existingOpen=true; },
@@ -217,7 +233,7 @@
                 busy(id, active) { this.busyTasks = active ? [...new Set([...this.busyTasks, Number(id)])] : this.busyTasks.filter(value => value !== Number(id)); },
                 find(id) { return this.activeTasks.concat(this.blockedTasks, this.doneTasks).find(t => t.dbId === Number(id)); },
                 endpoint(task, kind) { const base = @js(route('today.task.state', [$workspace->slug, '__PROJECT__', '__TASK__'], false)); return base.replace('__PROJECT__', task.project.slug).replace('__TASK__', task.dbId).replace('/state', kind); },
-                async request(url, method, body) { const r = await fetch(url, { method, headers: {'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':@js(csrf_token())}, body: body ? JSON.stringify(body) : null }); const data = await r.json().catch(() => ({})); if (!r.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'عملیات انجام نشد.'); return data; },
+                async request(url, method, body) { const r = await window.neovaFetch(url, { method, headers: {'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':@js(csrf_token())}, body: body ? JSON.stringify(body) : null }); const data = await r.json().catch(() => ({})); if (!r.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'عملیات انجام نشد.'); return data; },
                 async completeTask(task, targetId=null) { if (this.busyTasks.includes(task.dbId)) return; if(targetId){this.busy(task.dbId,true);try{await this.request(this.endpoint(task,'/state'),'PATCH',{action:'complete'});location.reload();}catch(e){this.flash(e.message,'error');this.busy(task.dbId,false);}return;} const snapshot = this.snapshot(); this.busy(task.dbId, true); this.removeLocal(task.dbId); this.doneTasks.unshift({...task, completedAt: new Date().toISOString()}); try { const data = await this.request(this.endpoint(task, '/state'), 'PATCH', {action:'complete'}); this.doneTasks = this.doneTasks.map(item => item.dbId === task.dbId ? data.task : item); this.flash('وظیفه انجام شد.'); } catch(e) { this.restore(snapshot); this.flash(e.message, 'error'); } finally { this.busy(task.dbId, false); } },
                 async reopenTask(task, targetId=null) { if (this.busyTasks.includes(task.dbId)) return; if(targetId){this.busy(task.dbId,true);try{await this.request(this.endpoint(task,'/state'),'PATCH',{action:'reopen'});location.reload();}catch(e){this.flash(e.message,'error');this.busy(task.dbId,false);}return;} const snapshot = this.snapshot(); this.busy(task.dbId, true); this.doneTasks = this.doneTasks.filter(item => item.dbId !== task.dbId); this.mustTasks.push({...task, completedAt:null}); try { const data = await this.request(this.endpoint(task, '/state'), 'PATCH', {action:'reopen'}); this.mustTasks = this.mustTasks.map(item => item.dbId === task.dbId ? data.task : item); this.flash('وظیفه به فهرست امروز برگشت.'); } catch(e) { this.restore(snapshot); this.flash(e.message, 'error'); } finally { this.busy(task.dbId, false); } },
                 async removeTask(task, targetId=null) { if (this.busyTasks.includes(task.dbId)) return; if(targetId){this.busy(task.dbId,true);try{await this.request(this.endpoint(task,'/plan'),'DELETE',{planned_for:this.today,user_id:targetId});location.reload();}catch(e){this.flash(e.message,'error');this.busy(task.dbId,false);}return;} const snapshot = this.snapshot(); this.busy(task.dbId, true); this.removeLocal(task.dbId); this.availableTasks.unshift({...task, plan:null}); try { await this.request(this.endpoint(task, '/plan'), 'DELETE', {planned_for:this.today}); this.flash('از فهرست امروز برداشته شد.'); } catch(e) { this.restore(snapshot); this.flash(e.message, 'error'); } finally { this.busy(task.dbId, false); } },
