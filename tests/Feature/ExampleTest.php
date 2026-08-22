@@ -16,11 +16,12 @@ class ExampleTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('همه می‌دانند قدم بعدی چیست.')
-            ->assertSee('رایگان شروع کنید')
-            ->assertSee('تیم محصول')
-            ->assertSee('پیام نئووا')
-            ->assertSee('سؤال‌های متداول')
+            ->assertSee('کارها را از توی چت بیرون بیاورید.')
+            ->assertSee('رایگان در نسخه بتا شروع کنید')
+            ->assertSee('امروز من')
+            ->assertSee('سه بخش، یک تصویر مشترک')
+            ->assertSee('شاید این‌ها را بپرسید.')
+            ->assertSee('نئووا رایگان است؟')
             ->assertSee(route('auth'), false);
     }
 }

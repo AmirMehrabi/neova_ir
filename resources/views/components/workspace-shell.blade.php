@@ -7,7 +7,7 @@
     $canManageWorkspace = $workspace->canManageMembers(auth()->user());
 @endphp
 
-<div class="workspace-shell {{ $board ? 'workspace-shell--board' : '' }} min-h-screen bg-[#FBFDFF]"
+<div class="workspace-shell workspace-shell--{{ $active }} {{ $board ? 'workspace-shell--board' : '' }} min-h-screen bg-[#FBFDFF]"
      x-data="workspaceShell({ board: {{ $board ? 'true' : 'false' }}, searchUrl: @js(route('workspace.search', $workspace->slug, false)) })"
      :class="{ 'workspace-shell--collapsed': sidebarCollapsed }"
      @keydown.slash.window="openSearch($event)">

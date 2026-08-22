@@ -2,9 +2,9 @@
   "schemaVersion": 1,
   "targets": {
     "/dashboard": {
-      "targetKind": "new-ui",
-      "projectId": "b33757d4-c211-4394-ab22-7325a1ae0216",
-      "activeDraftId": "33f1f8c6-c14f-4989-8726-b47bc2208221",
+      "targetKind": "existing-ui",
+      "projectId": "3a744288-7bef-47f8-b9ba-6a41948a5efd",
+      "activeDraftId": "919bb7f3-e595-4371-99cc-f286fcf8fb5b",
       "designSystemPath": ".superdesign/design-system.md",
       "referenceIds": [
         "public-assets-logo-horizental-logo-black-transparent.png"
@@ -12,7 +12,7 @@
       "brandAssets": {
         "logo": {
           "assetKey": "public-assets-logo-horizental-logo-black-transparent.png",
-          "url": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/b33757d4-c211-4394-ab22-7325a1ae0216/brand-assets/public-assets-logo-horizental-logo-black-transparent.png/horizental-logo-black-transparent.png",
+          "url": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/3a744288-7bef-47f8-b9ba-6a41948a5efd/brand-assets/public-assets-logo-horizental-logo-black-transparent.png/horizental-logo-black-transparent.png",
           "sourcePath": "public/assets/logo/horizental-logo-black-transparent.png"
         }
       },
@@ -20,34 +20,126 @@
         ".superdesign/design-system.md",
         "resources/views/today.blade.php",
         "resources/views/components/workspace-shell.blade.php",
-        "resources/css/app.css:1:28",
+        "resources/css/app.css:1:17",
         "resources/css/today.css",
         ".superdesign/init/theme.md"
       ],
       "fingerprints": {
-        ".superdesign/design-system.md": "bd7c3f7a582bcd1cdabaaaa16489f4d0086d4cbfa975d9bef6ae73a8d4366994",
-        "resources/views/today.blade.php": "4cb671d83e63d0a2d7e4f762f4bf80dc23b3607dae6f7571bc1cc3be1e687e46",
-        "resources/views/components/workspace-shell.blade.php": "6740fca96719d1ad7146606a6e9c76bfb1f47aec385f57e2103b8e1f27f5c7e3",
-        "resources/css/app.css": "c13da06f81ab3b2458eef22828f23050c069372ac8b005297c5cb75f93a8a56c",
-        "resources/css/today.css": "36e491943548b69c6589f32d284454169813a010b6693957fa4f912e38a3c977",
+        ".superdesign/design-system.md": "eae787084b9037e4ee674bcf52bafd1483e9aa28be429e7dcdb1ff986a137564",
+        "resources/views/today.blade.php": "c5403252b185e30a8d0049102839d5baf3c9a5d698450e7c573e2decd6f88e98",
+        "resources/views/components/workspace-shell.blade.php": "caa5ceeaa19b7c98171b35464f6e5b29dddf09420a95302fe5e218043c14f2d8",
+        "resources/css/app.css": "2cab959a8ed03b116ac602cd774ef0957a4828cf36f3d9258a17edc91708d94e",
+        "resources/css/today.css": "b2d53dd24d638d70b891753c8b91eeef3d2fadcc871f54a73a9376a642c66a4f",
         ".superdesign/init/theme.md": "342de9b2c43e2300de348eff4070efa4fb726e518b312412a62968d0bb999c9b"
       },
-      "components": [
-        {
-          "name": "WorkspaceShell",
-          "id": "c3e1e9e0-1c2d-4fbd-a803-8ea25ae01e62",
-          "sourcePath": "resources/views/components/workspace-shell.blade.php",
-          "logoAssetKey": "public-assets-logo-horizental-logo-black-transparent.png"
-        }
-      ],
+      "components": [],
       "drafts": {
-        "33f1f8c6-c14f-4989-8726-b47bc2208221": {
-          "title": "Neova Monochrome Workspace Redesign",
-          "visualDirection": "premium tonal monochrome RTL workspace with warm-gray canvas, borderless white task surfaces, and team card",
-          "currentVersion": 5
+        "919bb7f3-e595-4371-99cc-f286fcf8fb5b": {
+          "title": "Dashboard — Direction B Product-led Editorial",
+          "visualDirection": "warm paper Today dashboard with white work surfaces, muted mint emphasis, rounded editorial controls, and a compact team pulse",
+          "currentVersion": 1
         }
       },
-      "updatedAt": "2026-08-20T12:17:25Z"
+      "updatedAt": "2026-08-21T00:00:00+03:30"
+    },
+    "/": {
+      "targetKind": "existing-ui",
+      "projectId": "3a744288-7bef-47f8-b9ba-6a41948a5efd",
+      "baselineDraftId": "606433bd-6eeb-4462-a545-a7a0d0c68280",
+      "activeDraftId": "a2710e9e-5335-451c-989c-cbffe6f12ae4",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [
+        "public-assets-logo-horizental-logo-black-transparent.png",
+        "29e1cf99-3e23-4cb3-9881-87e8cfe130e3"
+      ],
+      "brandAssets": {
+        "logo": {
+          "assetKey": "public-assets-logo-horizental-logo-black-transparent.png",
+          "url": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/3a744288-7bef-47f8-b9ba-6a41948a5efd/brand-assets/public-assets-logo-horizental-logo-black-transparent.png/horizental-logo-black-transparent.png",
+          "sourcePath": "public/assets/logo/horizental-logo-black-transparent.png"
+        }
+      },
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        ".superdesign/init/theme.md",
+        "resources/views/welcome.blade.php",
+        "resources/css/app.css:1:17",
+        "resources/css/app.css:19:236"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "eae787084b9037e4ee674bcf52bafd1483e9aa28be429e7dcdb1ff986a137564",
+        ".superdesign/init/theme.md": "342de9b2c43e2300de348eff4070efa4fb726e518b312412a62968d0bb999c9b",
+        "resources/views/welcome.blade.php": "2ad39c6c0f8d801050219ba4222e7e86fa2ba60e8370f2992914e9b20157981d",
+        "resources/css/app.css": "2cab959a8ed03b116ac602cd774ef0957a4828cf36f3d9258a17edc91708d94e"
+      },
+      "components": [],
+      "drafts": {
+        "606433bd-6eeb-4462-a545-a7a0d0c68280": {
+          "title": "Neova Landing — Current Baseline",
+          "visualDirection": "faithful current light product-led RTL baseline",
+          "currentVersion": 1
+        },
+        "06c0a325-b410-4c95-a2ca-6b7c6f8f527a": {
+          "title": "Direction A — Neova Editorial 37signals",
+          "visualDirection": "dark editorial conversion narrative with 37signals rhythm, Neova product proof, and alternating warm-light sections",
+          "parentDraftId": "606433bd-6eeb-4462-a545-a7a0d0c68280",
+          "currentVersion": 1
+        },
+        "a2710e9e-5335-451c-989c-cbffe6f12ae4": {
+          "title": "Direction B — Neova Product-led Editorial",
+          "visualDirection": "warm light product-first landing with editorial copy and large Today workspace proof",
+          "parentDraftId": "606433bd-6eeb-4462-a545-a7a0d0c68280",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-21T00:00:00+03:30"
+    },
+    "/{workspace}/{project}/board": {
+      "targetKind": "existing-ui",
+      "projectId": "3a744288-7bef-47f8-b9ba-6a41948a5efd",
+      "activeDraftId": "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c",
+      "designSystemPath": ".superdesign/design-system.md",
+      "referenceIds": [
+        "public-assets-logo-horizental-logo-black-transparent.png"
+      ],
+      "brandAssets": {
+        "logo": {
+          "assetKey": "public-assets-logo-horizental-logo-black-transparent.png",
+          "url": "https://vgbujcuwptvheqijyjbe.supabase.co/storage/v1/object/public/hmac-uploads/projects/3a744288-7bef-47f8-b9ba-6a41948a5efd/brand-assets/public-assets-logo-horizental-logo-black-transparent.png/horizental-logo-black-transparent.png",
+          "sourcePath": "public/assets/logo/horizental-logo-black-transparent.png"
+        }
+      },
+      "contextFiles": [
+        ".superdesign/design-system.md",
+        ".superdesign/init/theme.md",
+        "resources/views/board.blade.php:1:650",
+        "resources/views/components/workspace-shell.blade.php",
+        "resources/views/components/navbar.blade.php",
+        "resources/views/components/notification-menu.blade.php",
+        "resources/css/app.css:1:17",
+        "resources/css/today.css",
+        "resources/css/board.css"
+      ],
+      "fingerprints": {
+        ".superdesign/design-system.md": "eae787084b9037e4ee674bcf52bafd1483e9aa28be429e7dcdb1ff986a137564",
+        ".superdesign/init/theme.md": "342de9b2c43e2300de348eff4070efa4fb726e518b312412a62968d0bb999c9b",
+        "resources/views/board.blade.php": "3c312e2155b87fc6ea3e83d9f44f5d4b858248178da99bace9396f0b06b80fa6",
+        "resources/views/components/workspace-shell.blade.php": "caa5ceeaa19b7c98171b35464f6e5b29dddf09420a95302fe5e218043c14f2d8",
+        "resources/views/components/navbar.blade.php": "34696ec24553dfa474216fd2b09fa8a16d91f3dd23ce996fb36655d347483947",
+        "resources/views/components/notification-menu.blade.php": "c3a49846c6ce72bfcdbfbb5a16b4971bb605f807d83a840521e97f325683dde2",
+        "resources/css/app.css": "2cab959a8ed03b116ac602cd774ef0957a4828cf36f3d9258a17edc91708d94e",
+        "resources/css/today.css": "b2d53dd24d638d70b891753c8b91eeef3d2fadcc871f54a73a9376a642c66a4f",
+        "resources/css/board.css": "41f34f9338d8024c4e6e1f83988d7eeaa9b18508485a7a46a0b76fba4d91ea42"
+      },
+      "components": [],
+      "drafts": {
+        "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c": {
+          "title": "Project Board — Direction B Product-led Editorial",
+          "visualDirection": "warm Direction B Kanban workspace with tonal columns, white task cards, compact metadata, clear cycle progress, and consistent RTL shell",
+          "currentVersion": 1
+        }
+      },
+      "updatedAt": "2026-08-21T00:00:00+03:30"
     }
   }
 }

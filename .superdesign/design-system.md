@@ -6,6 +6,19 @@ Neova is a Persian RTL workspace for small product and delivery teams. Its core 
 
 The dashboard is the visual source of truth for every subsequent page. It should feel calm, precise, modern, and unmistakably useful at first glance—minimal without becoming empty or generic.
 
+## Public landing page override
+
+- Audience: small Iranian teams across industries, not only software teams. Speak to founders, team leads, agencies, operations teams, and makers in plain Persian.
+- Positioning: Neova brings projects, today's work, ownership, deadlines, and task-level discussion into one clear Persian workspace.
+- Offer: free during beta, no bank card required, phone-number sign-in, and no installation. Never imply that the product will remain permanently free.
+- Voice: direct, candid, useful, and conversational in the spirit of 37signals editorial writing. Avoid translated SaaS cliches, inflated promises, invented metrics, and vague phrases such as "all-in-one solution."
+- Visual direction: unmistakably Neova, informed by Basecamp/37signals editorial rhythm rather than copied. Use generous reading space, strong headline/body contrast, alternating warm-light product sections and deep-ink proof sections, underlined editorial links, and real product UI as the primary visual evidence.
+- Landing hero: kicker «برای تیم‌های کوچکی که کار واقعی انجام می‌دهند»; headline «کارها را از توی چت بیرون بیاورید.»; primary CTA «رایگان در نسخه بتا شروع کنید»; secondary CTA «نئووا را در ۲ دقیقه ببینید».
+- Page narrative: minimal header; conversion hero with readable product preview; three outcome statements; relatable scattered-work problem; short founder letter; product stories for Today, project boards, and task details; concrete yes-answer capability list; three explicitly marked testimonial placeholders; answered FAQ; decisive closing CTA.
+- Product proof must only show implemented capabilities: workspaces, multiple projects, Today planning, Kanban boards, task ownership and deadlines, checklists, attachments, comments, search, roles/access, invitations, private projects, and lightweight cycles.
+- Testimonial areas must visibly say that approved customer quote/name/company content is pending. Never invent people, quotes, logos, or usage numbers.
+- The exact supplied Neova horizontal logo must appear in every logo position. Do not replace it with initials, an invented icon, a generic mark, emoji, or text alone.
+
 ## Visual direction
 
 - Premium monochrome productivity UI for teams of roughly 2–10 people: exceptionally simple, quiet, confident, and human.
