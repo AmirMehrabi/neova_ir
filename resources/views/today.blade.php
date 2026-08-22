@@ -193,6 +193,8 @@
                 get eligibleProjects() { const id=Number(this.quick.userId); return this.projects.filter(p => p.eligibleUserIds.includes(id)); },
                 get filteredAvailable() { const q = this.existingSearch.trim().toLowerCase(); const member=this.teamDays.find(m=>m.id===Number(this.existingTargetId)); const planned = new Set(member ? this.teamActive(member).concat(member.doneTasks).map(t=>t.dbId) : this.activeTasks.concat(this.blockedTasks).map(t => t.dbId)); return this.availableTasks.filter(t => t.eligibleUserIds.includes(Number(this.existingTargetId)) && !planned.has(t.dbId) && (!q || t.title.toLowerCase().includes(q) || t.project.name.toLowerCase().includes(q))); },
                 realtimeRefresher: null,
+                realtimeDragActive: false,
+                pendingRealtimeSnapshot: null,
                 init() {
                     this.$watch('quick.userId', () => { if(!this.eligibleProjects.some(p=>p.id===Number(this.quick.projectId))) this.quick.projectId=this.eligibleProjects[0]?.id || ''; });
                     this.realtimeRefresher = window.createRealtimeRefresher({
@@ -204,11 +206,13 @@
                     this.$nextTick(() => { this.setupSortable(); this.setupTeamSortables(); });
                 },
                 applyRealtimeSnapshot(payload) {
+                    if (this.realtimeDragActive || this.reordering) { this.pendingRealtimeSnapshot = payload; return; }
                     for (const key of ['mustTasks','optionalTasks','blockedTasks','doneTasks','overdueTasks','availableTasks','teamDays','projects','people']) {
                         if (payload[key] !== undefined) this[key] = payload[key];
                     }
                     this.$nextTick(() => { this.setupSortable(); this.setupTeamSortables(); });
                 },
+                finishRealtimeDrag() { window.setTimeout(() => { this.realtimeDragActive=false; if(this.reordering){window.setTimeout(()=>this.finishRealtimeDrag(),50);return;} if(!this.pendingRealtimeSnapshot)return; const payload=this.pendingRealtimeSnapshot; this.pendingRealtimeSnapshot=null; this.applyRealtimeSnapshot(payload); }, 0); },
                 teamActive(member) { return member.mustTasks.concat(member.optionalTasks); },
                 teamRemaining(member) { return this.teamActive(member).length + member.blockedTasks.length; },
                 openExistingFor(userId) { this.existingTargetId=Number(userId); this.existingSearch=''; this.existingOpen=true; },
@@ -217,14 +221,15 @@
                     this.sortable?.destroy();
                     this.sortable = new Sortable(this.$refs.taskList, {
                         animation: 160, handle: '.today-drag', draggable: '[data-today-task]', ghostClass: 'today-sort-ghost', chosenClass: 'today-sort-chosen',
-                        onEnd: event => this.persistOrder(event),
+                        onStart: () => { this.realtimeDragActive=true; },
+                        onEnd: event => { this.persistOrder(event); this.finishRealtimeDrag(); },
                     });
                 },
                 setupTeamSortables() {
                     if (this.viewMode !== 'team' || !@js($canEdit) || !window.Sortable) return;
                     this.teamSortables.forEach(item => item.destroy()); this.teamSortables=[];
                     document.querySelectorAll('[data-team-list]').forEach(list => {
-                        this.teamSortables.push(new Sortable(list, { animation:160, handle:'.today-drag', draggable:'[data-today-task]', ghostClass:'today-sort-ghost', chosenClass:'today-sort-chosen', onEnd:() => this.persistTeamOrder(Number(list.dataset.teamList), list) }));
+                        this.teamSortables.push(new Sortable(list, { animation:160, handle:'.today-drag', draggable:'[data-today-task]', ghostClass:'today-sort-ghost', chosenClass:'today-sort-chosen', onStart:()=>{this.realtimeDragActive=true;}, onEnd:()=>{this.persistTeamOrder(Number(list.dataset.teamList), list);this.finishRealtimeDrag();} }));
                     });
                 },
                 snapshot() { return { must: [...this.mustTasks], optional: [...this.optionalTasks], blocked: [...this.blockedTasks], done: [...this.doneTasks], available: [...this.availableTasks] }; },

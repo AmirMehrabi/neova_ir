@@ -1397,6 +1397,8 @@
                 modalLastFocused: null,
                 modalSnapshot: null,
                 realtimeRefresher: null,
+                realtimeDragActive: false,
+                pendingRealtimeSnapshot: null,
                 realtimeConflict: false,
                 realtimeTaskDeleted: false,
                 forceRealtimeOverwrite: false,
@@ -1740,6 +1742,10 @@
                 },
 
                 applyRealtimeSnapshot(payload) {
+                    if (this.realtimeDragActive || this.taskMovePending || this.columnMovePending) {
+                        this.pendingRealtimeSnapshot = payload;
+                        return;
+                    }
                     const collapsed = new Set(this.columns.filter(column => column.collapsed).map(column => String(column.id)));
                     const remoteTask = this.editingTask
                         ? payload.columns.flatMap(column => column.tasks).find(task => Number(task.dbId) === Number(this.editingTask))
@@ -1771,6 +1777,20 @@
                         this.columns.forEach(column => this.initSortable(column.id, this.boardMediaQuery?.matches ? 'mobile' : 'desktop'));
                         this.initColumnSortable(this.boardMediaQuery?.matches ? 'mobile' : 'desktop');
                     });
+                },
+
+                finishRealtimeDrag() {
+                    window.setTimeout(() => {
+                        this.realtimeDragActive = false;
+                        if (this.taskMovePending || this.columnMovePending) {
+                            window.setTimeout(() => this.finishRealtimeDrag(), 50);
+                            return;
+                        }
+                        if (!this.pendingRealtimeSnapshot) return;
+                        const payload = this.pendingRealtimeSnapshot;
+                        this.pendingRealtimeSnapshot = null;
+                        this.applyRealtimeSnapshot(payload);
+                    }, 0);
                 },
 
                 loadRemoteTask() {
@@ -2523,6 +2543,7 @@
                             return columnDragStartIndex > relatedIndex ? 1 : -1;
                         },
                         onStart(evt) {
+                            self.realtimeDragActive = true;
                             columnDragStartIndex = evt.oldIndex;
                             if (variant === 'mobile') {
                                 self.mobileDragSuppressClickUntil = Date.now() + 500;
@@ -2532,6 +2553,7 @@
                         onEnd(evt) {
                             columnDragStartIndex = null;
                             if (variant === 'mobile') el.classList.remove('column-order-dragging');
+                            self.finishRealtimeDrag();
                             if (evt.oldIndex === evt.newIndex || evt.oldIndex == null || evt.newIndex == null) return;
                             self.reorderColumns(evt.oldIndex, evt.newIndex);
                         },
@@ -2612,6 +2634,7 @@
                             if (variant === 'mobile') evt.clone.setAttribute('x-ignore', '');
                         },
                         onStart(evt) {
+                            self.realtimeDragActive = true;
                             if (variant === 'mobile') {
                                 window.Sortable.ghost?.setAttribute('x-ignore', '');
                                 const sourceIndex = self.columns.findIndex(column => column.id === evt.from.id.replace('col-mobile-', ''));
@@ -2642,6 +2665,7 @@
                                 self.endMobileDrag();
                             }
                             self.moveTask(fromColId, toColId, taskId, newIndex, evt.oldIndex);
+                            self.finishRealtimeDrag();
                         }
                     });
                     this.sortableInstances.push({ instance, columnId, variant });
