@@ -104,4 +104,19 @@ class WorkspaceNavigationTest extends TestCase
             ->assertSee('app-navbar--embedded', false)
             ->assertSee('function workspaceShell', false);
     }
+
+    public function test_board_explains_that_new_tasks_are_created_in_a_specific_column(): void
+    {
+        $user = User::factory()->create();
+        $workspace = Workspace::create(['owner_id' => $user->id, 'name' => 'تیم']);
+        $project = Project::create(['workspace_id' => $workspace->id, 'name' => 'وب']);
+        $project->columns()->create(['title' => 'در حال انجام', 'position' => 0, 'workflow_role' => 'active']);
+
+        $this->actingAs($user)->get(route('board', [$workspace->slug, $project->slug]))
+            ->assertOk()
+            ->assertSee('وظیفه جدید')
+            ->assertSee('اولین وظیفه را ایجاد کنید')
+            ->assertSee("'در ستون «' + column.title + '»'", false)
+            ->assertSee("'ایجاد وظیفه جدید در ستون ' + column.title", false);
+    }
 }

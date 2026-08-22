@@ -11,7 +11,7 @@
         <span class="h-5 w-px bg-white/15"></span>
         <h1 class="text-sm font-bold text-white truncate">{{ $title }}</h1>
         <div class="mr-auto flex items-center gap-2">
-            <x-notification-menu />
+            <x-notification-menu dark />
             <div class="w-8 h-8 rounded-full bg-[#031B4E] text-white flex items-center justify-center text-[10px] font-bold">
                 {{ mb_substr(auth()->user()->full_name, 0, 1) }}
             </div>

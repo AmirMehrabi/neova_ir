@@ -30,66 +30,7 @@
             @if (! $embedded)
 
             {{-- Notification Bell --}}
-            <div class="relative" x-data="{ notificationsOpen: false, unreadCount: {{ (int) $navbarUnreadCount }}, busyNotification: null, async markNotificationRead(id, event) {
-                event.preventDefault(); event.stopPropagation();
-                if (this.busyNotification === id) return;
-                this.busyNotification = id;
-                try {
-                    const response = await fetch('{{ route('notifications.read', ['notification' => '__notification__']) }}'.replace('__notification__', id), { method: 'PATCH', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' } });
-                    if (!response.ok) throw new Error('notification_read_failed');
-                    const data = await response.json();
-                    const row = document.querySelector(`[data-notification-id='${id}']`);
-                    row?.classList.remove('bg-[#F5F9FF]'); row?.querySelector('[data-unread-dot]')?.remove(); row?.querySelector('[data-read-button]')?.remove();
-                    this.unreadCount = Number.isFinite(data.unread_count) ? data.unread_count : Math.max(0, this.unreadCount - 1);
-                } finally { this.busyNotification = null; }
-            } }" @click.away="notificationsOpen = false">
-                <button
-                    type="button"
-                    @click="notificationsOpen = !notificationsOpen"
-                    class="relative w-11 h-11 md:w-9 md:h-9 rounded-xl md:rounded-lg flex items-center justify-center {{ $dark ? 'text-white/75 hover:text-white hover:bg-white/10' : 'text-[#475569] hover:text-[#18212B] hover:bg-[#F1F3F1]' }} transition-colors"
-                    aria-label="اعلان‌ها"
-                >
-                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.4-1.4A2 2 0 0118 14.2V11a6 6 0 10-12 0v3.2a2 2 0 01-.6 1.4L4 17h5m6 0a3 3 0 01-6 0m6 0H9"/>
-                    </svg>
-                    <span x-show="unreadCount > 0" x-text="unreadCount > 9 ? '۹+' : unreadCount" class="absolute -top-1 -left-1 min-w-4 h-4 px-1 rounded-full bg-[#EF4444] text-white text-[8px] font-bold flex items-center justify-center {{ $dark ? 'ring-2 ring-[#031B4E]' : 'ring-2 ring-white' }}"></span>
-                </button>
-
-                <div
-                    x-show="notificationsOpen"
-                    x-cloak
-                    x-transition
-                    class="fixed left-3 right-3 top-14 mt-2 w-auto md:absolute md:left-0 md:right-auto md:top-full md:w-[min(340px,calc(100vw-2rem))] bg-white rounded-xl border border-[#E2E8F0] shadow-xl shadow-[#031B4E]/10 overflow-hidden z-50"
-                >
-                    <div class="flex items-center justify-between px-4 py-3 border-b border-[#F1F5F9]">
-                        <span class="text-[13px] font-bold text-[#172B4D]">اعلان‌ها</span>
-                        <a href="{{ route('notifications.index') }}" class="text-[10px] font-bold text-[#18212B]">مشاهده همه</a>
-                    </div>
-                    <div class="max-h-80 overflow-y-auto">
-                        @forelse ($navbarNotifications as $notification)
-                            <div data-notification-id="{{ $notification->id }}" class="flex items-center gap-2 px-4 py-3 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] transition-colors {{ $notification->read_at ? '' : 'bg-[#F5F9FF]' }}">
-                                <a href="{{ route('notifications.open', $notification) }}" class="flex min-w-0 flex-1 gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-[#F1F3F2] text-[#18212B] flex items-center justify-center shrink-0">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 20h5v-2a4 4 0 00-4-4h-1M9 20H2v-2a4 4 0 014-4h3m6-6a4 4 0 11-8 0 4 4 0 018 0zm6 3v6m3-3h-6"/></svg>
-                                    </div>
-                                    <div class="min-w-0 flex-1">
-                                        <p class="text-[11px] leading-5 text-[#334155]">{{ $notification->data['message'] ?? 'اعلان جدید' }}</p>
-                                        <p class="text-[9px] text-[#94A3B8] mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                                    </div>
-                                </a>
-                                @if (! $notification->read_at)
-                                    <button type="button" data-read-button @click="markNotificationRead('{{ $notification->id }}', $event)" :disabled="busyNotification === '{{ $notification->id }}'" class="shrink-0 rounded-lg border border-[#D8D0C3] px-2 py-1.5 text-[9px] font-bold text-[#66716B] hover:border-[#18212B] hover:text-[#18212B] disabled:opacity-50" title="علامت‌گذاری به‌عنوان خوانده‌شده">خوانده شد</button>
-                                    <span data-unread-dot class="h-1.5 w-1.5 shrink-0 rounded-full bg-[#D86F57]" aria-label="خوانده نشده"></span>
-                                @endif
-                            </div>
-                        @empty
-                            <div class="px-4 py-8 text-center">
-                                <p class="text-xs text-[#94A3B8]">اعلان جدیدی ندارید</p>
-                            </div>
-                        @endforelse
-                    </div>
-                </div>
-            </div>
+            <x-notification-menu :dark="$dark" />
 
             {{-- User Dropdown --}}
             <div class="relative" x-data="{ userDropdown: false }" @click.away="userDropdown = false">

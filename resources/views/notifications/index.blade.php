@@ -4,6 +4,8 @@
 <x-workspace-shell :workspace="$workspace" active="notifications">
     <x-slot:context>اعلان‌ها</x-slot:context>
 
+    @php($showingUnread = request('filter') === 'unread')
+
     <main class="max-w-4xl mx-auto px-4 sm:px-6 py-7">
         @if (session('success'))
             <div class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-xl px-4 py-3">{{ session('success') }}</div>
@@ -54,15 +56,30 @@
         </section>
 
         <section>
-            <h3 class="text-sm font-bold text-[#172B4D] mb-3">تاریخچه اعلان‌ها</h3>
+            <div class="mb-3 flex items-center justify-between gap-3">
+                <h3 class="text-sm font-bold text-[#172B4D]">تاریخچه اعلان‌ها</h3>
+                <div class="flex rounded-lg bg-[#F1F5F9] p-1 text-[10px] font-bold" aria-label="فیلتر اعلان‌ها">
+                    <a href="{{ route('notifications.index') }}" class="rounded-md px-3 py-1.5 {{ $showingUnread ? 'text-[#64748B]' : 'bg-white text-[#172B4D] shadow-sm' }}">همه</a>
+                    <a href="{{ route('notifications.index', ['filter' => 'unread']) }}" class="rounded-md px-3 py-1.5 {{ $showingUnread ? 'bg-white text-[#0069FF] shadow-sm' : 'text-[#64748B]' }}">خوانده‌نشده</a>
+                </div>
+            </div>
             <div class="bg-white border border-[#DFE5EF] rounded-xl overflow-hidden">
                 @forelse ($notifications as $notification)
-                    <a href="{{ route('notifications.open', $notification) }}" class="block px-4 py-4 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] {{ $notification->read_at ? '' : 'bg-[#F5F9FF]' }}">
-                        <p class="text-[12px] text-[#334155]">{{ $notification->data['message'] ?? 'اعلان جدید' }}</p>
-                        <p class="text-[9px] text-[#94A3B8] mt-1">{{ $notification->created_at->diffForHumans() }}</p>
-                    </a>
+                    <div class="flex items-center gap-3 border-b border-[#F1F5F9] px-4 py-4 last:border-0 hover:bg-[#F8FAFC] {{ $notification->read_at ? '' : 'bg-[#F5F9FF]' }}">
+                        <a href="{{ route('notifications.open', $notification) }}" class="min-w-0 flex-1">
+                            <p class="text-[12px] text-[#334155]">{{ $notification->data['message'] ?? 'اعلان جدید' }}</p>
+                            <p class="text-[9px] text-[#94A3B8] mt-1">{{ $notification->created_at->diffForHumans() }}</p>
+                        </a>
+                        @if (! $notification->read_at)
+                            <form method="POST" action="{{ route('notifications.read', $notification) }}" class="shrink-0">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="rounded-lg border border-[#D8D0C3] px-3 py-2 text-[10px] font-bold text-[#66716B] hover:border-[#18212B] hover:text-[#18212B]">خوانده شد</button>
+                            </form>
+                        @endif
+                    </div>
                 @empty
-                    <div class="py-10 text-center text-xs text-[#94A3B8]">اعلانی وجود ندارد</div>
+                    <div class="py-10 text-center text-xs text-[#94A3B8]">{{ $showingUnread ? 'اعلان خوانده‌نشده‌ای وجود ندارد' : 'اعلانی وجود ندارد' }}</div>
                 @endforelse
             </div>
             <div class="mt-4">{{ $notifications->links() }}</div>

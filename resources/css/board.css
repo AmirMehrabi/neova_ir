@@ -120,6 +120,92 @@
     background: var(--board-surface-muted);
 }
 
+.board-create-task,
+.board-empty-state__action {
+    display: flex;
+    width: 100%;
+    min-height: 52px;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 8px 10px;
+    border: 1px solid color-mix(in srgb, var(--column-accent, #94A3B8) 22%, #DCE8F2);
+    border-radius: 11px;
+    background: rgba(255, 255, 255, .86);
+    color: var(--board-ink);
+    text-align: right;
+    transition: border-color var(--board-motion) ease, background-color var(--board-motion) ease, box-shadow var(--board-motion) ease, transform var(--board-motion) ease;
+}
+
+.board-create-task:hover,
+.board-create-task:focus-visible,
+.board-empty-state__action:hover,
+.board-empty-state__action:focus-visible {
+    border-color: var(--column-accent, #0069D9);
+    background: #FFFFFF;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--column-accent, #0069D9) 14%, transparent);
+    outline: none;
+}
+
+.board-create-task:active,
+.board-empty-state__action:active { transform: translateY(1px); }
+
+.board-create-task__icon {
+    display: inline-flex;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--column-accent, #0069D9) 14%, #FFFFFF);
+    color: color-mix(in srgb, var(--column-accent, #0069D9) 75%, #111111);
+}
+
+.board-create-task__icon svg { width: 15px; height: 15px; }
+
+.board-create-task__copy {
+    display: flex;
+    min-width: 0;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.board-create-task__copy strong {
+    color: var(--board-ink);
+    font-size: 12px;
+    font-weight: 900;
+    line-height: 1.5;
+}
+
+.board-create-task__copy small {
+    overflow: hidden;
+    color: var(--board-muted);
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.5;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.board-empty-state {
+    display: flex;
+    min-height: 180px;
+    align-items: center;
+    justify-content: center;
+    padding: 18px 8px;
+}
+
+.board-empty-state__action {
+    min-height: 84px;
+    padding: 14px;
+}
+
+.board-empty-state__action .board-create-task__icon { width: 36px; height: 36px; }
+.board-empty-state__action .board-create-task__icon svg { width: 18px; height: 18px; }
+.board-empty-state--mobile { min-height: 208px; }
+
 .board-column-header,
 .board-column-mobile-header {
     display: flex;
@@ -909,4 +995,17 @@
 .neova-board .board-form-modal > div:last-child {
     border-top: 0;
     background: #FFFFFF;
+}
+
+/* Keep the column destination visible in the task-creation CTA across themes. */
+.neova-board .board-column-footer .board-create-task {
+    border-color: color-mix(in srgb, var(--column-accent, #94A3B8) 22%, #DCE8F2);
+    background: rgba(255, 255, 255, .86);
+}
+
+.neova-board .board-column-footer .board-create-task:hover,
+.neova-board .board-column-footer .board-create-task:focus-visible {
+    border-color: var(--column-accent, #0069D9);
+    background: #FFFFFF;
+    color: var(--board-ink) !important;
 }

@@ -214,9 +214,10 @@
                 <button
                     @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)"
                     class="board-nav-control board-nav-control--primary board-nav-control--add-card hidden md:inline-flex whitespace-nowrap shrink-0"
+                    aria-label="ایجاد وظیفه جدید"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    <span class="board-nav-control__label">افزودن کارت</span>
+                    <span class="board-nav-control__label">وظیفه جدید</span>
                 </button>
             @else
                 <span class="hidden md:inline-flex text-[11px] font-bold text-[#64748B] bg-[#F1EFEA] border border-[#E7E3DA] rounded-md px-2.5 py-1.5">فقط مشاهده</span>
@@ -437,18 +438,32 @@
                                 </div>
                             </div>
                         </template>
-                        <div x-show="column.tasks.length === 0" class="flex flex-col items-center justify-center py-8 text-center">
-                            <div class="w-11 h-11 rounded-xl bg-white/80 flex items-center justify-center mb-2 border border-[#E8EBE9]">
-                                <svg class="w-5 h-5 text-[#18212B]/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                            </div>
-                            <p class="board-empty-title " x-text="'اولین کارت را اضافه کن'"></p>
+                        <div x-show="column.tasks.length === 0" class="board-empty-state">
+                            @if ($canEdit)
+                                <button type="button" @click.stop="openAddModal(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
+                                    <span class="board-create-task__icon" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
+                                    </span>
+                                    <span class="board-create-task__copy">
+                                        <strong>اولین وظیفه را ایجاد کنید</strong>
+                                        <small x-text="'در ستون «' + column.title + '»'"></small>
+                                    </span>
+                                </button>
+                            @else
+                                <p class="board-empty-title">هنوز وظیفه‌ای در این ستون نیست</p>
+                            @endif
                         </div>
                         </div>
                         @if ($canEdit)
-                            <div class="board-column-footer">
-                                <button @click.stop="openAddModal(column.id)" class="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#D7D1C5] py-2.5 text-[12px] font-black text-[#64748B] hover:border-[#18212B] hover:bg-white hover:text-[#18212B] transition-colors">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
-                                    <span x-text="'افزودن کارت'"></span>
+                            <div x-show="column.tasks.length > 0" class="board-column-footer">
+                                <button type="button" @click.stop="openAddModal(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
+                                    <span class="board-create-task__icon" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
+                                    </span>
+                                    <span class="board-create-task__copy">
+                                        <strong>وظیفه جدید</strong>
+                                        <small x-text="'در ستون «' + column.title + '»'"></small>
+                                    </span>
                                 </button>
                             </div>
                         @endif
@@ -508,6 +523,7 @@
                     class="mobile-board-column flex flex-col flex-none w-[calc(100%_-_24px)] min-w-[calc(100%_-_24px)]"
                     :data-column-index="colIdx"
                     :aria-label="column.title"
+                    :style="'--column-accent:' + (column.dotHex || '#94A3B8')"
                 >
                     <div class="board-column-mobile-header">
                         <div class="board-column-header__identity">
@@ -579,18 +595,32 @@
                                 </div>
                             </article>
                         </template>
-                        <div x-show="column.tasks.length === 0" class="flex flex-col items-center justify-center min-h-52 text-center">
-                            <div class="w-12 h-12 rounded-2xl bg-white text-[#18212B]/55 flex items-center justify-center mb-3 shadow-sm">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-                            </div>
-                            <p class="board-empty-title" x-text="'ایده‌ات را اینجا بچسبان'"></p>
+                        <div x-show="column.tasks.length === 0" class="board-empty-state board-empty-state--mobile">
+                            @if ($canEdit)
+                                <button type="button" @click="openAddModal(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
+                                    <span class="board-create-task__icon" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
+                                    </span>
+                                    <span class="board-create-task__copy">
+                                        <strong>اولین وظیفه را ایجاد کنید</strong>
+                                        <small x-text="'در ستون «' + column.title + '»'"></small>
+                                    </span>
+                                </button>
+                            @else
+                                <p class="board-empty-title">هنوز وظیفه‌ای در این ستون نیست</p>
+                            @endif
                         </div>
                         </div>
                         @if ($canEdit)
-                            <div class="board-column-footer">
-                                <button @click="openAddModal(column.id)" class="flex w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-[#D7D1C5] py-2.5 text-[12px] font-black text-[#64748B] active:border-[#18212B] active:bg-white active:text-[#18212B]" :aria-label="'افزودن وظیفه به ' + column.title">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
-                                    <span x-text="'افزودن کارت'"></span>
+                            <div x-show="column.tasks.length > 0" class="board-column-footer">
+                                <button type="button" @click="openAddModal(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
+                                    <span class="board-create-task__icon" aria-hidden="true">
+                                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
+                                    </span>
+                                    <span class="board-create-task__copy">
+                                        <strong>وظیفه جدید</strong>
+                                        <small x-text="'در ستون «' + column.title + '»'"></small>
+                                    </span>
                                 </button>
                             </div>
                         @endif
@@ -909,10 +939,10 @@
                 <div class="task-modal-header shrink-0">
                     <div class="min-w-0">
                         <div class="flex items-center gap-3">
-                            <h3 id="task-modal-title" class="text-[#18212B] font-black text-base" x-text="editingTask ? 'ویرایش کارت' : 'افزودن کارت'"></h3>
+                            <h3 id="task-modal-title" class="text-[#18212B] font-black text-base" x-text="editingTask ? 'ویرایش کارت' : 'وظیفه جدید'"></h3>
                             <span x-show="editingTask" class="text-[#64748B] text-[11px] font-bold bg-[#F8FAFC] border border-[#E8EBE9] px-2 py-0.5 rounded-md" x-text="form.id"></span>
                         </div>
-                        <p class="task-modal-header__subtitle" x-text="editingTask ? 'جزئیات کارت و روند انجام کار را مدیریت کنید.' : 'یک کارت جدید برای پیگیری کار ایجاد کنید.'"></p>
+                        <p class="task-modal-header__subtitle" x-text="editingTask ? 'جزئیات کارت و روند انجام کار را مدیریت کنید.' : 'یک وظیفه جدید در ستون انتخاب‌شده ایجاد کنید.'"></p>
                     </div>
                     <button @click="requestCloseModal()" class="text-[#64748B] hover:text-[#18212B] transition-colors w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#F8FAFC]" aria-label="بستن پنجره">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -1278,7 +1308,7 @@
                             <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
                             <button type="button" @click="requestCloseModal()" :disabled="taskSaving" class="task-modal-cancel text-[11px] font-bold text-[#64748B] border-2 border-[#E2E8F0] hover:bg-[#F8FCFF] disabled:opacity-60 px-5 py-2.5 rounded-xl transition-colors">انصراف</button>
                             <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="task-modal-primary text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-sm transition-colors">
-                                <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'افزودن کارت')"></span>
+                                <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد وظیفه')"></span>
                             </button>
                         </div>
                     @else
