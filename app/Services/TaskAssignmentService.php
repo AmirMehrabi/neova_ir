@@ -31,7 +31,12 @@ class TaskAssignmentService
 
     public function assignToMe(Task $task, User $user): void
     {
-        abort_unless($this->eligible($task)->contains('id', $user->id), 422, 'شما نمی‌توانید مسئول این وظیفه باشید.');
+        $this->assign($task, $user);
+    }
+
+    public function assign(Task $task, User $user): void
+    {
+        abort_unless($this->eligible($task)->contains('id', $user->id), 422, 'این شخص نمی‌تواند مسئول این وظیفه باشد.');
 
         $task->assignedUsers()->syncWithoutDetaching([$user->id]);
         $names = $task->assignedUsers()->get()->map->full_name->values()->all();

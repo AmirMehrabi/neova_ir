@@ -16,6 +16,7 @@ class TodayService
     public function __construct(
         private TaskAssignmentService $assignments,
         private ProjectActivityLogger $activityLogger,
+        private ProjectActivityNotifier $notifier,
     ) {}
 
     public function date(Workspace $workspace): CarbonImmutable
@@ -30,45 +31,61 @@ class TodayService
             ->pluck('id')->values();
     }
 
-    public function plan(Task $task, User $user, string $date, string $bucket = 'must', ?int $position = null): TaskPlan
+    public function canManage(User $actor, User $target, Workspace $workspace): bool
+    {
+        if (! $workspace->hasMember($target)) return false;
+
+        return $actor->is($target) || in_array($workspace->roleFor($actor), ['owner', 'admin'], true);
+    }
+
+    public function plan(Task $task, User $target, User $actor, string $date, string $bucket = 'must', ?int $position = null): TaskPlan
     {
         $this->assignments->backfill($task);
-        abort_unless($task->assignedUsers()->whereKey($user->id)->exists(), 422, 'ابتدا وظیفه را به خودتان اختصاص دهید.');
+        abort_unless($this->assignments->eligible($task)->contains('id', $target->id), 422, 'این شخص نمی‌تواند مسئول این وظیفه باشد.');
+        abort_unless($task->assignedUsers()->whereKey($target->id)->exists(), 422, 'ابتدا وظیفه را به این شخص اختصاص دهید.');
 
-        return DB::transaction(function () use ($task, $user, $date, $bucket, $position) {
-            $position ??= (int) TaskPlan::where('user_id', $user->id)
+        $plan = DB::transaction(function () use ($task, $target, $actor, $date, $bucket, $position) {
+            $position ??= (int) TaskPlan::where('user_id', $target->id)
                 ->whereDate('planned_for', $date)->where('bucket', $bucket)->max('position') + 1;
             $plan = TaskPlan::updateOrCreate(
-                ['task_id' => $task->id, 'user_id' => $user->id, 'planned_for' => $date],
+                ['task_id' => $task->id, 'user_id' => $target->id, 'planned_for' => $date],
                 ['bucket' => $bucket, 'position' => max(1, $position)],
             );
-            $this->activityLogger->taskPlanned($task, $user, $date, $bucket);
+            $this->activityLogger->taskPlanned($task, $actor, $target, $date, $bucket);
             return $plan;
         });
+        $this->notifier->todayPlanChanged($task, $actor, $target, 'planned', $date);
+        return $plan;
     }
 
-    public function unplan(Task $task, User $user, string $date): void
+    public function unplan(Task $task, User $target, User $actor, string $date): void
     {
-        $deleted = TaskPlan::where('task_id', $task->id)->where('user_id', $user->id)
+        $deleted = TaskPlan::where('task_id', $task->id)->where('user_id', $target->id)
             ->whereDate('planned_for', $date)->delete();
-        if ($deleted) $this->activityLogger->taskUnplanned($task, $user, $date);
+        if ($deleted) {
+            $this->activityLogger->taskUnplanned($task, $actor, $target, $date);
+            $this->notifier->todayPlanChanged($task, $actor, $target, 'unplanned', $date);
+        }
     }
 
-    public function move(Task $task, User $user, string $fromDate, string $toDate): TaskPlan
+    public function move(Task $task, User $target, User $actor, string $fromDate, string $toDate): TaskPlan
     {
-        return DB::transaction(function () use ($task, $user, $fromDate, $toDate) {
+        $plan = DB::transaction(function () use ($task, $target, $actor, $fromDate, $toDate) {
             $current = TaskPlan::query()
                 ->where('task_id', $task->id)
-                ->where('user_id', $user->id)
+                ->where('user_id', $target->id)
                 ->whereDate('planned_for', $fromDate)
                 ->lockForUpdate()
                 ->firstOrFail();
 
             $bucket = $current->bucket;
             $current->delete();
-            $this->activityLogger->taskUnplanned($task, $user, $fromDate);
-
-            return $this->plan($task, $user, $toDate, $bucket);
+            $position = (int) TaskPlan::where('user_id', $target->id)->whereDate('planned_for', $toDate)->where('bucket', $bucket)->max('position') + 1;
+            $plan = TaskPlan::create(['task_id' => $task->id, 'user_id' => $target->id, 'planned_for' => $toDate, 'bucket' => $bucket, 'position' => $position]);
+            $this->activityLogger->taskPlanMoved($task, $actor, $target, $fromDate, $toDate);
+            return $plan;
         });
+        $this->notifier->todayPlanChanged($task, $actor, $target, 'moved', $toDate);
+        return $plan;
     }
 }

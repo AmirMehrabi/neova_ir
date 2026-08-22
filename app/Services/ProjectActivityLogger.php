@@ -92,16 +92,25 @@ class ProjectActivityLogger
         $this->log($task->column->project, $actor, 'task_unblocked', "{$actor->full_name} انسداد وظیفه «{$task->title}» را برداشت.", $task, $task->column);
     }
 
-    public function taskPlanned(Task $task, User $actor, string $date, string $bucket): void
+    public function taskPlanned(Task $task, User $actor, User $target, string $date, string $bucket): void
     {
         $task->loadMissing('column.project');
-        $this->log($task->column->project, $actor, 'task_planned', "{$actor->full_name} وظیفه «{$task->title}» را برای برنامه روزانه انتخاب کرد.", $task, $task->column, ['planned_for' => $date, 'bucket' => $bucket]);
+        $owner = $actor->is($target) ? '' : " برای {$target->full_name}";
+        $this->log($task->column->project, $actor, 'task_planned', "{$actor->full_name} وظیفه «{$task->title}» را{$owner} برای برنامه روزانه انتخاب کرد.", $task, $task->column, ['planned_for' => $date, 'bucket' => $bucket, 'target_user_id' => $target->id, 'target_user_name' => $target->full_name]);
     }
 
-    public function taskUnplanned(Task $task, User $actor, string $date): void
+    public function taskUnplanned(Task $task, User $actor, User $target, string $date): void
     {
         $task->loadMissing('column.project');
-        $this->log($task->column->project, $actor, 'task_unplanned', "{$actor->full_name} وظیفه «{$task->title}» را از برنامه روزانه برداشت.", $task, $task->column, ['planned_for' => $date]);
+        $owner = $actor->is($target) ? '' : " {$target->full_name}";
+        $this->log($task->column->project, $actor, 'task_unplanned', "{$actor->full_name} وظیفه «{$task->title}» را از برنامه روزانه{$owner} برداشت.", $task, $task->column, ['planned_for' => $date, 'target_user_id' => $target->id, 'target_user_name' => $target->full_name]);
+    }
+
+    public function taskPlanMoved(Task $task, User $actor, User $target, string $fromDate, string $toDate): void
+    {
+        $task->loadMissing('column.project');
+        $owner = $actor->is($target) ? '' : " {$target->full_name}";
+        $this->log($task->column->project, $actor, 'task_plan_moved', "{$actor->full_name} وظیفه «{$task->title}» را در برنامه روزانه{$owner} جابه‌جا کرد.", $task, $task->column, ['from' => $fromDate, 'to' => $toDate, 'target_user_id' => $target->id, 'target_user_name' => $target->full_name]);
     }
 
     public function projectChanged(Project $project, array $changes, User $actor): void

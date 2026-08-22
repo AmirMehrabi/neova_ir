@@ -105,6 +105,9 @@ class ProjectActivityNotification extends Notification
             'task_updated' => "{$this->actor} وظیفه «{$this->task?->title}» را به‌روز کرد",
             'task_moved' => "{$this->actor} وظیفه «{$this->task?->title}» را جابجا کرد",
             'task_mentioned' => "{$this->actor} از شما نام برد",
+            'today_planned' => "{$this->actor} کاری را به برنامه امروز شما اضافه کرد",
+            'today_unplanned' => "{$this->actor} کاری را از برنامه امروز شما برداشت",
+            'today_moved' => "{$this->actor} کاری را در برنامه شما به فردا منتقل کرد",
         ];
 
         return $subjects[$this->kind] ?? 'اعلان جدید در نئووا';

@@ -10,6 +10,30 @@ use Illuminate\Support\Collection;
 
 class ProjectActivityNotifier
 {
+    public function todayPlanChanged(Task $task, User $actor, User $target, string $action, string $date): void
+    {
+        if ($actor->is($target)) return;
+
+        $project = $this->project($task);
+        $messages = [
+            'planned' => "{$actor->full_name} وظیفه «{$task->title}» را به برنامه روزانه شما اضافه کرد.",
+            'unplanned' => "{$actor->full_name} وظیفه «{$task->title}» را از برنامه روزانه شما برداشت.",
+            'moved' => "{$actor->full_name} وظیفه «{$task->title}» را در برنامه شما به فردا منتقل کرد.",
+        ];
+        $kinds = ['planned' => 'today_planned', 'unplanned' => 'today_unplanned', 'moved' => 'today_moved'];
+        abort_unless(isset($messages[$action]), 500);
+
+        $this->notify(
+            $target,
+            $kinds[$action],
+            $messages[$action],
+            $project,
+            $task,
+            $actor->full_name,
+            url: route('today', $project->workspace->slug, false),
+        );
+    }
+
     public function taskCreated(Task $task, User $actor): void
     {
         $project = $this->project($task);
@@ -166,11 +190,12 @@ class ProjectActivityNotifier
         ?string $fromColumn = null,
         ?string $toColumn = null,
         ?string $place = null,
+        ?string $url = null,
     ): void {
         $user->notify(new ProjectActivityNotification(
             kind: $kind,
             message: $message,
-            url: route('board', [$project->workspace->slug, $project->slug], false),
+            url: $url ?? route('board', [$project->workspace->slug, $project->slug], false),
             projectId: $project->id,
             taskId: $task->id,
             project: $project,

@@ -255,6 +255,22 @@
 .today-dialog__panel > div:last-child button:last-child { background:#111; }
 .today-existing-list em { color:#111; }
 .today-existing-list button:disabled { cursor:wait; opacity:.48; }
+.today-view-tabs { display:flex; gap:4px; width:max-content; margin:-12px 0 24px; padding:4px; border-radius:9px; background:#EDEDE8; }
+.today-view-tabs a { padding:7px 14px; border-radius:7px; color:#777772; font-size:10px; font-weight:800; }
+.today-view-tabs a.is-active { background:#fff; color:#111; box-shadow:0 1px 4px rgba(17,17,17,.08); }
+.today-team-workspace { display:grid; gap:22px; }
+.today-team-capture { margin-bottom:0; grid-template-columns:20px minmax(190px,1fr) minmax(120px,.35fr) minmax(140px,.4fr) auto; }
+.today-team-groups { display:grid; gap:14px; }
+.today-team-group { overflow:hidden; border-radius:12px; background:#fff; }
+.today-team-group__header { display:flex; align-items:center; justify-content:space-between; gap:16px; padding:14px 18px; border-bottom:1px solid #EFEFEA; }
+.today-team-group__header .today-add-existing { margin-top:0; }
+.today-team-group__person { display:flex; align-items:center; gap:10px; }
+.today-team-group__person > span { display:grid; place-items:center; width:32px; height:32px; border-radius:50%; background:#111; color:#fff; font-size:9px; font-weight:800; }
+.today-team-group__person h2 { color:#111; font-size:12px; font-weight:800; }
+.today-team-group__person small { display:block; margin-top:2px; color:#8A8A84; font-size:9px; }
+.today-team-task-list { min-height:62px; padding:7px; background:#fff; }
+.today-team-task-list .today-row { background:#F8F8F5; margin-bottom:5px; }
+.today-team-task-list .today-row:hover { background:#F0F0ED; }
 
 .project-list { display:grid; gap:8px; margin-top:26px; border-top:0; }
 .project-list__row { min-height:74px; padding:12px 14px; border:0; border-radius:10px; background:#fff; }
@@ -280,6 +296,8 @@
  .today-undo { opacity:1; }
  .today-row__actions button:first-child { display:none; }
  .today-toast { right:16px; left:16px; bottom:78px; text-align:center; }
+ .today-team-capture { grid-template-columns:18px minmax(0,1fr) auto; }
+ .today-team-group__header { align-items:flex-start; }
 }
 
 /* Keep the approved Direction B canvas authoritative over the legacy shell theme. */
