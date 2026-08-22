@@ -373,8 +373,12 @@
                             @if ($canEdit)
                                 <div class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
                                     <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="board-column-header__button" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
-                                    <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-32 rounded-xl border border-[#E8EBE9] bg-white py-1 shadow-xl z-20" @click.stop>
+                                    <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-44 rounded-xl border border-[#E8EBE9] bg-white py-1 shadow-xl z-20" @click.stop>
                                         <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش</button>
+                                        <div class="my-1 border-t border-[#F1F5F9]"></div>
+                                        <button @click="openColumnMenuId = null; moveColumnByStep(column.id, -1)" :disabled="columnMovePending || colIdx === 0" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به قبل</button>
+                                        <button @click="openColumnMenuId = null; moveColumnByStep(column.id, 1)" :disabled="columnMovePending || colIdx === columns.length - 1" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به بعد</button>
+                                        <div class="my-1 border-t border-[#F1F5F9]"></div>
                                         <button @click="openColumnMenuId = null; confirmDeleteColumn(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-red-500 hover:bg-red-50">حذف</button>
                                     </div>
                                 </div>
@@ -522,6 +526,7 @@
                 <section
                     class="mobile-board-column flex flex-col flex-none w-[calc(100%_-_24px)] min-w-[calc(100%_-_24px)]"
                     :data-column-index="colIdx"
+                    :data-column-id="column.id"
                     :aria-label="column.title"
                     :style="'--column-accent:' + (column.dotHex || '#94A3B8')"
                 >
@@ -1099,7 +1104,7 @@
                                             type="text"
                                             class="w-full text-xs border border-[#E2E8F0] rounded-lg pr-7 pl-2 py-1.5 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
                                             placeholder="جستجو..."
-                                            x-init="$nextTick(() => $el.focus())"
+                                            x-effect="if (assigneeOpen) $nextTick(() => $el.focus({ preventScroll: true }))"
                                         >
                                     </div>
                                 </div>
@@ -1693,7 +1698,7 @@
 
                 floatingMenuStyle(trigger, preferredWidth = null, preferredHeight = 320) {
                     this.floatingMenuRevision;
-                    if (!trigger) return 'visibility:hidden;';
+                    if (!trigger) return { visibility: 'hidden' };
 
                     const rect = trigger.getBoundingClientRect();
                     const gutter = 12;
@@ -1706,11 +1711,16 @@
                     const roomAbove = Math.max(0, rect.top - gutter - gap);
                     const openAbove = roomBelow < Math.min(preferredHeight, 220) && roomAbove > roomBelow;
                     const availableHeight = Math.max(120, Math.min(preferredHeight, openAbove ? roomAbove : roomBelow));
-                    const verticalPosition = openAbove
-                        ? `top:auto;bottom:${Math.max(gutter, viewportHeight - rect.top + gap)}px;`
-                        : `top:${Math.min(viewportHeight - gutter, rect.bottom + gap)}px;bottom:auto;`;
-
-                    return `position:fixed;left:${left}px;right:auto;width:${width}px;max-height:${availableHeight}px;${verticalPosition}`;
+                    return {
+                        position: 'fixed',
+                        left: `${left}px`,
+                        right: 'auto',
+                        width: `${width}px`,
+                        maxHeight: `${availableHeight}px`,
+                        top: openAbove ? 'auto' : `${Math.min(viewportHeight - gutter, rect.bottom + gap)}px`,
+                        bottom: openAbove ? `${Math.max(gutter, viewportHeight - rect.top + gap)}px` : 'auto',
+                        visibility: 'visible',
+                    };
                 },
 
                 checklistTotal(task) {
@@ -2568,50 +2578,46 @@
                     const el = variant === 'mobile' ? this.$refs.mobileBoardTrack : document.getElementById('desktop-column-track');
                     if (!el) return;
                     const self = this;
-                    let columnDragStartIndex = null;
                     const instance = new Sortable(el, {
                         animation: 220,
-                        ghostClass: 'sortable-ghost',
-                        chosenClass: 'sortable-chosen',
-                        dragClass: 'sortable-drag',
+                        ghostClass: 'column-sortable-ghost',
+                        chosenClass: 'column-sortable-chosen',
+                        dragClass: 'column-sortable-drag',
                         direction: 'horizontal',
-                        swapThreshold: 0.5,
+                        swapThreshold: 0.65,
+                        invertSwap: true,
+                        invertedSwapThreshold: 0.35,
                         draggable: variant === 'mobile' ? '.mobile-board-column' : '.board-column',
                         handle: '.column-drag-handle',
-                        delay: variant === 'mobile' ? 140 : 50,
+                        delay: variant === 'mobile' ? 140 : 0,
                         delayOnTouchOnly: true,
                         touchStartThreshold: 4,
-                        forceFallback: variant === 'mobile',
-                        fallbackOnBody: variant === 'mobile',
-                        fallbackTolerance: variant === 'mobile' ? 5 : 0,
+                        forceFallback: true,
+                        fallbackOnBody: true,
+                        fallbackTolerance: variant === 'mobile' ? 5 : 3,
                         scroll: true,
                         bubbleScroll: true,
                         scrollSensitivity: 72,
                         scrollSpeed: 14,
-                        onMove(evt) {
-                            if (variant !== 'desktop' || !evt.related || columnDragStartIndex == null) return true;
-                            const columnElements = Array.from(el.children).filter(child => child.matches('.board-column'));
-                            const relatedIndex = columnElements.indexOf(evt.related);
-                            if (relatedIndex < 0) return true;
-
-                            // The board is RTL, so the insertion side is opposite to the visual x-axis.
-                            // SortableJS uses -1 for before and 1 for after the related element.
-                            return columnDragStartIndex > relatedIndex ? 1 : -1;
-                        },
                         onStart(evt) {
                             self.realtimeDragActive = true;
-                            columnDragStartIndex = evt.oldIndex;
+                            el.classList.add('column-order-dragging');
+                            document.body.classList.add('column-reorder-active');
                             if (variant === 'mobile') {
                                 self.mobileDragSuppressClickUntil = Date.now() + 500;
-                                el.classList.add('column-order-dragging');
                             }
                         },
                         onEnd(evt) {
-                            columnDragStartIndex = null;
-                            if (variant === 'mobile') el.classList.remove('column-order-dragging');
+                            el.classList.remove('column-order-dragging');
+                            document.body.classList.remove('column-reorder-active');
                             self.finishRealtimeDrag();
-                            if (evt.oldIndex === evt.newIndex || evt.oldIndex == null || evt.newIndex == null) return;
-                            self.reorderColumns(evt.oldIndex, evt.newIndex);
+                            const selector = variant === 'mobile' ? '.mobile-board-column' : '.board-column';
+                            const orderedIds = Array.from(el.querySelectorAll(`:scope > ${selector}`))
+                                .map(column => Number(column.dataset.columnId))
+                                .filter(Number.isFinite);
+                            if (orderedIds.length !== self.columns.length) return;
+                            if (orderedIds.every((id, index) => id === Number(self.columns[index]?.id))) return;
+                            self.reorderColumns(orderedIds);
                         },
                     });
                     this.columnSortableInstances.push({ instance, variant });
@@ -2622,12 +2628,25 @@
                     this.columnSortableInstances = [];
                 },
 
-                async reorderColumns(oldIndex, newIndex) {
+                moveColumnByStep(columnId, direction) {
+                    if (!this.canEdit || this.columnMovePending) return;
+                    const currentIndex = this.columns.findIndex(column => Number(column.id) === Number(columnId));
+                    const targetIndex = currentIndex + Number(direction);
+                    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= this.columns.length) return;
+
+                    const orderedIds = this.columns.map(column => Number(column.id));
+                    const [movedId] = orderedIds.splice(currentIndex, 1);
+                    orderedIds.splice(targetIndex, 0, movedId);
+                    this.reorderColumns(orderedIds);
+                },
+
+                async reorderColumns(orderedIds) {
                     if (!this.canEdit || this.columnMovePending) return;
                     const snapshot = this.columns.slice();
-                    const [movedColumn] = this.columns.splice(oldIndex, 1);
-                    if (!movedColumn) return;
-                    this.columns.splice(newIndex, 0, movedColumn);
+                    const columnsById = new Map(snapshot.map(column => [Number(column.id), column]));
+                    const reorderedColumns = orderedIds.map(id => columnsById.get(Number(id))).filter(Boolean);
+                    if (reorderedColumns.length !== snapshot.length) return;
+                    this.columns = reorderedColumns;
                     this.activeColumnIndex = this.columns.findIndex(column => column.id === snapshot[this.activeColumnIndex]?.id);
                     this.columnMovePending = true;
                     this.setSortablesDisabled(true);
@@ -2636,7 +2655,7 @@
                         const response = await window.neovaFetch('{{ route("board.columns.reorder", [$workspace->slug, $project->slug], false) }}', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
-                            body: JSON.stringify({ column_ids: this.columns.map(column => Number(column.id)) }),
+                            body: JSON.stringify({ column_ids: orderedIds }),
                         });
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || 'ترتیب ستون‌ها ذخیره نشد.');

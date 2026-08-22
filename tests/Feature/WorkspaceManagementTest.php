@@ -211,6 +211,29 @@ class WorkspaceManagementTest extends TestCase
         $this->assertDatabaseHas('project_columns', ['id' => $column->id, 'wip_limit' => 5]);
     }
 
+    public function test_workspace_owner_can_reorder_a_column_to_an_intermediate_position(): void
+    {
+        $owner = User::factory()->create();
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'Product Team']);
+        $project = Project::create(['workspace_id' => $workspace->id, 'name' => 'Board', 'key' => 'BRD']);
+        $first = $project->columns()->create(['title' => 'First', 'position' => 1]);
+        $second = $project->columns()->create(['title' => 'Second', 'position' => 2]);
+        $third = $project->columns()->create(['title' => 'Third', 'position' => 3]);
+        $fourth = $project->columns()->create(['title' => 'Fourth', 'position' => 4]);
+
+        $this->actingAs($owner)
+            ->postJson(route('board.columns.reorder', [$workspace->slug, $project->slug]), [
+                'column_ids' => [$first->id, $third->id, $second->id, $fourth->id],
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertSame(
+            [$first->id, $third->id, $second->id, $fourth->id],
+            $project->columns()->orderBy('position')->pluck('id')->all(),
+        );
+    }
+
     public function test_project_manager_can_manage_members_from_board_routes(): void
     {
         $owner = User::factory()->create();
