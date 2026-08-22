@@ -39,6 +39,24 @@ class TodayWorkflowTest extends TestCase
         $this->assertDatabaseCount('task_plans', 0);
     }
 
+    public function test_saving_today_as_due_date_from_board_adds_assignee_to_today(): void
+    {
+        extract($this->context());
+        $today = now($workspace->timezone)->toDateString();
+
+        $this->actingAs($user)->putJson(route('board.task.update', [$workspace->slug, $project->slug, $task]), [
+            'due_date' => $today,
+            'assignees' => [$user->full_name],
+        ])->assertOk();
+
+        $this->assertDatabaseHas('task_plans', [
+            'task_id' => $task->id,
+            'user_id' => $user->id,
+            'planned_for' => $today.' 00:00:00',
+        ]);
+        $this->actingAs($user)->get(route('today', $workspace->slug))->assertOk()->assertSee('رفع خطا');
+    }
+
     public function test_assignee_can_plan_and_remove_a_task_for_today(): void
     {
         extract($this->context());

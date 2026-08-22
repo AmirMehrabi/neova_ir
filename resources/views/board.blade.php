@@ -1034,7 +1034,7 @@
                                 <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
                             </div>
-                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker task-floating-menu w-[290px] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg" :style="floatingMenuStyle($refs.dueDateInput, 290, 350)">
+                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker task-floating-menu absolute right-0 top-full mt-2 w-[min(290px,calc(100vw-3rem))] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg">
                                 <div class="flex items-center justify-between mb-3">
                                     <button type="button" @click="changeJalaliMonth(1)" class="jalali-picker__nav" aria-label="ماه بعد">‹</button>
                                     <span class="text-xs font-black text-[#18212B]" x-text="jalaliMonthLabel()"></span>

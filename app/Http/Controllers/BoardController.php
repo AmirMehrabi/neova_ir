@@ -10,6 +10,7 @@ use App\Services\ProjectActivityNotifier;
 use App\Services\ProjectActivityLogger;
 use App\Services\TaskAssignmentService;
 use App\Services\TaskWorkflowService;
+use App\Services\TodayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -153,6 +154,7 @@ class BoardController extends Controller
         ProjectActivityNotifier $notifier,
         ProjectActivityLogger $activityLogger,
         TaskAssignmentService $assignments,
+        TodayService $today,
     ) {
         $request->validate([
             'column_id' => 'required|exists:project_columns,id',
@@ -190,6 +192,7 @@ class BoardController extends Controller
         ]);
         $assignments->syncFromNames($task, $request->input('assignees', []));
         $task->refresh();
+        $this->planAssignedUsersWhenDueToday($task, $request, $today);
         $notifier->taskCreated($task, $request->user());
         $activityLogger->taskCreated($task, $request->user());
 
@@ -205,6 +208,7 @@ class BoardController extends Controller
         ProjectActivityLogger $activityLogger,
         TaskAssignmentService $assignments,
         TaskWorkflowService $workflow,
+        TodayService $today,
     ) {
         $task = $this->findTaskInCurrentProject($request, $task);
         $validated = $request->validate([
@@ -253,6 +257,7 @@ class BoardController extends Controller
             $target = ProjectColumn::findOrFail($targetColumnId);
             $task = $workflow->move($task, $target, $target->tasks()->count(), $request->user());
         }
+        $this->planAssignedUsersWhenDueToday($task->refresh(), $request, $today);
 
         return response()->json($task);
     }
@@ -627,6 +632,29 @@ class BoardController extends Controller
         $invalid = array_diff($request->input('assignees', []), $allowed);
 
         abort_if($invalid !== [], 422, 'یک یا چند مسئول انتخاب‌شده عضو تیم پروژه نیستند.');
+    }
+
+    private function planAssignedUsersWhenDueToday(Task $task, Request $request, TodayService $today): void
+    {
+        if (! $request->has('due_date') || ! $task->due_date || $task->column->workflow_role === 'done') {
+            return;
+        }
+
+        $workspace = $request->attributes->get('workspace');
+        $todayDate = $today->date($workspace)->toDateString();
+        if ($task->due_date->format('Y-m-d') !== $todayDate) {
+            return;
+        }
+
+        $task->assignedUsers()->get()->each(function (User $person) use ($task, $request, $today, $todayDate) {
+            $alreadyPlanned = $task->plans()
+                ->where('user_id', $person->id)
+                ->whereDate('planned_for', $todayDate)
+                ->exists();
+            if (! $alreadyPlanned) {
+                $today->plan($task, $person, $request->user(), $todayDate);
+            }
+        });
     }
 
     public function activity(Request $request, string $workspace, string $project)
