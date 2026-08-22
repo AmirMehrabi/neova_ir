@@ -917,13 +917,14 @@
         x-transition:leave="transition-opacity ease-in duration-75"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 overflow-y-auto"
+        class="fixed inset-0 z-50 overflow-hidden"
         @click="requestCloseModal()"
         @keydown.escape.window="requestCloseModal()"
+        @resize.window="floatingMenuRevision++"
     >
-        <div class="min-h-screen flex items-stretch justify-start p-0">
+        <div class="h-full min-h-0 flex items-stretch justify-start p-0">
             <div
-                class="task-modal-shell relative my-auto"
+                class="task-modal-shell relative"
                 :class="editingTask ? 'task-modal-shell--editing' : 'task-modal-shell--create'"
                 :style="modalAccentStyle()"
                 x-transition:enter="transition-opacity ease-out duration-100"
@@ -950,7 +951,7 @@
                 </div>
 
                 {{-- Body: Single column --}}
-                <div class="task-modal-body p-4 md:p-6 space-y-4" :class="editingTask ? 'task-modal-body--editing' : 'task-modal-body--create'" style="direction: rtl;">
+                <div class="task-modal-body p-4 md:p-6 space-y-4" :class="editingTask ? 'task-modal-body--editing' : 'task-modal-body--create'" style="direction: rtl;" @scroll="floatingMenuRevision++">
                     <div x-show="realtimeConflict" x-cloak class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
                         <p x-text="realtimeTaskDeleted ? 'این وظیفه در همین حین حذف شده است. پیش‌نویس شما حفظ شد.' : 'این وظیفه توسط شخص دیگری تغییر کرده است. پیش‌نویس شما حفظ شد.'"></p>
                         <div class="mt-2 flex gap-2">
@@ -976,6 +977,7 @@
                             placeholder="مثلاً طراحی صفحه ورود"
                         >
                         <textarea
+                            x-ref="descriptionMentionTrigger"
                             x-model="form.description"
                             rows="5"
                             :disabled="!canEdit"
@@ -987,15 +989,13 @@
                             @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
                             @keydown.escape="mentionOpen ? closeMentionMenu() : null"
                         ></textarea>
-                        <div x-show="mentionOpen && mentionField === 'description'" class="relative">
-                            <div class="absolute top-full right-0 left-0 mt-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
+                        <div x-show="mentionOpen && mentionField === 'description'" x-cloak class="task-floating-menu bg-white border border-[#D8E0EB] rounded-xl shadow-xl overflow-hidden" :style="floatingMenuStyle($refs.descriptionMentionTrigger, 360, 220)">
                                 <template x-for="(person, index) in mentionResults" :key="person.id">
                                     <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
                                         <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
                                         <span class="text-[11px] font-bold text-[#111111]" x-text="person.name"></span>
                                     </button>
                                 </template>
-                            </div>
                         </div>
                         <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                     </div>
@@ -1029,7 +1029,7 @@
                                 <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
                             </div>
-                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker absolute top-full right-0 mt-2 z-30 w-[290px] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg">
+                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker task-floating-menu w-[290px] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg" :style="floatingMenuStyle($refs.dueDateInput, 290, 350)">
                                 <div class="flex items-center justify-between mb-3">
                                     <button type="button" @click="changeJalaliMonth(1)" class="jalali-picker__nav" aria-label="ماه بعد">‹</button>
                                     <span class="text-xs font-black text-[#18212B]" x-text="jalaliMonthLabel()"></span>
@@ -1061,6 +1061,7 @@
                         <div x-data="{ assigneeOpen: false, assigneeSearch: '' }" @click.away="assigneeOpen = false" class="relative">
                             <label class="board-field-label">مسئولین</label>
                             <div
+                                x-ref="assigneeTrigger"
                                 @click="if (canEdit) assigneeOpen = !assigneeOpen"
                                 class="w-full min-h-[36px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-1.5 transition-colors bg-white flex flex-wrap items-center gap-1"
                                 :class="canEdit ? 'cursor-pointer hover:border-[#CBD5E1]' : 'cursor-default bg-[#F1F5F9]'"
@@ -1086,7 +1087,8 @@
                                 x-transition:leave="transition ease-in duration-100"
                                 x-transition:leave-start="opacity-100 translate-y-0"
                                 x-transition:leave-end="opacity-0 -translate-y-1"
-                                class="absolute top-full left-0 right-0 mt-1 bg-white border-2 border-[#E2E8F0] rounded-xl shadow-lg shadow-black/10 z-10 overflow-hidden"
+                                class="task-floating-menu bg-white border-2 border-[#E2E8F0] rounded-xl shadow-lg shadow-black/10 overflow-hidden"
+                                :style="floatingMenuStyle($refs.assigneeTrigger, Math.max($refs.assigneeTrigger?.offsetWidth || 240, 280), 320)"
                             >
                                 <div class="p-2 border-b border-[#F1F5F9]">
                                     <div class="relative">
@@ -1241,6 +1243,7 @@
                             </div>
                             <div class="flex-1 relative">
                                 <textarea
+                                    x-ref="commentMentionTrigger"
                                     x-model="newComment"
                                     rows="2"
                                     class="w-full text-sm border-2 border-[#E2E8F0] rounded-xl px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors resize-none placeholder:text-[#CBD5E1]"
@@ -1253,7 +1256,7 @@
                                     @keydown.meta.enter="addComment()"
                                     @keydown.ctrl.enter="addComment()"
                                 ></textarea>
-                                <div x-show="mentionOpen && mentionField === 'comment'" class="absolute bottom-full right-0 left-0 mb-1 bg-white border border-[#D8E0EB] rounded-xl shadow-xl z-30 overflow-hidden">
+                                <div x-show="mentionOpen && mentionField === 'comment'" x-cloak class="task-floating-menu bg-white border border-[#D8E0EB] rounded-xl shadow-xl overflow-hidden" :style="floatingMenuStyle($refs.commentMentionTrigger, Math.max($refs.commentMentionTrigger?.offsetWidth || 280, 320), 220)">
                                     <template x-for="(person, index) in mentionResults" :key="person.id">
                                         <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
                                             <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
@@ -1426,6 +1429,7 @@
                 columnDeleting: false,
                 modalLastFocused: null,
                 modalSnapshot: null,
+                floatingMenuRevision: 0,
                 realtimeRefresher: null,
                 realtimeDragActive: false,
                 pendingRealtimeSnapshot: null,
@@ -1685,6 +1689,28 @@
                 modalAccentStyle() {
                     const col = this.columns.find(c => String(c.id) === String(this.form.columnId));
                     return '--modal-accent:' + (col?.dotHex || '#18212B');
+                },
+
+                floatingMenuStyle(trigger, preferredWidth = null, preferredHeight = 320) {
+                    this.floatingMenuRevision;
+                    if (!trigger) return 'visibility:hidden;';
+
+                    const rect = trigger.getBoundingClientRect();
+                    const gutter = 12;
+                    const gap = 6;
+                    const viewportWidth = window.innerWidth;
+                    const viewportHeight = window.innerHeight;
+                    const width = Math.min(Number(preferredWidth) || rect.width, viewportWidth - (gutter * 2));
+                    const left = Math.min(Math.max(gutter, rect.right - width), viewportWidth - width - gutter);
+                    const roomBelow = Math.max(0, viewportHeight - rect.bottom - gutter - gap);
+                    const roomAbove = Math.max(0, rect.top - gutter - gap);
+                    const openAbove = roomBelow < Math.min(preferredHeight, 220) && roomAbove > roomBelow;
+                    const availableHeight = Math.max(120, Math.min(preferredHeight, openAbove ? roomAbove : roomBelow));
+                    const verticalPosition = openAbove
+                        ? `top:auto;bottom:${Math.max(gutter, viewportHeight - rect.top + gap)}px;`
+                        : `top:${Math.min(viewportHeight - gutter, rect.bottom + gap)}px;bottom:auto;`;
+
+                    return `position:fixed;left:${left}px;right:auto;width:${width}px;max-height:${availableHeight}px;${verticalPosition}`;
                 },
 
                 checklistTotal(task) {
