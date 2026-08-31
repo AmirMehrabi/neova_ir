@@ -924,7 +924,7 @@
         x-transition:leave-end="opacity-0"
         class="fixed inset-0 z-50 overflow-hidden"
         @click="requestCloseModal()"
-        @keydown.escape.window="requestCloseModal()"
+        @keydown.escape.window="handleTaskEscape($event)"
         @resize.window="floatingMenuRevision++"
     >
         <div class="h-full min-h-0 flex items-stretch justify-start p-0">
@@ -1035,6 +1035,21 @@
                                         <button type="button" @click="removePendingAttachment(item, 'description')" class="shrink-0 text-[9px] font-bold text-red-500" x-text="item.status === 'uploading' ? 'لغو' : 'حذف'"></button>
                                     </div>
                                 </template>
+                            </div>
+                            <div x-show="descriptionAttachments().length" x-cloak class="mt-3">
+                                <p class="mb-2 flex items-center gap-1.5 text-[9px] font-bold text-emerald-700"><span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>فایل‌های بارگذاری‌شده</p>
+                                <div class="grid gap-2 sm:grid-cols-2">
+                                    <template x-for="attachment in descriptionAttachments()" :key="attachment.id">
+                                        <div class="flex min-w-0 items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 p-2">
+                                            <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-[9px] font-black text-[#64748B] shadow-sm">
+                                                <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
+                                                <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
+                                            </button>
+                                            <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="text-[9px] text-emerald-700">بارگذاری موفق · <span x-text="formatFileSize(attachment.size)"></span></p></div>
+                                            <div class="flex shrink-0 items-center gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[9px] font-bold text-[#0069D9]">نمایش</button><a :href="attachment.downloadUrl" class="text-[9px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[9px] text-red-500">حذف</button>@endif</div>
+                                        </div>
+                                    </template>
+                                </div>
                             </div>
                         </div>
                         @endif
@@ -1387,7 +1402,7 @@
     </div>
 
     {{-- Attachment preview --}}
-    <div x-show="attachmentPreview" x-cloak class="fixed inset-0 z-[90] flex items-center justify-center p-4" @keydown.escape.window="closeAttachmentPreview()">
+    <div x-show="attachmentPreview" x-cloak class="fixed inset-0 z-[90] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-[#07111F]/75 backdrop-blur-sm" @click="closeAttachmentPreview()"></div>
         <div class="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="پیش‌نمایش فایل" @click.stop>
             <div class="flex items-center justify-between gap-3 border-b border-[#E2E8F0] px-4 py-3">
@@ -2973,6 +2988,17 @@
                     this.closeModal();
                 },
 
+                handleTaskEscape(event) {
+                    if (!this.showModal) return;
+                    if (this.attachmentPreview) {
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        this.closeAttachmentPreview();
+                        return;
+                    }
+                    this.requestCloseModal();
+                },
+
                 requestDeleteFromTaskModal() {
                     if (!this.editingTask || this.taskSaving) return;
                     const columnId = this.form.columnId;
@@ -3182,6 +3208,10 @@
                     if (this.attachmentFilter === 'media') return this.form.attachments.filter(item => ['audio', 'video'].includes(item.category));
                     if (this.attachmentFilter === 'document') return this.form.attachments.filter(item => ['document', 'pdf', 'text'].includes(item.category));
                     return this.form.attachments.filter(item => item.category === this.attachmentFilter);
+                },
+
+                descriptionAttachments() {
+                    return this.form.attachments.filter(item => item.context !== 'comment');
                 },
 
                 openAttachmentPreview(attachment) { this.attachmentPreview = attachment; },
