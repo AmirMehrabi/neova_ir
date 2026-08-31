@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProjectColumn;
 use App\Models\ProjectActivity;
+use App\Models\ProjectColumn;
 use App\Models\Task;
 use App\Models\User;
-use App\Services\ProjectActivityNotifier;
 use App\Services\ProjectActivityLogger;
+use App\Services\ProjectActivityNotifier;
 use App\Services\TaskAssignmentService;
+use App\Services\TaskAttachmentData;
+use App\Services\TaskAttachmentManager;
 use App\Services\TaskWorkflowService;
 use App\Services\TodayService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class BoardController extends Controller
 {
@@ -23,7 +29,7 @@ class BoardController extends Controller
         $workspace = $request->attributes->get('workspace');
         $request->session()->put("last_project.{$workspace->id}", $project->id);
 
-        $columns = $project->columns()->with('tasks.attachments')->orderBy('position')->get();
+        $columns = $project->columns()->with('tasks.attachments.uploader')->orderBy('position')->get();
 
         $members = $project->members()->orderBy('name')->get();
         $workspacePeople = collect([$workspace->owner])
@@ -60,28 +66,33 @@ class BoardController extends Controller
             'dotColor' => $colColors[$c->title] ?? 'bg-[#94A3B8]',
             'dotHex' => $c->color ?: ($colHexColors[$c->title] ?? '#94A3B8'),
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
-            'tasks' => $c->tasks->map(fn ($t) => [
-                'id' => $t->display_id,
-                'dbId' => $t->id,
-                'title' => $t->title,
-                'description' => $t->description ?? '',
-                'priority' => $t->priority,
-                'assignees' => $t->assignees ?? [],
-                'dueDate' => $t->due_date?->format('Y-m-d') ?? '',
-                'isBlocked' => $t->is_blocked,
-                'blockedReason' => $t->blocked_reason,
-                'completedAt' => $t->completed_at?->toIso8601String(),
-                'tags' => $t->tags ?? [],
-                'checklist' => $t->checklist ?? [],
-                'comments' => $t->comments ?? [],
-                'attachments' => $t->attachments->map(fn ($attachment) => [
-                    'id' => $attachment->id,
-                    'name' => $attachment->original_name,
-                    'size' => $attachment->size,
-                    'url' => route('task.attachments.download', [$workspace->slug, $project->slug, $t->id, $attachment->id], false),
-                ])->values()->all(),
-                'updatedAt' => $t->updated_at->toIso8601String(),
-            ])->toArray(),
+            'tasks' => $c->tasks->map(function ($t) use ($workspace, $project) {
+                $attachmentData = app(TaskAttachmentData::class);
+                $attachments = $t->attachments->map(fn ($attachment) => $attachmentData->make($attachment, $workspace->slug, $project->slug))->values();
+                $comments = collect($t->comments ?? [])->map(function ($comment) use ($attachments) {
+                    $comment['attachments'] = $attachments->where('context', 'comment')->where('commentId', $comment['id'] ?? null)->values()->all();
+
+                    return $comment;
+                })->values()->all();
+
+                return [
+                    'id' => $t->display_id,
+                    'dbId' => $t->id,
+                    'title' => $t->title,
+                    'description' => $t->description ?? '',
+                    'priority' => $t->priority,
+                    'assignees' => $t->assignees ?? [],
+                    'dueDate' => $t->due_date?->format('Y-m-d') ?? '',
+                    'isBlocked' => $t->is_blocked,
+                    'blockedReason' => $t->blocked_reason,
+                    'completedAt' => $t->completed_at?->toIso8601String(),
+                    'tags' => $t->tags ?? [],
+                    'checklist' => $t->checklist ?? [],
+                    'comments' => $comments,
+                    'attachments' => $attachments->all(),
+                    'updatedAt' => $t->updated_at->toIso8601String(),
+                ];
+            })->toArray(),
         ])->toArray();
 
         $membersData = $members->map(fn ($member) => [
@@ -196,7 +207,7 @@ class BoardController extends Controller
         $notifier->taskCreated($task, $request->user());
         $activityLogger->taskCreated($task, $request->user());
 
-        return response()->json($task);
+        return response()->json([...$task->toArray(), 'display_id' => $task->display_id]);
     }
 
     public function updateTask(
@@ -227,7 +238,7 @@ class BoardController extends Controller
         ]);
         $this->ensureTaskInCurrentProject($request, $task);
         if (! $request->boolean('force') && isset($validated['expected_updated_at'])
-            && $task->updated_at->toIso8601String() !== \Illuminate\Support\Carbon::parse($validated['expected_updated_at'])->toIso8601String()) {
+            && $task->updated_at->toIso8601String() !== Carbon::parse($validated['expected_updated_at'])->toIso8601String()) {
             return response()->json([
                 'message' => 'این وظیفه توسط شخص دیگری تغییر کرده است.',
                 'conflict' => true,
@@ -288,7 +299,9 @@ class BoardController extends Controller
 
         $action = $validated['action'];
         $value = $validated['value'] ?? null;
-        if ($action === 'priority') abort_unless(in_array($value, ['بالا', 'متوسط', 'پایین'], true), 422, 'اولویت معتبر نیست.');
+        if ($action === 'priority') {
+            abort_unless(in_array($value, ['بالا', 'متوسط', 'پایین'], true), 422, 'اولویت معتبر نیست.');
+        }
         if ($action === 'column') {
             $targetColumn = ProjectColumn::findOrFail($value);
             $this->ensureColumnInCurrentProject($request, $targetColumn);
@@ -302,11 +315,13 @@ class BoardController extends Controller
             $before = $task->only(['title', 'description', 'priority', 'due_date', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
             if ($action === 'column') {
                 $workflow->move($task, $targetColumn, $targetColumn->tasks()->count(), $request->user());
+
                 continue;
             }
             if ($action === 'assignee') {
                 $assignments->syncFromNames($task, $value ? [$value] : []);
                 $activityLogger->taskUpdated($task->refresh(), $before, $request->user());
+
                 continue;
             }
             $changes = match ($action) {
@@ -362,13 +377,33 @@ class BoardController extends Controller
         string $task,
         ProjectActivityNotifier $notifier,
         ProjectActivityLogger $activityLogger,
+        TaskAttachmentManager $attachmentManager,
+        TaskAttachmentData $attachmentData,
     ) {
         $task = $this->findTaskInCurrentProject($request, $task);
-        $validated = $request->validate([
-            'text' => ['required', 'string', 'max:5000'],
+        $validator = Validator::make($request->all(), [
+            'text' => ['nullable', 'string', 'max:5000', 'required_without:files'],
+            'files' => ['nullable', 'array', 'max:10', 'required_without:text'],
+            'files.*' => ['file'],
             'mention_ids' => ['nullable', 'array'],
             'mention_ids.*' => ['integer'],
         ]);
+        if ($validator->fails()) {
+            return response()->json(['message' => 'پیام یا فایل‌های انتخاب‌شده معتبر نیستند.', 'errors' => $validator->errors()], 422);
+        }
+        $validated = $validator->validated();
+        $files = $request->file('files', []);
+        if ($files instanceof UploadedFile) {
+            $files = [$files];
+        }
+        $files = array_values(array_filter($files));
+        if ($files) {
+            try {
+                $attachmentManager->validate($files, 'comment');
+            } catch (ValidationException $exception) {
+                return response()->json(['message' => 'فایل‌های انتخاب‌شده معتبر نیستند.', 'errors' => $exception->errors()], 422);
+            }
+        }
         $before = $task->only([
             'title', 'description', 'priority', 'due_date', 'assignees',
             'tags', 'checklist', 'comments', 'column_id',
@@ -377,17 +412,26 @@ class BoardController extends Controller
             'id' => (string) str()->uuid(),
             'author' => $request->user()->full_name,
             'author_id' => $request->user()->id,
-            'text' => $validated['text'],
+            'text' => trim((string) ($validated['text'] ?? '')),
             'mention_ids' => array_values(array_unique($validated['mention_ids'] ?? [])),
             'time' => 'همین الان',
             'created_at' => now()->toIso8601String(),
         ];
-        $comments = $task->comments ?? [];
-        $comments[] = $comment;
-        $task->update(['comments' => $comments]);
+        $attachments = collect();
+        DB::transaction(function () use ($task, $comment, $files, $attachmentManager, $request, &$attachments) {
+            $comments = $task->comments ?? [];
+            $comments[] = $comment;
+            $task->update(['comments' => $comments]);
+            if ($files) {
+                $attachments = $attachmentManager->store($task, $files, 'comment', $request->user()->id, $comment['id']);
+            }
+        });
         $task = $task->refresh();
         $notifier->taskUpdated($task, $before, $request->user());
         $activityLogger->commentAdded($task, $comment, $request->user());
+
+        $attachments->each->load('uploader');
+        $comment['attachments'] = $attachments->map(fn ($attachment) => $attachmentData->make($attachment, $workspace, $project))->values()->all();
 
         return response()->json(['comment' => $comment]);
     }
@@ -427,7 +471,9 @@ class BoardController extends Controller
         $projectModel->refresh();
         $changes = [];
         foreach (array_keys($before) as $field) {
-            if ($before[$field] != $projectModel->{$field}) $changes[$field] = [$before[$field], $projectModel->{$field}];
+            if ($before[$field] != $projectModel->{$field}) {
+                $changes[$field] = [$before[$field], $projectModel->{$field}];
+            }
         }
         $activityLogger->projectChanged($projectModel, $changes, $request->user());
 
@@ -453,7 +499,9 @@ class BoardController extends Controller
         $projectModel->members()->syncWithoutDetaching([
             $user->id => ['added_by' => $request->user()->id],
         ]);
-        if (! $alreadyMember) $activityLogger->memberChanged($projectModel, $user, $request->user(), true);
+        if (! $alreadyMember) {
+            $activityLogger->memberChanged($projectModel, $user, $request->user(), true);
+        }
 
         return response()->json([
             'message' => 'عضو به پروژه اضافه شد.',
@@ -670,8 +718,12 @@ class BoardController extends Controller
         $query = ProjectActivity::query()
             ->with(['actor:id,first_name,last_name,name'])
             ->where('project_id', $projectModel->id);
-        if (! empty($validated['user_id'])) $query->where('actor_id', $validated['user_id']);
-        if (! empty($validated['kind'])) $query->where('kind', $validated['kind']);
+        if (! empty($validated['user_id'])) {
+            $query->where('actor_id', $validated['user_id']);
+        }
+        if (! empty($validated['kind'])) {
+            $query->where('kind', $validated['kind']);
+        }
         if (! empty($validated['search'])) {
             $search = $validated['search'];
             $query->where(function ($builder) use ($search) {

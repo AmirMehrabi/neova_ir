@@ -4,41 +4,65 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use App\Models\TaskAttachment;
+use App\Services\TaskAttachmentData;
+use App\Services\TaskAttachmentManager;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 
 class TaskAttachmentController extends Controller
 {
-    public function store(Request $request, string $workspace, string $project, Task $task)
+    public function store(Request $request, string $workspace, string $project, Task $task, TaskAttachmentData $attachmentData, TaskAttachmentManager $attachmentManager)
     {
         $this->ensureTask($request, $task);
-        $validated = $request->validate(['file' => ['required', 'file', 'max:10240', 'mimes:pdf,png,jpg,jpeg,gif,webp,txt,csv,doc,docx,xls,xlsx,zip']]);
-        $file = $validated['file'];
-        $path = $file->store("task-attachments/{$task->id}", 'local');
-        abort_unless($path, 500, 'ذخیره پیوست انجام نشد.');
-        $attachment = $task->attachments()->create([
-            'uploaded_by' => $request->user()->id,
-            'original_name' => $file->getClientOriginalName(),
-            'path' => $path,
-            'mime_type' => $file->getMimeType(),
-            'size' => $file->getSize(),
+        $files = $this->filesFrom($request);
+        $context = $request->input('context', 'description');
+        try {
+            $attachments = $attachmentManager->store($task, $files, $context, $request->user()->id);
+        } catch (ValidationException $exception) {
+            return response()->json(['message' => 'فایل‌های انتخاب‌شده معتبر نیستند.', 'errors' => $exception->errors()], 422);
+        }
+
+        $attachments->each->load('uploader');
+
+        return response()->json([
+            'attachments' => $attachments->map(fn ($attachment) => $attachmentData->make($attachment, $workspace, $project))->values(),
+        ], 201);
+    }
+
+    public function preview(Request $request, string $workspace, string $project, Task $task, TaskAttachment $attachment, TaskAttachmentData $attachmentData)
+    {
+        $this->ensureAttachment($request, $task, $attachment);
+        abort_unless(Storage::disk('local')->exists($attachment->path), 404);
+        abort_unless(in_array($attachmentData->category($attachment->mime_type, $attachment->original_name), ['image', 'pdf', 'audio', 'video', 'text'], true), 415);
+
+        $fallbackName = Str::ascii(basename($attachment->original_name)) ?: 'attachment';
+        $disposition = (new ResponseHeaderBag)->makeDisposition(ResponseHeaderBag::DISPOSITION_INLINE, basename($attachment->original_name), $fallbackName);
+
+        return response()->file(Storage::disk('local')->path($attachment->path), [
+            'Content-Type' => $attachment->mime_type ?: 'application/octet-stream',
+            'Content-Disposition' => $disposition,
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'; img-src 'self' data:; media-src 'self'; style-src 'unsafe-inline'",
         ]);
-        return response()->json(['attachment' => $this->data($attachment)], 201);
     }
 
     public function download(Request $request, string $workspace, string $project, Task $task, TaskAttachment $attachment)
     {
-        $this->ensureTask($request, $task);
-        abort_unless($attachment->task_id === $task->id, 404);
+        $this->ensureAttachment($request, $task, $attachment);
         abort_unless(Storage::disk('local')->exists($attachment->path), 404);
-        return Storage::disk('local')->download($attachment->path, $attachment->original_name);
+
+        return Storage::disk('local')->download($attachment->path, $attachment->original_name, ['X-Content-Type-Options' => 'nosniff']);
     }
 
     public function destroy(Request $request, string $workspace, string $project, Task $task, TaskAttachment $attachment)
     {
-        $this->ensureTask($request, $task);
-        abort_unless($attachment->task_id === $task->id, 404);
+        $this->ensureAttachment($request, $task, $attachment);
         $attachment->delete();
+
         return response()->json(['success' => true]);
     }
 
@@ -48,8 +72,23 @@ class TaskAttachmentController extends Controller
         abort_unless($task->column->project_id === $request->attributes->get('project')->id, 404);
     }
 
-    private function data(TaskAttachment $attachment): array
+    private function ensureAttachment(Request $request, Task $task, TaskAttachment $attachment): void
     {
-        return ['id' => $attachment->id, 'name' => $attachment->original_name, 'mimeType' => $attachment->mime_type, 'size' => $attachment->size];
+        $this->ensureTask($request, $task);
+        abort_unless($attachment->task_id === $task->id, 404);
+    }
+
+    /** @return array<int, UploadedFile> */
+    private function filesFrom(Request $request): array
+    {
+        $files = $request->file('files', []);
+        if ($files instanceof UploadedFile) {
+            $files = [$files];
+        }
+        if ($request->hasFile('file')) {
+            $files[] = $request->file('file');
+        }
+
+        return array_values(array_filter($files));
     }
 }

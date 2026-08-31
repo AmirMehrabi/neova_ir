@@ -993,6 +993,7 @@
                             @keydown.up.prevent="moveMentionSelection(-1)"
                             @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
                             @keydown.escape="mentionOpen ? closeMentionMenu() : null"
+                            @paste="handleAttachmentPaste($event, 'description')"
                         ></textarea>
                         <div x-show="mentionOpen && mentionField === 'description'" x-cloak class="task-floating-menu bg-white border border-[#D8E0EB] rounded-xl shadow-xl overflow-hidden" :style="floatingMenuStyle($refs.descriptionMentionTrigger, 360, 220)">
                                 <template x-for="(person, index) in mentionResults" :key="person.id">
@@ -1003,6 +1004,40 @@
                                 </template>
                         </div>
                         <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                        @if ($canEdit)
+                        <div
+                            class="mt-3 rounded-xl border-2 border-dashed px-3 py-3 transition-colors"
+                            :class="attachmentDragTarget === 'description' ? 'border-[#0069D9] bg-[#F0F8FF]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
+                            @dragover.prevent="attachmentDragTarget = 'description'"
+                            @dragleave.prevent="attachmentDragTarget = null"
+                            @drop.prevent="attachmentDragTarget = null; queueAttachmentFiles($event.dataTransfer.files, 'description')"
+                        >
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p class="text-[11px] font-bold text-[#334155]">فایل‌های توضیحات</p>
+                                    <p class="mt-0.5 text-[9px] text-[#94A3B8]">فایل‌ها را رها کنید، تصویر را بچسبانید یا تا ۱۰ فایل انتخاب کنید.</p>
+                                </div>
+                                <button type="button" @click="$refs.descriptionFiles.click()" class="rounded-lg border border-[#BFD8EC] bg-white px-3 py-1.5 text-[10px] font-bold text-[#111111]">انتخاب فایل</button>
+                                <input x-ref="descriptionFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'description'); $event.target.value = ''">
+                            </div>
+                            <div x-show="pendingDescriptionFiles.length" x-cloak class="mt-3 grid gap-2 sm:grid-cols-2">
+                                <template x-for="item in pendingDescriptionFiles" :key="item.localId">
+                                    <div class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2">
+                                        <button type="button" @click="openAttachmentPreview(item)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
+                                            <img x-show="item.category === 'image'" :src="item.previewUrl" class="h-full w-full object-cover" alt="">
+                                            <span x-show="item.category !== 'image'" x-text="attachmentLabel(item)"></span>
+                                        </button>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate text-[10px] font-bold text-[#334155]" x-text="item.name"></p>
+                                            <p class="text-[9px] text-[#94A3B8]" x-text="attachmentStatusText(item)"></p>
+                                            <div x-show="item.status === 'uploading'" class="mt-1 h-1 overflow-hidden rounded bg-[#E2E8F0]"><div class="h-full bg-[#0069D9]" :style="`width:${item.progress}%`"></div></div>
+                                        </div>
+                                        <button type="button" @click="removePendingAttachment(item, 'description')" class="shrink-0 text-[9px] font-bold text-red-500" x-text="item.status === 'uploading' ? 'لغو' : 'حذف'"></button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        @endif
                     </div>
 
                     {{-- Settings: one clear row on desktop --}}
@@ -1237,6 +1272,18 @@
                                             <span class="text-[9px] text-[#94A3B8]" x-text="comment.time"></span>
                                         </div>
                                         <p class="text-[12px] text-[#475569] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
+                                        <p x-show="!comment.text && !(comment.attachments || []).length" class="text-[10px] text-[#94A3B8]">پیوست حذف شده است.</p>
+                                        <div x-show="(comment.attachments || []).length" class="mt-2 grid gap-2 sm:grid-cols-2">
+                                            <template x-for="attachment in (comment.attachments || [])" :key="attachment.id">
+                                                <button type="button" @click="openAttachmentPreview(attachment)" class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2 text-right">
+                                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F1F5F9] text-[8px] font-black text-[#64748B]">
+                                                        <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
+                                                        <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
+                                                    </span>
+                                                    <span class="min-w-0"><span class="block truncate text-[9px] font-bold text-[#334155]" x-text="attachment.name"></span><span class="text-[8px] text-[#94A3B8]" x-text="formatFileSize(attachment.size)"></span></span>
+                                                </button>
+                                            </template>
+                                        </div>
                                     </div>
                                 </div>
                             </template>
@@ -1270,36 +1317,47 @@
                                     </template>
                                 </div>
                                 <p class="text-[10px] text-[#94A3B8] mt-1">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
-                                <div class="flex justify-end mt-1.5" x-show="newComment.trim()">
-                                    <button @click="addComment()" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] px-3 py-1 rounded-lg transition-all">ارسال (Ctrl+Enter)</button>
+                                <div class="mt-2 flex flex-wrap gap-2" x-show="pendingCommentFiles.length">
+                                    <template x-for="item in pendingCommentFiles" :key="item.localId">
+                                        <div class="flex max-w-full items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1.5">
+                                            <button type="button" @click="openAttachmentPreview(item)" class="text-[9px] font-black text-[#64748B]" x-text="attachmentLabel(item)"></button>
+                                            <span class="max-w-36 truncate text-[9px] font-bold text-[#334155]" x-text="item.name"></span>
+                                            <button type="button" @click="removePendingAttachment(item, 'comment')" class="text-[9px] text-red-500">×</button>
+                                        </div>
+                                    </template>
+                                </div>
+                                <div class="flex items-center justify-between mt-1.5">
+                                    <button type="button" @click="$refs.commentFiles.click()" class="text-[10px] font-bold text-[#64748B] hover:text-[#18212B]">＋ افزودن فایل</button>
+                                    <input x-ref="commentFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'comment'); $event.target.value = ''">
+                                    <button x-show="newComment.trim() || pendingCommentFiles.length" @click="addComment()" :disabled="commentPosting" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] disabled:opacity-60 px-3 py-1 rounded-lg transition-all" x-text="commentPosting ? 'در حال ارسال…' : 'ارسال (Ctrl+Enter)'"></button>
                                 </div>
                             </div>
                         </div>
                         @endif
                     </section>
 
-                    {{-- Attachments --}}
+                    {{-- Task file library --}}
                     <section x-show="editingTask" x-cloak class="task-modal-section" aria-labelledby="task-attachments-title">
                         <div class="task-modal-section__heading">
-                            <div class="task-modal-section__title" id="task-attachments-title">پیوست‌ها</div>
+                            <div><div class="task-modal-section__title" id="task-attachments-title">کتابخانه فایل‌های وظیفه</div><p class="mt-1 text-[9px] text-[#94A3B8]">همه فایل‌های توضیحات و گفتگو در یک‌جا</p></div>
                             <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.attachments.length) + ' فایل'"></span>
                         </div>
-                        <div class="space-y-2">
-                            <template x-for="attachment in form.attachments" :key="attachment.id">
-                                <div class="flex items-center gap-3 border border-[#E8EBE9] rounded-lg px-3 py-2">
-                                    <a :href="attachment.url" class="min-w-0 flex-1 text-[11px] font-bold text-[#334155] truncate" x-text="attachment.name"></a>
-                                    <span class="text-[9px] text-[#94A3B8]" x-text="formatFileSize(attachment.size)"></span>
-                                    @if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[9px] text-red-500">حذف</button>@endif
+                        <div class="mb-3 flex flex-wrap gap-1.5">
+                            <template x-for="filter in attachmentFilters" :key="filter.value"><button type="button" @click="attachmentFilter = filter.value" class="rounded-full border px-2.5 py-1 text-[9px] font-bold" :class="attachmentFilter === filter.value ? 'border-[#18212B] bg-[#18212B] text-white' : 'border-[#E2E8F0] bg-white text-[#64748B]'" x-text="filter.label"></button></template>
+                        </div>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <template x-for="attachment in filteredAttachments()" :key="attachment.id">
+                                <div class="flex min-w-0 items-center gap-2.5 border border-[#E8EBE9] rounded-xl p-2.5">
+                                    <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
+                                        <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
+                                        <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
+                                    </button>
+                                    <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="mt-0.5 text-[8px] text-[#94A3B8]"><span x-text="attachment.context === 'comment' ? 'گفتگو' : 'توضیحات'"></span> · <span x-text="formatFileSize(attachment.size)"></span></p><div class="mt-1 flex gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[8px] font-bold text-[#0069D9]">پیش‌نمایش</button><a :href="attachment.downloadUrl" class="text-[8px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[8px] font-bold text-red-500">حذف</button>@endif</div></div>
                                 </div>
                             </template>
                             <p x-show="form.attachments.length === 0" class="text-[11px] text-[#94A3B8]">فایلی پیوست نشده است.</p>
+                            <p x-show="form.attachments.length && filteredAttachments().length === 0" class="text-[11px] text-[#94A3B8]">فایلی در این دسته وجود ندارد.</p>
                         </div>
-                        @if ($canEdit)
-                            <label class="mt-3 inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[#BFD8EC] px-3 py-2 text-[10px] font-bold text-[#111111]">
-                                <span x-text="attachmentUploading ? 'در حال بارگذاری…' : '+ افزودن فایل'"></span>
-                                <input type="file" class="hidden" :disabled="attachmentUploading" @change="uploadAttachment($event)">
-                            </label>
-                        @endif
                     </section>
                 </div>
 
@@ -1324,6 +1382,24 @@
                     @endif
                 </div>
 
+            </div>
+        </div>
+    </div>
+
+    {{-- Attachment preview --}}
+    <div x-show="attachmentPreview" x-cloak class="fixed inset-0 z-[90] flex items-center justify-center p-4" @keydown.escape.window="closeAttachmentPreview()">
+        <div class="absolute inset-0 bg-[#07111F]/75 backdrop-blur-sm" @click="closeAttachmentPreview()"></div>
+        <div class="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="پیش‌نمایش فایل" @click.stop>
+            <div class="flex items-center justify-between gap-3 border-b border-[#E2E8F0] px-4 py-3">
+                <div class="min-w-0"><p class="truncate text-xs font-black text-[#18212B]" x-text="attachmentPreview?.name"></p><p class="mt-0.5 text-[9px] text-[#94A3B8]" x-text="formatFileSize(attachmentPreview?.size)"></p></div>
+                <div class="flex items-center gap-2"><a x-show="attachmentPreview?.downloadUrl" :href="attachmentPreview?.downloadUrl" class="rounded-lg border border-[#D8E0EB] px-3 py-1.5 text-[10px] font-bold text-[#334155]">دانلود</a><button type="button" @click="closeAttachmentPreview()" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F1F5F9] text-lg text-[#64748B]" aria-label="بستن">×</button></div>
+            </div>
+            <div class="flex min-h-64 flex-1 items-center justify-center overflow-auto bg-[#F8FAFC] p-4">
+                <template x-if="attachmentPreview?.category === 'image'"><img :src="attachmentPreview?.previewUrl" class="max-h-[72vh] max-w-full rounded-lg object-contain" :alt="attachmentPreview?.name"></template>
+                <template x-if="attachmentPreview?.category === 'pdf' || attachmentPreview?.category === 'text'"><iframe :src="attachmentPreview?.previewUrl" class="h-[72vh] w-full rounded-lg border-0 bg-white" title="پیش‌نمایش فایل"></iframe></template>
+                <template x-if="attachmentPreview?.category === 'audio'"><audio :src="attachmentPreview?.previewUrl" controls class="w-full max-w-xl"></audio></template>
+                <template x-if="attachmentPreview?.category === 'video'"><video :src="attachmentPreview?.previewUrl" controls class="max-h-[72vh] max-w-full rounded-lg bg-black"></video></template>
+                <template x-if="attachmentPreview && !['image','pdf','text','audio','video'].includes(attachmentPreview.category)"><div class="text-center"><div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-lg font-black text-[#64748B] shadow-sm" x-text="attachmentLabel(attachmentPreview)"></div><p class="mt-4 text-xs font-bold text-[#334155]">برای این نوع فایل پیش‌نمایش مرورگر موجود نیست.</p></div></template>
             </div>
         </div>
     </div>
@@ -1485,6 +1561,16 @@
                 newComment: '',
                 commentPosting: false,
                 attachmentUploading: false,
+                attachmentDragTarget: null,
+                attachmentPreview: null,
+                attachmentFilter: 'all',
+                attachmentFilters: [
+                    { value: 'all', label: 'همه' }, { value: 'image', label: 'تصاویر' },
+                    { value: 'document', label: 'اسناد' }, { value: 'media', label: 'رسانه' },
+                    { value: 'archive', label: 'بایگانی' },
+                ],
+                pendingDescriptionFiles: [],
+                pendingCommentFiles: [],
                 mentionOpen: false,
                 showTagManager: false,
                 newTagName: '',
@@ -1816,7 +1902,8 @@
                     const remoteTask = this.editingTask
                         ? payload.columns.flatMap(column => column.tasks).find(task => Number(task.dbId) === Number(this.editingTask))
                         : null;
-                    const draftIsDirty = this.showModal && this.modalSnapshot && JSON.stringify(this.form) !== this.modalSnapshot;
+                    const draftIsDirty = this.showModal && this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot;
+                    const attachmentBusy = this.attachmentUploading || this.commentPosting || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length;
                     if (this.showModal && this.editingTask && draftIsDirty) {
                         this.realtimeConflict = true;
                         this.realtimeTaskDeleted = !remoteTask;
@@ -1833,7 +1920,7 @@
                         description: payload.project.description,
                         board_style: payload.project.boardStyle,
                     });
-                    if (this.showModal && this.editingTask && !draftIsDirty && remoteTask) {
+                    if (this.showModal && this.editingTask && !draftIsDirty && !attachmentBusy && remoteTask) {
                         const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
                         this.openEditModal(remoteTask, column.id);
                     }
@@ -2512,47 +2599,39 @@
                 },
 
                 async addComment() {
-                    if (!this.newComment.trim() || this.commentPosting) return;
-                    const pendingComment = {
-                        author: '{{ auth()->user()->full_name }}',
-                        author_id: {{ auth()->id() }},
-                        text: this.newComment.trim(),
-                        mention_ids: this.mentionIds(this.newComment),
-                        time: 'همین الان',
-                    };
-                    if (!this.editingTask) {
-                        this.form.comments.push(pendingComment);
-                        this.newComment = '';
-                        this.closeMentionMenu();
-                        return;
-                    }
+                    if ((!this.newComment.trim() && !this.pendingCommentFiles.length) || this.commentPosting || !this.editingTask) return;
                     this.commentPosting = true;
                     try {
-                        const response = await window.neovaFetch('{{ route("board.task.comments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                text: pendingComment.text,
-                                mention_ids: pendingComment.mention_ids,
-                            }),
-                        });
-                        const data = await response.json();
-                        if (!response.ok) throw new Error(data.message || 'ارسال پیام انجام نشد.');
+                        const data = await this.postCommentRequest();
                         this.form.comments.push(data.comment);
+                        this.form.attachments.push(...(data.comment.attachments || []));
                         const task = this.columns.flatMap(column => column.tasks).find(item => item.dbId === this.editingTask);
-                        if (task) task.comments = JSON.parse(JSON.stringify(this.form.comments));
+                        if (task) { task.comments = JSON.parse(JSON.stringify(this.form.comments)); task.attachments = JSON.parse(JSON.stringify(this.form.attachments)); }
+                        this.clearPendingFiles('comment');
+                        this.newComment = '';
+                        this.closeMentionMenu();
                         this.showToast('پیام ارسال شد.');
                     } catch (error) {
                         this.showToast(error.message);
                     } finally {
                         this.commentPosting = false;
                     }
-                    this.newComment = '';
-                    this.closeMentionMenu();
+                },
+
+                postCommentRequest() {
+                    return new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest();
+                        const body = new FormData();
+                        body.append('text', this.newComment.trim());
+                        this.mentionIds(this.newComment).forEach(id => body.append('mention_ids[]', id));
+                        this.pendingCommentFiles.forEach(item => { body.append('files[]', item.file); item.status = 'uploading'; });
+                        xhr.open('POST', '{{ route("board.task.comments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask));
+                        xhr.setRequestHeader('Accept', 'application/json'); xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+                        xhr.upload.onprogress = event => { if (event.lengthComputable) this.pendingCommentFiles.forEach(item => item.progress = Math.round(event.loaded / event.total * 100)); };
+                        xhr.onload = () => { const data = JSON.parse(xhr.responseText || '{}'); xhr.status >= 200 && xhr.status < 300 ? resolve(data) : reject(new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ارسال پیام انجام نشد.')); };
+                        xhr.onerror = () => reject(new Error('ارتباط هنگام ارسال فایل قطع شد.'));
+                        xhr.send(body);
+                    });
                 },
 
                 formatDate(dateStr) {
@@ -2816,6 +2895,11 @@
                     }
                 },
 
+                formFingerprint() {
+                    const { comments, attachments, updatedAt, ...fields } = this.form;
+                    return JSON.stringify(fields);
+                },
+
                 openAddModal(columnId) {
                     if (!this.canEdit) return;
                     this.editingTask = null;
@@ -2823,6 +2907,9 @@
                     this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' };
                     this.newCheckItem = '';
                     this.newComment = '';
+                    this.clearPendingFiles('description');
+                    this.clearPendingFiles('comment');
+                    this.attachmentFilter = 'all';
                     this.taskError = '';
                     this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
@@ -2831,7 +2918,7 @@
                     this.forceRealtimeOverwrite = false;
                     this.showModal = true;
                     this.$nextTick(() => {
-                        this.modalSnapshot = JSON.stringify(this.form);
+                        this.modalSnapshot = this.formFingerprint();
                         this.$refs.taskTitle?.focus();
                     });
                 },
@@ -2849,6 +2936,9 @@
                     };
                     this.newCheckItem = '';
                     this.newComment = '';
+                    this.clearPendingFiles('description');
+                    this.clearPendingFiles('comment');
+                    this.attachmentFilter = 'all';
                     this.taskError = '';
                     this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
@@ -2857,7 +2947,7 @@
                     this.forceRealtimeOverwrite = false;
                     this.showModal = true;
                     this.$nextTick(() => {
-                        this.modalSnapshot = JSON.stringify(this.form);
+                        this.modalSnapshot = this.formFingerprint();
                         this.$refs.taskTitle?.focus();
                     });
                 },
@@ -2868,6 +2958,9 @@
                     this.editingDescription = false;
                     this.taskError = '';
                     this.modalSnapshot = null;
+                    this.clearPendingFiles('description');
+                    this.clearPendingFiles('comment');
+                    this.closeAttachmentPreview();
                     const target = this.modalLastFocused;
                     this.modalLastFocused = null;
                     this.$nextTick(() => target?.focus?.());
@@ -2875,7 +2968,7 @@
 
                 requestCloseModal() {
                     if (this.taskSaving) return;
-                    const dirty = this.modalSnapshot && JSON.stringify(this.form) !== this.modalSnapshot;
+                    const dirty = (this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot) || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length;
                     if (dirty && !window.confirm('تغییرات ذخیره نشده‌اند. از بستن پنجره مطمئن هستید؟')) return;
                     this.closeModal();
                 },
@@ -2938,6 +3031,7 @@
                                 this.activeColumnIndex = this.columns.findIndex(column => column.id === targetCol.id);
                                 this.$nextTick(() => this.scrollToColumn(this.activeColumnIndex));
                             }
+                            if (!await this.uploadQueuedDescription(task.dbId)) { this.taskError = 'برخی فایل‌ها بارگذاری نشدند. دوباره تلاش کنید.'; return; }
                             this.showToast('تغییرات ذخیره شد');
                         } else {
                             const col = this.columns.find(c => c.id === this.form.columnId);
@@ -2946,7 +3040,12 @@
                             const res = await window.neovaFetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
                             const data = await res.json().catch(() => ({}));
                             if (!res.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ایجاد وظیفه انجام نشد.');
-                            col.tasks.push({ id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [] });
+                            const createdTask = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null };
+                            col.tasks.push(createdTask);
+                            this.editingTask = data.id;
+                            this.form.id = data.display_id;
+                            this.form.updatedAt = data.updated_at || null;
+                            if (!await this.uploadQueuedDescription(data.id)) { this.taskError = 'وظیفه ایجاد شد، اما برخی فایل‌ها بارگذاری نشدند. برای تلاش دوباره «ذخیره تغییرات» را بزنید.'; this.modalSnapshot = this.formFingerprint(); return; }
                             this.showToast('وظیفه جدید ایجاد شد');
                         }
                         this.modalSnapshot = null;
@@ -2992,20 +3091,101 @@
                     return value < 1024 * 1024 ? Math.max(1, Math.round(value / 1024)) + ' KB' : (value / 1024 / 1024).toFixed(1) + ' MB';
                 },
 
-                async uploadAttachment(event) {
-                    const file = event.target.files?.[0];
-                    if (!file || !this.editingTask || this.attachmentUploading) return;
-                    this.attachmentUploading = true;
-                    const body = new FormData(); body.append('file', file);
-                    try {
-                        const response = await window.neovaFetch('{{ route("task.attachments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask), { method:'POST', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'}, body });
-                        const data = await response.json().catch(() => ({}));
-                        if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'بارگذاری انجام نشد.');
-                        data.attachment.url = '{{ route("task.attachments.download", [$workspace->slug, $project->slug, "__TASK__", "__ATTACHMENT__"], false) }}'.replace('__TASK__', this.editingTask).replace('__ATTACHMENT__', data.attachment.id);
-                        this.form.attachments.push(data.attachment);
-                    } catch (error) { this.taskError = error.message; }
-                    finally { this.attachmentUploading = false; event.target.value = ''; }
+                attachmentCategory(file) {
+                    const type = (file.type || file.mimeType || '').toLowerCase();
+                    const extension = (file.name || '').split('.').pop().toLowerCase();
+                    if (type.startsWith('image/') && extension !== 'svg') return 'image';
+                    if (type === 'application/pdf' || extension === 'pdf') return 'pdf';
+                    if (type.startsWith('audio/')) return 'audio';
+                    if (type.startsWith('video/')) return 'video';
+                    if (type.startsWith('text/') || ['txt','csv','md','json'].includes(extension)) return 'text';
+                    if (['zip','rar','7z','tar','gz'].includes(extension)) return 'archive';
+                    return 'document';
                 },
+
+                attachmentLabel(item) {
+                    return ({ image: 'IMG', pdf: 'PDF', audio: 'صوت', video: 'ویدئو', text: 'TXT', archive: 'ZIP', document: 'DOC' })[item.category || this.attachmentCategory(item)] || 'FILE';
+                },
+
+                attachmentStatusText(item) {
+                    if (item.status === 'uploading') return `در حال بارگذاری · ${this.toPersianDigits(item.progress)}٪`;
+                    if (item.status === 'error') return item.error || 'بارگذاری ناموفق؛ برای تلاش دوباره ذخیره کنید.';
+                    return `${this.formatFileSize(item.size)} · آماده بارگذاری`;
+                },
+
+                queueAttachmentFiles(fileList, target) {
+                    const files = Array.from(fileList || []);
+                    if (!files.length) return;
+                    const list = target === 'comment' ? this.pendingCommentFiles : this.pendingDescriptionFiles;
+                    const allowed = ['jpg','jpeg','png','gif','webp','bmp','heic','pdf','txt','csv','md','json','doc','docx','xls','xlsx','ppt','pptx','odt','ods','odp','mp3','wav','m4a','ogg','mp4','webm','mov','zip','rar','7z','tar','gz'];
+                    if (list.length + files.length > 10) { this.showToast('در هر بار حداکثر ۱۰ فایل انتخاب کنید.'); return; }
+                    if (files.some(file => file.size > 25 * 1024 * 1024)) { this.showToast('حجم هر فایل باید حداکثر ۲۵ مگابایت باشد.'); return; }
+                    if (list.reduce((sum, item) => sum + item.size, 0) + files.reduce((sum, file) => sum + file.size, 0) > 100 * 1024 * 1024) { this.showToast('حجم مجموع فایل‌ها نباید بیشتر از ۱۰۰ مگابایت باشد.'); return; }
+                    if (files.some(file => !allowed.includes((file.name.split('.').pop() || '').toLowerCase()))) { this.showToast('یکی از فایل‌های انتخاب‌شده از نوع مجاز نیست.'); return; }
+                    files.forEach(file => list.push({ localId: `${Date.now()}-${Math.random()}`, file, name: file.name, size: file.size, type: file.type, category: this.attachmentCategory(file), previewUrl: URL.createObjectURL(file), status: 'queued', progress: 0, error: '', xhr: null }));
+                    if (target === 'description' && this.editingTask) this.uploadQueuedDescription(this.editingTask);
+                },
+
+                handleAttachmentPaste(event, target) {
+                    const files = Array.from(event.clipboardData?.files || []);
+                    if (files.length) this.queueAttachmentFiles(files, target);
+                },
+
+                removePendingAttachment(item, target) {
+                    item.xhr?.abort();
+                    if (item.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(item.previewUrl);
+                    const key = target === 'comment' ? 'pendingCommentFiles' : 'pendingDescriptionFiles';
+                    this[key] = this[key].filter(candidate => candidate.localId !== item.localId);
+                },
+
+                clearPendingFiles(target) {
+                    const key = target === 'comment' ? 'pendingCommentFiles' : 'pendingDescriptionFiles';
+                    this[key].forEach(item => { item.xhr?.abort(); if (item.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(item.previewUrl); });
+                    this[key] = [];
+                },
+
+                async uploadQueuedDescription(taskId) {
+                    const queue = this.pendingDescriptionFiles.filter(item => ['queued', 'error'].includes(item.status));
+                    if (!queue.length) return true;
+                    this.attachmentUploading = true;
+                    for (const item of queue) {
+                        try {
+                            const data = await this.uploadDescriptionItem(item, taskId);
+                            this.form.attachments.push(...(data.attachments || []));
+                            const task = this.columns.flatMap(column => column.tasks).find(candidate => Number(candidate.dbId) === Number(taskId));
+                            if (task) task.attachments = JSON.parse(JSON.stringify(this.form.attachments));
+                            this.removePendingAttachment(item, 'description');
+                        } catch (error) {
+                            if (item.status !== 'cancelled') { item.status = 'error'; item.error = error.message; }
+                        }
+                    }
+                    this.attachmentUploading = false;
+                    return this.pendingDescriptionFiles.length === 0;
+                },
+
+                uploadDescriptionItem(item, taskId) {
+                    return new Promise((resolve, reject) => {
+                        const xhr = new XMLHttpRequest(); item.xhr = xhr; item.status = 'uploading'; item.progress = 0; item.error = '';
+                        const body = new FormData(); body.append('context', 'description'); body.append('files[]', item.file);
+                        xhr.open('POST', '{{ route("task.attachments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', taskId));
+                        xhr.setRequestHeader('Accept', 'application/json'); xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+                        xhr.upload.onprogress = event => { if (event.lengthComputable) item.progress = Math.round(event.loaded / event.total * 100); };
+                        xhr.onload = () => { const data = JSON.parse(xhr.responseText || '{}'); xhr.status >= 200 && xhr.status < 300 ? resolve(data) : reject(new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'بارگذاری انجام نشد.')); };
+                        xhr.onerror = () => reject(new Error('ارتباط هنگام بارگذاری قطع شد.'));
+                        xhr.onabort = () => { item.status = 'cancelled'; reject(new Error('بارگذاری لغو شد.')); };
+                        xhr.send(body);
+                    });
+                },
+
+                filteredAttachments() {
+                    if (this.attachmentFilter === 'all') return this.form.attachments;
+                    if (this.attachmentFilter === 'media') return this.form.attachments.filter(item => ['audio', 'video'].includes(item.category));
+                    if (this.attachmentFilter === 'document') return this.form.attachments.filter(item => ['document', 'pdf', 'text'].includes(item.category));
+                    return this.form.attachments.filter(item => item.category === this.attachmentFilter);
+                },
+
+                openAttachmentPreview(attachment) { this.attachmentPreview = attachment; },
+                closeAttachmentPreview() { this.attachmentPreview = null; },
 
                 async deleteAttachment(attachment) {
                     if (!window.confirm('این پیوست حذف شود؟')) return;
@@ -3014,6 +3194,9 @@
                         const response = await window.neovaFetch(url, { method:'DELETE', headers:{'Accept':'application/json','X-CSRF-TOKEN':'{{ csrf_token() }}'} });
                         if (!response.ok) throw new Error('حذف پیوست انجام نشد.');
                         this.form.attachments = this.form.attachments.filter(item => item.id !== attachment.id);
+                        this.form.comments.forEach(comment => comment.attachments = (comment.attachments || []).filter(item => item.id !== attachment.id));
+                        const task = this.columns.flatMap(column => column.tasks).find(item => item.dbId === this.editingTask);
+                        if (task) { task.attachments = JSON.parse(JSON.stringify(this.form.attachments)); task.comments = JSON.parse(JSON.stringify(this.form.comments)); }
                     } catch (error) { this.taskError = error.message; }
                 },
 

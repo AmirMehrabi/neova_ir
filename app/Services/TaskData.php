@@ -8,12 +8,23 @@ use Carbon\CarbonInterface;
 
 class TaskData
 {
+    public function __construct(private readonly TaskAttachmentData $attachmentData) {}
+
     public function make(Task $task, ?User $viewer = null, ?CarbonInterface $plannedFor = null): array
     {
-        $task->loadMissing(['column.project.workspace', 'assignedUsers', 'attachments']);
+        $task->loadMissing(['column.project.workspace', 'assignedUsers', 'attachments.uploader']);
         $plan = $plannedFor && $viewer
             ? $task->plans()->where('user_id', $viewer->id)->whereDate('planned_for', $plannedFor->toDateString())->first()
             : null;
+
+        $workspace = $task->column->project->workspace;
+        $project = $task->column->project;
+        $attachments = $task->attachments->map(fn ($attachment) => $this->attachmentData->make($attachment, $workspace->slug, $project->slug))->values();
+        $comments = collect($task->comments ?? [])->map(function ($comment) use ($attachments) {
+            $comment['attachments'] = $attachments->where('context', 'comment')->where('commentId', $comment['id'] ?? null)->values()->all();
+
+            return $comment;
+        })->values()->all();
 
         return [
             'id' => $task->display_id,
@@ -34,11 +45,8 @@ class TaskData
             'legacyAssignees' => $task->assignees ?? [],
             'tags' => $task->tags ?? [],
             'checklist' => $task->checklist ?? [],
-            'comments' => $task->comments ?? [],
-            'attachments' => $task->attachments->map(fn ($attachment) => [
-                'id' => $attachment->id, 'name' => $attachment->original_name,
-                'mimeType' => $attachment->mime_type, 'size' => $attachment->size,
-            ])->values()->all(),
+            'comments' => $comments,
+            'attachments' => $attachments->all(),
             'column' => [
                 'id' => $task->column->id,
                 'title' => $task->column->title,

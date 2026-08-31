@@ -8,10 +8,17 @@ use Illuminate\Support\Facades\Storage;
 
 class TaskAttachment extends Model
 {
-    protected $fillable = ['task_id', 'uploaded_by', 'original_name', 'path', 'mime_type', 'size'];
+    protected $fillable = ['task_id', 'context', 'comment_id', 'uploaded_by', 'original_name', 'path', 'mime_type', 'size'];
 
-    public function task(): BelongsTo { return $this->belongsTo(Task::class); }
-    public function uploader(): BelongsTo { return $this->belongsTo(User::class, 'uploaded_by'); }
+    public function task(): BelongsTo
+    {
+        return $this->belongsTo(Task::class);
+    }
+
+    public function uploader(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'uploaded_by');
+    }
 
     protected static function booted(): void
     {

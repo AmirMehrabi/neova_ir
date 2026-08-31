@@ -2,17 +2,17 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\BoardController;
+use App\Http\Controllers\CycleController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\WorkspaceManagementController;
-use App\Http\Controllers\TodayController;
-use App\Http\Controllers\TeamController;
 use App\Http\Controllers\ProjectsController;
-use App\Http\Controllers\WorkspaceHomeController;
 use App\Http\Controllers\TaskAttachmentController;
-use App\Http\Controllers\CycleController;
+use App\Http\Controllers\TeamController;
+use App\Http\Controllers\TodayController;
+use App\Http\Controllers\WorkspaceHomeController;
+use App\Http\Controllers\WorkspaceManagementController;
 use App\Http\Controllers\WorkspaceSearchController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +75,7 @@ Route::middleware('auth')->group(function () {
                 Route::get('/{workspace}/{project}/board', [BoardController::class, 'show'])->name('board');
                 Route::get('/{workspace}/{project}/board/realtime-snapshot', [BoardController::class, 'snapshot'])->name('board.realtime.snapshot');
                 Route::get('/{workspace}/{project}/task/{task}/attachments/{attachment}', [TaskAttachmentController::class, 'download'])->name('task.attachments.download');
+                Route::get('/{workspace}/{project}/task/{task}/attachments/{attachment}/preview', [TaskAttachmentController::class, 'preview'])->name('task.attachments.preview');
                 Route::middleware('workspace.editor')->group(function () {
                     Route::patch('/{workspace}/{project}/cycles/configure', [CycleController::class, 'configure'])->name('cycles.configure');
                     Route::post('/{workspace}/{project}/cycles', [CycleController::class, 'start'])->name('cycles.start');
