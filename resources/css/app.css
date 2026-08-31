@@ -96,12 +96,14 @@
     .nl-team-preview p { display: flex; justify-content: space-between; margin: 18px 0 0; color: var(--nl-muted); font-size: 10px; }
     .nl-team-preview b { color: var(--nl-ink); }
 
-    .nl-outcomes { border-block: 1px solid var(--nl-line); background: #fff; }
-    .nl-outcome-grid { display: grid; grid-template-columns: repeat(3, 1fr); }
-    .nl-outcome-grid article { padding: 32px; border-inline-start: 1px solid var(--nl-line); text-align: center; }
-    .nl-outcome-grid article:first-child { border-inline-start: 0; }
-    .nl-outcome-grid strong { font-size: 16px; }
-    .nl-outcome-grid p { margin: 7px 0 0; color: var(--nl-muted); font-size: 11px; }
+    .nl-outcomes { position: relative; border-block: 1px solid var(--nl-line); background: rgba(255, 255, 255, .84); }
+    .nl-outcomes::before { position: absolute; top: -1px; right: 50%; width: 72px; height: 2px; border-radius: 999px; background: #6f9b83; content: ''; transform: translateX(50%); }
+    .nl-outcome-grid { display: grid; width: min(1040px, calc(100% - 48px)); grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; margin-inline: auto; }
+    .nl-outcome-grid article { position: relative; display: grid; min-height: 126px; align-content: center; justify-items: center; padding: 28px clamp(22px, 3vw, 42px); text-align: center; }
+    .nl-outcome-grid article + article { border-inline-start: 1px solid var(--nl-line); }
+    .nl-outcome-grid article::before { width: 7px; height: 7px; margin-bottom: 12px; border-radius: 50%; background: #6f9b83; box-shadow: 0 0 0 5px rgba(111, 155, 131, .11); content: ''; }
+    .nl-outcome-grid strong { font-size: 15px; line-height: 1.7; }
+    .nl-outcome-grid p { max-width: 240px; margin: 5px 0 0; color: var(--nl-muted); font-size: 11px; line-height: 1.8; }
 
     .nl-story { display: grid; grid-template-columns: .78fr 1.22fr; gap: clamp(50px, 9vw, 130px); padding-block: clamp(95px, 12vw, 150px); }
     .nl-story h2, .nl-section-intro h2, .nl-capabilities h2, .nl-testimonials h2, .nl-founder h2, .nl-faq h2, .nl-closing h2 { margin: 17px 0 0; font-weight: 900; letter-spacing: -.055em; line-height: 1.4; }
@@ -215,7 +217,9 @@
         .nl-today-grid { grid-template-columns: 1fr; }
         .nl-team-preview { display: none; }
         .nl-outcome-grid, .nl-testimonial-grid, .nl-capability-list { grid-template-columns: 1fr; }
-        .nl-outcome-grid article { border-inline-start: 0; border-bottom: 1px solid var(--nl-line); padding: 23px 0; }
+        .nl-outcome-grid { width: min(100% - 30px, 560px); }
+        .nl-outcome-grid article { min-height: 116px; border-inline-start: 0; border-bottom: 1px solid var(--nl-line); padding: 21px 0; }
+        .nl-outcome-grid article + article { border-inline-start: 0; }
         .nl-outcome-grid article:last-child { border-bottom: 0; }
         .nl-story { padding-block: 85px; }
         .nl-section-intro h2 { font-size: 38px; }
