@@ -45,7 +45,7 @@
         .mobile-column-tabs { scrollbar-width: none; }
         .mobile-column-tabs::-webkit-scrollbar { display: none; }
         .mobile-board-column { scroll-snap-align: center; scroll-snap-stop: always; }
-        .mobile-task-list { touch-action: pan-y; }
+        .mobile-task-list { touch-action: pan-x pan-y; }
         .task-drag-handle { touch-action: none; }
         .column-drag-handle { touch-action: none; }
         .column-drag-handle { opacity: .7; transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease; }
@@ -509,7 +509,7 @@
                 </span>
             </div>
             @if ($canEdit)
-                <div class="px-3 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی ستون، دستگیرهٔ آن را بکشید.</div>
+                <div class="px-3 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی دقیق ستون، جایگاه آن را انتخاب کنید.</div>
             @endif
         </section>
 
@@ -544,6 +544,18 @@
                             @endif
                         </div>
                     </div>
+                    @if ($canEdit)
+                        <label class="board-column-position">
+                            <span>جایگاه ستون</span>
+                            <select :aria-label="'جایگاه ستون ' + column.title" :value="colIdx"
+                                    :disabled="columnMovePending || taskMovePending"
+                                    @change="moveColumnToIndex(column.id, $event.target.value)">
+                                <template x-for="(destination, position) in columns" :key="'position-' + destination.id">
+                                    <option :value="position" :selected="position === colIdx" x-text="toPersianDigits(position + 1) + ' — ' + destination.title"></option>
+                                </template>
+                            </select>
+                        </label>
+                    @endif
                     <div
                         class="mobile-task-list flex flex-1 min-h-0 flex-col rounded-xl p-0 bg-[#F1F0EC] border transition-colors"
                         :class="mobileDragActive && activeColumnIndex === colIdx ? 'border-[#18212B]/60 bg-[#EEF1EF]/65' : 'border-[#CBD5E1]/50'"
@@ -2147,12 +2159,12 @@
                     }
                 },
 
-                scrollToColumn(index) {
+                scrollToColumn(index, behavior = 'smooth') {
                     const track = this.$refs.mobileBoardTrack;
                     const target = track?.querySelector(`[data-column-index="${index}"]`);
                     if (!target) return;
                     target.scrollIntoView({
-                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+                        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : behavior,
                         block: 'nearest',
                         inline: 'center',
                     });
@@ -2672,6 +2684,7 @@
                     const el = variant === 'mobile' ? this.$refs.mobileBoardTrack : document.getElementById('desktop-column-track');
                     if (!el) return;
                     const self = this;
+                    let originalOrder = [];
                     const instance = new Sortable(el, {
                         animation: 220,
                         ghostClass: 'column-sortable-ghost',
@@ -2694,6 +2707,7 @@
                         scrollSensitivity: 72,
                         scrollSpeed: 14,
                         onStart(evt) {
+                            originalOrder = Array.from(el.children);
                             self.realtimeDragActive = true;
                             el.classList.add('column-order-dragging');
                             document.body.classList.add('column-reorder-active');
@@ -2701,17 +2715,27 @@
                                 self.mobileDragSuppressClickUntil = Date.now() + 500;
                             }
                         },
+                        onMove(evt, originalEvent) {
+                            // DOM order runs right-to-left on this board.
+                            const touch = originalEvent?.touches?.[0] || originalEvent?.changedTouches?.[0];
+                            const clientX = touch?.clientX ?? originalEvent?.clientX;
+                            if (evt.related === el || !Number.isFinite(clientX)) return true;
+                            return clientX < evt.relatedRect.left + evt.relatedRect.width / 2 ? 1 : -1;
+                        },
                         onEnd(evt) {
                             el.classList.remove('column-order-dragging');
                             document.body.classList.remove('column-reorder-active');
-                            self.finishRealtimeDrag();
                             const selector = variant === 'mobile' ? '.mobile-board-column' : '.board-column';
                             const orderedIds = Array.from(el.querySelectorAll(`:scope > ${selector}`))
                                 .map(column => Number(column.dataset.columnId))
                                 .filter(Number.isFinite);
-                            if (orderedIds.length !== self.columns.length) return;
-                            if (orderedIds.every((id, index) => id === Number(self.columns[index]?.id))) return;
-                            self.reorderColumns(orderedIds);
+                            // Restore Alpine's keyed DOM before changing its source array.
+                            originalOrder.forEach(child => el.appendChild(child));
+                            if (orderedIds.length === self.columns.length
+                                && !orderedIds.every((id, index) => id === Number(self.columns[index]?.id))) {
+                                self.reorderColumns(orderedIds);
+                            }
+                            self.finishRealtimeDrag();
                         },
                     });
                     this.columnSortableInstances.push({ instance, variant });
@@ -2723,28 +2747,36 @@
                 },
 
                 moveColumnByStep(columnId, direction) {
-                    if (!this.canEdit || this.columnMovePending) return;
                     const currentIndex = this.columns.findIndex(column => Number(column.id) === Number(columnId));
-                    const targetIndex = currentIndex + Number(direction);
-                    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= this.columns.length) return;
+                    return this.moveColumnToIndex(columnId, currentIndex + Number(direction));
+                },
+
+                moveColumnToIndex(columnId, position) {
+                    if (!this.canEdit || this.columnMovePending || this.taskMovePending) return;
+                    const currentIndex = this.columns.findIndex(column => Number(column.id) === Number(columnId));
+                    const targetIndex = Number(position);
+                    if (!Number.isInteger(targetIndex) || currentIndex < 0 || targetIndex < 0
+                        || targetIndex >= this.columns.length || currentIndex === targetIndex) return;
 
                     const orderedIds = this.columns.map(column => Number(column.id));
                     const [movedId] = orderedIds.splice(currentIndex, 1);
                     orderedIds.splice(targetIndex, 0, movedId);
-                    this.reorderColumns(orderedIds);
+                    return this.reorderColumns(orderedIds);
                 },
 
                 async reorderColumns(orderedIds) {
-                    if (!this.canEdit || this.columnMovePending) return;
+                    if (!this.canEdit || this.columnMovePending || this.taskMovePending) return;
                     const snapshot = this.columns.slice();
+                    const activeColumnId = snapshot[this.activeColumnIndex]?.id;
                     const columnsById = new Map(snapshot.map(column => [Number(column.id), column]));
                     const reorderedColumns = orderedIds.map(id => columnsById.get(Number(id))).filter(Boolean);
-                    if (reorderedColumns.length !== snapshot.length) return;
+                    if (reorderedColumns.length !== snapshot.length || new Set(reorderedColumns).size !== snapshot.length) return;
                     this.columns = reorderedColumns;
-                    this.activeColumnIndex = this.columns.findIndex(column => column.id === snapshot[this.activeColumnIndex]?.id);
+                    this.activeColumnIndex = Math.max(0, this.columns.findIndex(column => column.id === activeColumnId));
                     this.columnMovePending = true;
                     this.setSortablesDisabled(true);
                     this.setColumnSortablesDisabled(true);
+                    this.$nextTick(() => this.scrollToColumn(this.activeColumnIndex, 'auto'));
                     try {
                         const response = await window.neovaFetch('{{ route("board.columns.reorder", [$workspace->slug, $project->slug], false) }}', {
                             method: 'POST',
@@ -2752,11 +2784,12 @@
                             body: JSON.stringify({ column_ids: orderedIds }),
                         });
                         const data = await response.json().catch(() => ({}));
-                        if (!response.ok) throw new Error(data.message || 'ترتیب ستون‌ها ذخیره نشد.');
+                        if (!response.ok || response.redirected) throw new Error(data.message || 'ترتیب ستون‌ها ذخیره نشد.');
                         this.showToast('ترتیب ستون‌ها ذخیره شد');
                     } catch (error) {
                         this.columns = snapshot;
-                        this.activeColumnIndex = Math.max(0, Math.min(this.activeColumnIndex, this.columns.length - 1));
+                        this.activeColumnIndex = Math.max(0, this.columns.findIndex(column => column.id === activeColumnId));
+                        this.$nextTick(() => this.scrollToColumn(this.activeColumnIndex, 'auto'));
                         this.showToast(error.message || 'ترتیب ستون‌ها ذخیره نشد.');
                         this.destroySortables();
                         this.destroyColumnSortables();
@@ -2825,7 +2858,7 @@
                             const taskId = Number(evt.item.getAttribute('data-id'));
                             const fromColId = evt.from.id.replace(`col-${variant}-`, '');
                             let toColId = evt.to.id.replace(`col-${variant}-`, '');
-                            let newIndex = evt.newIndex;
+                            let newIndex = evt.newDraggableIndex;
                             if (variant === 'mobile') {
                                 toColId = self.columns[self.activeColumnIndex]?.id || fromColId;
                                 if (toColId !== fromColId) {
@@ -2833,7 +2866,10 @@
                                 }
                                 self.endMobileDrag();
                             }
-                            self.moveTask(fromColId, toColId, taskId, newIndex, evt.oldIndex);
+                            // Return the dragged node before Alpine reconciles the task arrays.
+                            const siblings = Array.from(evt.from.children).filter(child => child.matches('[data-id]') && child !== evt.item);
+                            evt.from.insertBefore(evt.item, siblings[evt.oldDraggableIndex] || evt.from.querySelector('.board-empty-state'));
+                            self.moveTask(fromColId, toColId, taskId, newIndex, evt.oldDraggableIndex);
                             self.finishRealtimeDrag();
                         }
                     });
@@ -2890,7 +2926,7 @@
                             body: JSON.stringify({ column_id: parseInt(toColId), position: safeIndex }),
                         });
                         const data = await response.json().catch(() => ({}));
-                        if (!response.ok) throw new Error(data.message || 'انتقال وظیفه انجام نشد.');
+                        if (!response.ok || response.redirected) throw new Error(data.message || 'انتقال وظیفه انجام نشد.');
                         this.showToast(fromColId === toColId ? 'ترتیب وظیفه ذخیره شد' : 'وظیفه به ستون جدید منتقل شد');
                     } catch (error) {
                         snapshot.forEach(savedColumn => {

@@ -97,7 +97,7 @@
     "/{workspace}/{project}/board": {
       "targetKind": "existing-ui",
       "projectId": "3a744288-7bef-47f8-b9ba-6a41948a5efd",
-      "activeDraftId": "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c",
+      "activeDraftId": "0010ce4b-fb1f-4869-92c6-b215f7ec2c49",
       "designSystemPath": ".superdesign/design-system.md",
       "referenceIds": [
         "public-assets-logo-horizental-logo-black-transparent.png"
@@ -112,24 +112,27 @@
       "contextFiles": [
         ".superdesign/design-system.md",
         ".superdesign/init/theme.md",
-        "resources/views/board.blade.php:1:650",
+        "resources/views/board.blade.php:90:240",
+        "resources/views/board.blade.php:340:670",
+        "resources/views/board.blade.php:925:1035",
         "resources/views/components/workspace-shell.blade.php",
         "resources/views/components/navbar.blade.php",
         "resources/views/components/notification-menu.blade.php",
         "resources/css/app.css:1:17",
         "resources/css/today.css",
-        "resources/css/board.css"
+        "resources/css/board.css:1:278",
+        "resources/css/board.css:1010:1185"
       ],
       "fingerprints": {
         ".superdesign/design-system.md": "eae787084b9037e4ee674bcf52bafd1483e9aa28be429e7dcdb1ff986a137564",
         ".superdesign/init/theme.md": "342de9b2c43e2300de348eff4070efa4fb726e518b312412a62968d0bb999c9b",
-        "resources/views/board.blade.php": "3c312e2155b87fc6ea3e83d9f44f5d4b858248178da99bace9396f0b06b80fa6",
+        "resources/views/board.blade.php": "4627e97f3de9200e4fd9d63bca449843cc3121ab5d04111ba3e869e0b51b2397",
         "resources/views/components/workspace-shell.blade.php": "caa5ceeaa19b7c98171b35464f6e5b29dddf09420a95302fe5e218043c14f2d8",
-        "resources/views/components/navbar.blade.php": "34696ec24553dfa474216fd2b09fa8a16d91f3dd23ce996fb36655d347483947",
-        "resources/views/components/notification-menu.blade.php": "c3a49846c6ce72bfcdbfbb5a16b4971bb605f807d83a840521e97f325683dde2",
-        "resources/css/app.css": "2cab959a8ed03b116ac602cd774ef0957a4828cf36f3d9258a17edc91708d94e",
-        "resources/css/today.css": "b2d53dd24d638d70b891753c8b91eeef3d2fadcc871f54a73a9376a642c66a4f",
-        "resources/css/board.css": "41f34f9338d8024c4e6e1f83988d7eeaa9b18508485a7a46a0b76fba4d91ea42"
+        "resources/views/components/navbar.blade.php": "07d62b8b8983ae72cc682f4de13fde20872eb25fe45ea6a9f8e275dc85fe4806",
+        "resources/views/components/notification-menu.blade.php": "b85859db139b8ed891db5898b63995078c266d6a21f2ce6b76bf6376047f8887",
+        "resources/css/app.css": "189b08875a0bd5c6e6edb7eb36f841d1bbd782260e40099aee427e9d7f6a5f22",
+        "resources/css/today.css": "2db06b88527eec7411caa39604c7440e41aa617b1b7ba123add906ebd09814a2",
+        "resources/css/board.css": "61f46df728f0c51058037b9e3e4d63bda08f135fad44d36701bc0dce7afa9d89"
       },
       "components": [],
       "drafts": {
@@ -137,9 +140,33 @@
           "title": "Project Board — Direction B Product-led Editorial",
           "visualDirection": "warm Direction B Kanban workspace with tonal columns, white task cards, compact metadata, clear cycle progress, and consistent RTL shell",
           "currentVersion": 1
+        },
+        "0010ce4b-fb1f-4869-92c6-b215f7ec2c49": {
+          "title": "Neova — Minimal Board · Approval Concept",
+          "visualDirection": "Minimal monochrome Persian RTL board, inline task capture, progressive task details, mobile single-column navigation. Approval pending.",
+          "currentVersion": 2,
+          "parentDraftId": "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c"
+        },
+        "d2154437-8584-4f51-bd00-fe04919d6224": {
+          "title": "Neova — Minimal Task Drawer · Approval Concept",
+          "visualDirection": "Minimal monochrome Persian RTL board, inline task capture, progressive task details, mobile single-column navigation. Approval pending.",
+          "currentVersion": 2,
+          "parentDraftId": "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c"
+        },
+        "0e23e363-f02f-43e5-a525-1dfb42917a20": {
+          "title": "Neova — Minimal Board · Mobile Approval",
+          "visualDirection": "Minimal monochrome Persian RTL board, inline task capture, progressive task details, mobile single-column navigation. Approval pending.",
+          "currentVersion": 2,
+          "parentDraftId": "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c"
         }
       },
-      "updatedAt": "2026-08-21T00:00:00+03:30"
+      "updatedAt": "2026-09-19T06:58:57.132323+00:00",
+      "approvalStatus": "pending",
+      "reviewDraftIds": [
+        "0010ce4b-fb1f-4869-92c6-b215f7ec2c49",
+        "d2154437-8584-4f51-bd00-fe04919d6224",
+        "0e23e363-f02f-43e5-a525-1dfb42917a20"
+      ]
     }
   }
 }

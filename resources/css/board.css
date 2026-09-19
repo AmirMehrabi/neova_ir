@@ -1149,3 +1149,29 @@ body.column-reorder-active * {
         padding: 10px 12px;
     }
 }
+
+/* The marketing illustration also uses .neova-board; the app must fit its viewport. */
+body.app-page.neova-board { width: 100%; max-width: 100%; }
+
+/* Keep mobile navigation inside the viewport and preserve native swipe gestures. */
+@media (max-width: 767px) {
+    .neova-board .mobile-board-track { width: 100%; min-width: 0; }
+    .neova-board .mobile-board-column { min-width: 0; width: calc(100% - 12px); min-height: 0; height: max(340px, calc(100dvh - 27rem)); }
+    .neova-board .mobile-column-tabs > button { flex-shrink: 0; }
+    .neova-board .board-column-position {
+        display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        font-size: 11px; color: var(--board-muted);
+    }
+    .neova-board .board-column-position select {
+        flex: 1; min-width: 0; min-height: 44px; padding: 8px;
+        border: 1px solid var(--board-line); border-radius: 10px;
+        background: var(--board-surface); color: var(--board-ink);
+    }
+}
+
+/* Empty columns remain large enough to receive a card. */
+.neova-board .board-task-list,
+.neova-board .mobile-task-scroll { min-height: 120px; }
+
+.neova-board .board-task-list > .task-card,
+.neova-board .mobile-task-scroll > .task-card { flex-shrink: 0; }

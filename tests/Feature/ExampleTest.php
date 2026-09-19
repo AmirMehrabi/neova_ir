@@ -16,12 +16,12 @@ class ExampleTest extends TestCase
 
         $response
             ->assertOk()
-            ->assertSee('کارها را از توی چت بیرون بیاورید.')
+            ->assertSee('نرم افزار مدیریت پروژه برای تیم‌های کوچک')
             ->assertSee('رایگان در نسخه بتا شروع کنید')
             ->assertSee('امروز من')
-            ->assertSee('سه بخش، یک تصویر مشترک')
-            ->assertSee('شاید این‌ها را بپرسید.')
-            ->assertSee('نئووا رایگان است؟')
+            ->assertSee('برنامه‌ریزی و پیگیری پروژه')
+            ->assertSee('پرسش‌های نرم افزار مدیریت پروژه')
+            ->assertSee('آیا نئووا رایگان است؟')
             ->assertSee(route('auth'), false);
     }
 }

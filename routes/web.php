@@ -20,6 +20,22 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::get('/sitemap.xml', function () {
+    $urls = collect(['/'])->merge(array_keys(config('seo_pages')));
+    return response()->view('seo.sitemap', compact('urls'))->header('Content-Type', 'application/xml');
+})->name('sitemap');
+
+Route::get('/{seoPage}', function (string $seoPage) {
+    abort_unless($page = config("seo_pages.{$seoPage}"), 404);
+    return view('seo.page', ['page' => $page, 'slug' => $seoPage]);
+})->where('seoPage', 'project-manager|project-management')->name('seo.show');
+
+Route::get('/{section}/{seoPage}', function (string $section, string $seoPage) {
+    $slug = "{$section}/{$seoPage}";
+    abort_unless($page = config("seo_pages.{$slug}"), 404);
+    return view('seo.page', compact('page', 'slug'));
+})->where('section', 'features|solutions|alternatives')->where('seoPage', '[a-z0-9-]+');
+
 Route::get('/auth', [AuthController::class, 'showAuth'])->name('auth');
 Route::post('/auth/send-otp', [AuthController::class, 'sendOtp'])->name('auth.send-otp');
 Route::post('/auth/verify-otp', [AuthController::class, 'verifyOtp'])->name('auth.verify-otp');
