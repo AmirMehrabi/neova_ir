@@ -1175,3 +1175,400 @@ body.app-page.neova-board { width: 100%; max-width: 100%; }
 
 .neova-board .board-task-list > .task-card,
 .neova-board .mobile-task-scroll > .task-card { flex-shrink: 0; }
+
+/* Minimal board approved in Superdesign */
+body.app-page.neova-board {
+    --board-paper: #F7F7F5;
+    --board-surface: #FFFFFF;
+    --board-surface-muted: transparent;
+    --board-ink: #111111;
+    --board-muted: #8A8A84;
+    --board-line: #E2E2DE;
+    background: var(--board-paper) !important;
+}
+
+.workspace-shell--board .app-navbar--embedded {
+    border-color: var(--board-line) !important;
+    background: #FFFFFF !important;
+    box-shadow: none !important;
+}
+
+.workspace-shell--board .neova-board .board-filter-bar,
+.workspace-shell--board .neova-board .board-bulk-bar {
+    background: #FFFFFF;
+    border-color: var(--board-line);
+}
+
+.neova-board .board-nav-control {
+    min-height: 36px;
+    border-color: transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: #555552;
+    box-shadow: none;
+}
+
+.neova-board .board-nav-control--primary,
+.neova-board .board-nav-control--primary:hover,
+.neova-board .board-nav-control--primary:focus-visible {
+    border-color: #111111;
+    background: #111111;
+    color: #FFFFFF;
+    box-shadow: none;
+}
+
+.neova-board #desktop-column-track {
+    align-items: stretch;
+    gap: 20px;
+    padding: 20px 28px 28px;
+}
+
+.workspace-shell--board .neova-board .board-column-shell,
+.workspace-shell--board .neova-board .board-column-shell:nth-child(n) {
+    width: 280px;
+    min-height: calc(100dvh - 11.5rem);
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+}
+
+.neova-board .board-column-header {
+    min-height: 46px;
+    padding: 0 5px 12px;
+    border: 0;
+    background: transparent;
+}
+
+.neova-board .board-column-header-accent,
+.neova-board .board-column-header__wip { display: none; }
+.neova-board .board-column-header__utilities > button { display: none; }
+.neova-board .board-column-header__title { font-size: 12px; color: #111111; }
+.neova-board .board-column-header__count {
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: #8A8A84;
+    font-size: 10px;
+    font-weight: 500;
+}
+
+.neova-board .board-column-well,
+.neova-board .mobile-task-list {
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    overflow: visible;
+}
+
+.neova-board .board-task-list,
+.neova-board .mobile-task-scroll {
+    gap: 10px;
+    padding: 0 2px 8px;
+}
+
+.neova-board .task-card,
+.neova-board .mobile-task-list .task-card {
+    min-height: 92px;
+    padding: 16px !important;
+    border: 0 !important;
+    border-radius: 12px;
+    background: #FFFFFF !important;
+    box-shadow: none !important;
+}
+
+.neova-board .task-card:hover,
+.neova-board .task-card:focus-within {
+    box-shadow: 0 0 0 1px var(--board-line) !important;
+    transform: none;
+}
+
+.neova-board .task-card__title { color: #111111; font-size: 13px; line-height: 1.9; }
+.neova-board .task-card__desc,
+.neova-board .task-card__id,
+.neova-board .task-card__priority-badge,
+.neova-board .task-card__checklist-count,
+.neova-board .task-card__blocked,
+.neova-board .task-card [class*="rounded-md"][class*="text-[10px]"] { display: none !important; }
+.neova-board .board-task-select { opacity: 0; transition: opacity 150ms ease; }
+.neova-board .task-card:hover .board-task-select,
+.neova-board .board-task-select:checked,
+.neova-board .board-task-select:focus-visible { opacity: 1; }
+.neova-board .task-card .w-6.h-6.rounded-full {
+    background: #F0F0ED !important;
+    color: #555552 !important;
+    box-shadow: none;
+}
+.neova-board .task-card .w-6.h-6.rounded-full span { color: #555552 !important; }
+
+.neova-board .board-column-footer {
+    position: static;
+    padding: 4px 0 0;
+    background: transparent;
+}
+
+.neova-board .board-create-task,
+.neova-board .board-empty-state__action {
+    min-height: 42px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #8A8A84;
+    box-shadow: none;
+}
+.neova-board .board-create-task__icon { width: 22px; height: 22px; background: transparent; color: #8A8A84; }
+.neova-board .board-create-task__copy small { display: none; }
+.neova-board .board-create-task__copy strong { font-size: 11px; font-weight: 500; }
+.neova-board .board-empty-state {
+    min-height: 172px;
+    border: 1px dashed var(--board-line);
+    border-radius: 12px;
+    background: transparent;
+}
+
+.neova-board .board-quick-composer {
+    flex: 0 0 auto;
+    margin: 4px 2px 8px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #FFFFFF;
+}
+.neova-board .board-quick-composer textarea {
+    width: 100%;
+    min-height: 58px;
+    resize: vertical;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #111111;
+    font-size: 13px;
+    line-height: 1.8;
+}
+.neova-board .board-quick-composer > div { display: flex; align-items: center; gap: 6px; }
+.neova-board .board-quick-composer button { min-height: 34px; padding: 0 10px; border-radius: 7px; color: #555552; font-size: 10px; }
+.neova-board .board-quick-composer button[type="submit"] { background: #111111; color: #FFFFFF; }
+.neova-board .board-quick-composer button:last-child { margin-right: auto; color: #8A8A84; }
+
+/* One stable drawer layer prevents competing modal backdrops and transitions. */
+.neova-board .task-drawer-layer { background: rgba(17, 17, 17, .15); }
+.neova-board .task-modal-shell,
+.neova-board .task-modal-shell--create,
+.neova-board .task-modal-shell--editing {
+    width: min(440px, 100vw);
+    max-width: 100vw;
+    border: 0;
+    border-radius: 0;
+    box-shadow: 8px 0 40px rgba(17, 17, 17, .08);
+}
+.neova-board .task-modal-header {
+    min-height: 64px;
+    padding: 0 24px;
+    border-bottom: 1px solid var(--board-line);
+    background: #FFFFFF;
+    color: #111111;
+}
+.neova-board .task-modal-header h3 { color: #8A8A84 !important; font-size: 11px; font-weight: 500; }
+.neova-board .task-modal-header__subtitle,
+.neova-board .task-modal-header h3 + span { display: none; }
+.neova-board .task-modal-body { padding: 26px 24px; background: #FFFFFF; }
+.neova-board .task-modal-section,
+.neova-board .task-modal-section--description {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+.neova-board .task-modal-section--description .task-modal-section__heading { display: none; }
+.neova-board .task-modal-title-input {
+    margin: 0 0 20px;
+    padding: 0;
+    border: 0 !important;
+    border-radius: 0;
+    color: #111111;
+    font-size: 21px;
+    font-weight: 800;
+    line-height: 1.7;
+    box-shadow: none !important;
+}
+.neova-board .task-modal-section--description textarea {
+    min-height: 105px;
+    padding: 0;
+    border: 0 !important;
+    border-radius: 0;
+    color: #555552;
+    line-height: 2;
+    box-shadow: none !important;
+}
+.neova-board .task-modal-section--description > p,
+.neova-board .task-modal-section--description > .mt-3 { display: none; }
+.neova-board .task-details-toggle {
+    display: flex;
+    width: 100%;
+    min-height: 42px;
+    align-items: center;
+    gap: 8px;
+    padding: 0;
+    border-top: 1px solid var(--board-line);
+    color: #555552;
+    font-size: 11px;
+    font-weight: 600;
+}
+.neova-board .task-details-toggle svg { transition: transform 150ms ease; }
+.neova-board .task-advanced-section { padding: 16px 0; border-top: 1px solid var(--board-line); }
+.neova-board .task-unsaved-warning {
+    padding: 12px;
+    border-radius: 8px;
+    background: #F0F0ED;
+    color: #555552;
+    font-size: 11px;
+    line-height: 1.8;
+}
+.neova-board .task-unsaved-warning > div { display: flex; gap: 14px; margin-top: 7px; }
+.neova-board .task-unsaved-warning button { color: #111111; font-weight: 700; }
+.neova-board .task-modal-footer {
+    padding: 14px 24px;
+    border-color: var(--board-line);
+    background: #FFFFFF;
+}
+.neova-board .task-modal-primary { border: 0; border-radius: 8px; background: #111111 !important; box-shadow: none; }
+.neova-board .task-modal-cancel { border: 0; border-radius: 8px; }
+
+@media (max-width: 767px) {
+    .workspace-shell--board .neova-board .mobile-column-tabs { background: #FFFFFF; }
+    .neova-board .mobile-board-track { padding: 14px 16px 18px; }
+    .workspace-shell--board .neova-board .mobile-board-column {
+        width: calc(100% - 6px);
+        min-height: 0;
+        height: calc(100dvh - 19rem);
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+    }
+    .neova-board .board-column-position,
+    .neova-board .board-column-mobile-header .column-drag-handle,
+    .neova-board .task-drag-handle { display: none; }
+    .neova-board .board-column-mobile-header {
+        min-height: 42px;
+        padding: 0 3px 10px;
+        border: 0;
+        background: transparent;
+    }
+    .neova-board .mobile-task-scroll { overflow-y: auto; }
+    .neova-board .task-modal-shell,
+    .neova-board .task-modal-shell--create,
+    .neova-board .task-modal-shell--editing { width: 100vw; height: 100dvh; }
+    .neova-board .task-modal-body { padding: 24px 20px; }
+    .neova-board .task-modal-footer { padding: 12px 20px max(12px, env(safe-area-inset-bottom)); }
+}
+
+/* Direct mobile navigation and moves remain usable without a drag gesture. */
+@media (max-width: 767px) {
+    .neova-board .mobile-column-nav {
+        flex: 0 0 44px;
+        width: 44px;
+        height: 44px;
+        border: 1px solid var(--board-line);
+        border-radius: 10px;
+        background: #fff;
+        color: var(--board-ink);
+        font-size: 24px;
+        line-height: 1;
+    }
+    .neova-board .mobile-column-nav:disabled { opacity: .35; }
+    .neova-board .mobile-board-column { scroll-snap-stop: normal; }
+    .neova-board .board-column-position { display: flex; margin: 0 3px 10px; }
+    .neova-board .board-column-position select { min-height: 44px; }
+    .neova-board .mobile-task-move {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid var(--board-line);
+        color: var(--board-muted);
+        font-size: 11px;
+        font-weight: 700;
+    }
+    .neova-board .mobile-task-move select {
+        min-width: 120px;
+        max-width: 60%;
+        min-height: 44px;
+        padding: 0 8px;
+        border: 1px solid var(--board-line);
+        border-radius: 8px;
+        background: #fff;
+        color: var(--board-ink);
+        font-size: 11px;
+    }
+}
+
+/* Task workspace: centered on desktop, full-screen on phones. */
+.neova-board .task-drawer-layer > div { align-items: center; justify-content: center; padding: 20px; }
+.neova-board .task-modal-shell,
+.neova-board .task-modal-shell--create,
+.neova-board .task-modal-shell--editing {
+    width: min(960px, calc(100vw - 40px));
+    max-width: 960px;
+    height: min(90dvh, 900px);
+    min-height: 0;
+    max-height: 90dvh;
+    border: 1px solid var(--board-line);
+    border-radius: 16px !important;
+    box-shadow: 0 24px 80px rgba(17,17,17,.18);
+}
+.neova-board .task-modal-header { padding: 18px 24px; }
+.neova-board .task-modal-header h3 { color: var(--board-ink) !important; font-size: 18px; font-weight: 800; }
+.neova-board .task-modal-header__subtitle { display: block; margin-top: 4px; font-size: 11px; }
+.neova-board .task-modal-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(280px, .85fr);
+    align-content: start;
+    gap: 20px 24px;
+    padding: 24px;
+}
+.neova-board .task-modal-body > * { margin-top: 0 !important; }
+.neova-board .task-modal-body > .task-unsaved-warning,
+.neova-board .task-modal-body > [role="alert"] { grid-column: 1 / -1; order: -1; }
+.neova-board .task-modal-title-field { grid-column: 1 / -1; order: 0; }
+.neova-board .task-modal-title-field label { display: block; margin-bottom: 8px; color: var(--board-ink); font-size: 12px; font-weight: 800; }
+.neova-board .task-modal-section--description { grid-column: 1; order: 1; }
+.neova-board .task-modal-section[aria-labelledby="task-settings-title"] { grid-column: 2; order: 2; }
+.neova-board .task-modal-body > .task-details-toggle,
+.neova-board .task-modal-body > .task-modal-section:not(.task-modal-section--description):not([aria-labelledby="task-settings-title"]) { grid-column: 1 / -1; order: 4; }
+.neova-board .task-modal-body > .task-details-toggle { order: 3; }
+.neova-board .task-modal-section--description .task-modal-section__heading { display: flex; }
+.neova-board .task-modal-section--description > p,
+.neova-board .task-modal-section--description > .mt-3 { display: block; }
+.neova-board .task-modal-title-input { width: 100%; min-height: 48px; padding: 8px 10px; border: 1px solid var(--board-line) !important; border-radius: 9px; font-size: 18px; }
+.neova-board .task-modal-section--description textarea { width: 100%; min-height: 125px; padding: 10px; border: 1px solid var(--board-line) !important; border-radius: 9px; }
+.neova-board .task-settings-grid { grid-template-columns: minmax(0, 1fr); gap: 18px; }
+.neova-board .task-settings-grid > div { min-width: 0; }
+.neova-board .task-due-time { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.neova-board .task-due-time label { color: var(--board-muted); font-size: 11px; font-weight: 700; }
+.neova-board .task-due-time input { min-height: 38px; padding: 4px 8px; border: 1px solid var(--board-line); border-radius: 8px; background: #fff; font-size: 12px; }
+.neova-board .task-due-time input:disabled { opacity: .45; }
+.neova-board .task-due-time button { color: var(--board-muted); font-size: 10px; }
+.neova-board .task-due-timezone { margin-top: 4px; color: var(--board-muted); font-size: 10px; }
+
+@media (max-width: 767px) {
+    .neova-board .task-drawer-layer > div { padding: 0; }
+    .neova-board .task-modal-shell,
+    .neova-board .task-modal-shell--create,
+    .neova-board .task-modal-shell--editing {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100dvh;
+        max-height: 100dvh;
+        border: 0;
+        border-radius: 0 !important;
+    }
+    .neova-board .task-modal-header { padding: max(16px, env(safe-area-inset-top)) 18px 14px; }
+    .neova-board .task-modal-body { display: flex; flex-direction: column; gap: 20px; padding: 18px; }
+    .neova-board .task-modal-section[aria-labelledby="task-settings-title"] { order: 1; }
+    .neova-board .task-modal-section--description { order: 2; }
+    .neova-board .task-settings-grid { grid-template-columns: minmax(0, 1fr); }
+    .neova-board .task-modal-footer { padding: 12px 18px max(12px, env(safe-area-inset-bottom)); }
+}

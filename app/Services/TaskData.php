@@ -33,6 +33,7 @@ class TaskData
             'description' => $task->description ?? '',
             'priority' => $task->priority,
             'dueDate' => $task->due_date?->format('Y-m-d') ?? '',
+            'dueTime' => $task->due_time ? substr($task->due_time, 0, 5) : '',
             'isBlocked' => $task->is_blocked,
             'blockedReason' => $task->blocked_reason,
             'completedAt' => $task->completed_at?->toIso8601String(),

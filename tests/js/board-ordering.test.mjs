@@ -51,7 +51,7 @@ test('invalid and concurrent moves do not persist', async () => {
     await state.moveColumnToIndex('1', 2);
     assert.deepEqual(state.columns.map(c => c.id), ['1', '2', '3', '4']);
 });
-test('RTL drag chooses both sides of an intermediate column and restores DOM before updating Alpine', () => {
+test('RTL drag lets Sortable place a column between siblings and restores DOM before updating Alpine', () => {
     let options;
     globalThis.window = { matchMedia: () => ({ matches: false }) };
     globalThis.Sortable = class { constructor(el, config) { options = config; } };
@@ -70,9 +70,8 @@ test('RTL drag chooses both sides of an intermediate column and restores DOM bef
         assert.deepEqual(track.children, children);
     };
     method('initColumnSortable').call(state, 'desktop');
-    const event = { related: children[1], relatedRect: { left: 100, width: 200 } };
-    assert.equal(options.onMove(event, { clientX: 150 }), 1);
-    assert.equal(options.onMove(event, { clientX: 250 }), -1);
+    assert.equal(options.direction, 'horizontal');
+    assert.equal(options.onMove, undefined);
     options.onStart({});
     track.children = [children[0], children[3], children[1], children[2]];
     options.onEnd({});

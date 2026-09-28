@@ -49,7 +49,7 @@
                             <article class="today-row" :data-today-task="task.dbId" :class="busyTasks.includes(task.dbId) ? 'is-busy' : ''">
                                 @if ($canEdit)<button type="button" class="today-drag" aria-label="تغییر اولویت" title="برای تغییر اولویت بکشید"><svg viewBox="0 0 16 16" fill="currentColor"><circle cx="5" cy="4" r="1"/><circle cx="11" cy="4" r="1"/><circle cx="5" cy="8" r="1"/><circle cx="11" cy="8" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="11" cy="12" r="1"/></svg></button>@endif
                                 @if ($canEdit)<button type="button" class="today-check" @click="completeTask(task)" aria-label="انجام شد"></button>@endif
-                                <div class="today-row__copy"><strong x-text="task.title"></strong><small><span x-text="task.project.name"></span><template x-if="task.dueDate"><span x-text="' · ' + task.dueDate"></span></template></small></div>
+                                <div class="today-row__copy"><strong x-text="task.title"></strong><small><span x-text="task.project.name"></span><template x-if="task.dueDate"><span x-text="' · ' + task.dueDate + (task.dueTime ? ' · ' + task.dueTime : '')"></span></template></small></div>
                                 <template x-if="task.assignees?.[0]"><span class="today-row__avatar" x-text="task.assignees[0].initials"></span></template>
                                 @if ($canEdit)
                                     <div class="today-row__actions">
@@ -95,7 +95,7 @@
         <section class="today-section today-secondary-section" x-show="overdueTasks.length">
             <div class="today-section__heading"><h2>عقب‌افتاده</h2><span x-text="overdueTasks.length"></span></div>
             <template x-for="task in overdueTasks" :key="task.dbId">
-                <div class="today-row"><span class="today-row__due">!</span><div><strong x-text="task.title"></strong><small x-text="task.project.name + ' · سررسید ' + task.dueDate"></small></div><button @click="addExisting(task, false)">افزودن به امروز</button></div>
+                <div class="today-row"><span class="today-row__due">!</span><div><strong x-text="task.title"></strong><small x-text="task.project.name + ' · سررسید ' + task.dueDate + (task.dueTime ? ' · ' + task.dueTime : '')"></small></div><button @click="addExisting(task, false)">افزودن به امروز</button></div>
             </template>
         </section>
 

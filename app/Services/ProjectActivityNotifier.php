@@ -80,7 +80,7 @@ class ProjectActivityNotifier
         );
 
         $changed = collect([
-            'title', 'description', 'priority', 'due_date', 'tags', 'checklist', 'comments', 'column_id',
+            'title', 'description', 'priority', 'due_date', 'due_time', 'tags', 'checklist', 'comments', 'column_id',
         ])->contains(fn (string $field) => ($before[$field] ?? null) != $task->{$field});
 
         if (! $changed) {

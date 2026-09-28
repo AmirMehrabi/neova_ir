@@ -20,7 +20,7 @@ class Task extends Model
 
     protected $fillable = [
         'column_id', 'task_number', 'title', 'description', 'priority',
-        'due_date', 'is_blocked', 'blocked_reason', 'completed_at',
+        'due_date', 'due_time', 'is_blocked', 'blocked_reason', 'completed_at',
         'assignees', 'tags', 'checklist', 'comments', 'position',
     ];
 

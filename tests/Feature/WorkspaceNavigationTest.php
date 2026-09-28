@@ -116,6 +116,10 @@ class WorkspaceNavigationTest extends TestCase
             ->assertOk()
             ->assertSee('وظیفه جدید')
             ->assertSee('اولین وظیفه را ایجاد کنید')
+            ->assertSee('board-quick-composer', false)
+            ->assertSee('افزودن جزئیات')
+            ->assertSee('تغییرات این وظیفه هنوز ذخیره نشده‌اند')
+            ->assertDontSee("window.confirm('تغییرات ذخیره نشده‌اند", false)
             ->assertSee("'در ستون «' + column.title + '»'", false)
             ->assertSee("'ایجاد وظیفه جدید در ستون ' + column.title", false);
     }

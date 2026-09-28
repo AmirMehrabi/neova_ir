@@ -142,6 +142,7 @@ class ProjectActivityLogger
             'description' => ['توضیحات', 'task_description_changed'],
             'priority' => ['اولویت', 'task_priority_changed'],
             'due_date' => ['سررسید', 'task_due_date_changed'],
+            'due_time' => ['ساعت سررسید', 'task_due_time_changed'],
         ];
 
         foreach ($compare as $field => [$label, $kind]) {
@@ -185,11 +186,11 @@ class ProjectActivityLogger
 
     private function taskState(Task $task): array
     {
-        return $task->only(['title', 'description', 'priority', 'due_date', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
+        return $task->only(['title', 'description', 'priority', 'due_date', 'due_time', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
     }
 
     private function emptyTaskState(): array
     {
-        return ['title' => null, 'description' => null, 'priority' => null, 'due_date' => null, 'assignees' => [], 'tags' => [], 'checklist' => [], 'comments' => [], 'column_id' => null];
+        return ['title' => null, 'description' => null, 'priority' => null, 'due_date' => null, 'due_time' => null, 'assignees' => [], 'tags' => [], 'checklist' => [], 'comments' => [], 'column_id' => null];
     }
 }

@@ -83,6 +83,7 @@ class BoardController extends Controller
                     'priority' => $t->priority,
                     'assignees' => $t->assignees ?? [],
                     'dueDate' => $t->due_date?->format('Y-m-d') ?? '',
+                    'dueTime' => $t->due_time ? substr($t->due_time, 0, 5) : '',
                     'isBlocked' => $t->is_blocked,
                     'blockedReason' => $t->blocked_reason,
                     'completedAt' => $t->completed_at?->toIso8601String(),
@@ -171,6 +172,8 @@ class BoardController extends Controller
             'column_id' => 'required|exists:project_columns,id',
             'title' => 'required|string|max:500',
             'assignees' => ['nullable', 'array'],
+            'due_date' => ['nullable', 'date_format:Y-m-d', 'required_with:due_time'],
+            'due_time' => ['nullable', 'date_format:H:i'],
         ]);
         $this->validateAssignees($request);
 
@@ -195,6 +198,7 @@ class BoardController extends Controller
             'description' => $request->input('description', ''),
             'priority' => $request->input('priority', 'متوسط'),
             'due_date' => $request->input('due_date'),
+            'due_time' => $request->filled('due_date') && $request->filled('due_time') ? $request->input('due_time') : null,
             'assignees' => $request->input('assignees', []),
             'tags' => $request->input('tags', []),
             'checklist' => $request->input('checklist', []),
@@ -227,6 +231,7 @@ class BoardController extends Controller
             'description' => ['sometimes', 'nullable', 'string', 'max:50000'],
             'priority' => ['sometimes', Rule::in(['بالا', 'متوسط', 'پایین'])],
             'due_date' => ['sometimes', 'nullable', 'date'],
+            'due_time' => ['sometimes', 'nullable', 'date_format:H:i'],
             'assignees' => ['sometimes', 'array'],
             'assignees.*' => ['string', 'max:255'],
             'tags' => ['sometimes', 'array'],
@@ -236,6 +241,9 @@ class BoardController extends Controller
             'expected_updated_at' => ['sometimes', 'nullable', 'date'],
             'force' => ['sometimes', 'boolean'],
         ]);
+        if ($request->filled('due_time') && ! ($request->filled('due_date') || $task->due_date && ! $request->has('due_date'))) {
+            throw ValidationException::withMessages(['due_date' => 'برای تعیین ساعت، تاریخ سررسید را نیز انتخاب کنید.']);
+        }
         $this->ensureTaskInCurrentProject($request, $task);
         if (! $request->boolean('force') && isset($validated['expected_updated_at'])
             && $task->updated_at->toIso8601String() !== Carbon::parse($validated['expected_updated_at'])->toIso8601String()) {
@@ -249,15 +257,22 @@ class BoardController extends Controller
             $this->ensureColumnInCurrentProject($request, ProjectColumn::findOrFail($validated['column_id']));
         }
         $before = $task->only([
-            'title', 'description', 'priority', 'due_date', 'assignees',
+            'title', 'description', 'priority', 'due_date', 'due_time', 'assignees',
             'tags', 'checklist', 'comments', 'column_id',
         ]);
 
         $targetColumnId = isset($validated['column_id']) ? (int) $validated['column_id'] : (int) $task->column_id;
-        $task->update($request->only([
-            'title', 'description', 'priority', 'due_date',
+        $changes = $request->only([
+            'title', 'description', 'priority', 'due_date', 'due_time',
             'tags', 'checklist', 'position',
-        ]));
+        ]);
+        if ($request->has('due_time') && ! $request->filled('due_time')) {
+            $changes['due_time'] = null;
+        }
+        if ($request->has('due_date') && ! $request->filled('due_date')) {
+            $changes['due_time'] = null;
+        }
+        $task->update($changes);
         if ($request->has('assignees')) {
             $assignments->syncFromNames($task, $request->input('assignees', []));
         }
@@ -312,7 +327,7 @@ class BoardController extends Controller
         }
 
         foreach ($tasks as $task) {
-            $before = $task->only(['title', 'description', 'priority', 'due_date', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
+            $before = $task->only(['title', 'description', 'priority', 'due_date', 'due_time', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
             if ($action === 'column') {
                 $workflow->move($task, $targetColumn, $targetColumn->tasks()->count(), $request->user());
 
@@ -327,7 +342,7 @@ class BoardController extends Controller
             $changes = match ($action) {
                 'priority' => ['priority' => $value],
                 'tag' => ['tags' => collect($task->tags ?? [])->push((string) $value)->unique()->values()->all()],
-                'due_date' => ['due_date' => $value ?: null],
+                'due_date' => ['due_date' => $value ?: null, 'due_time' => null],
             };
             $task->update($changes);
             $activityLogger->taskUpdated($task->refresh(), $before, $request->user());
@@ -405,7 +420,7 @@ class BoardController extends Controller
             }
         }
         $before = $task->only([
-            'title', 'description', 'priority', 'due_date', 'assignees',
+            'title', 'description', 'priority', 'due_date', 'due_time', 'assignees',
             'tags', 'checklist', 'comments', 'column_id',
         ]);
         $comment = [
@@ -531,7 +546,7 @@ class BoardController extends Controller
                         ->values()
                         ->all();
                     if ($assignees !== ($task->assignees ?? [])) {
-                        $before = $task->only(['title', 'description', 'priority', 'due_date', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
+                        $before = $task->only(['title', 'description', 'priority', 'due_date', 'due_time', 'assignees', 'tags', 'checklist', 'comments', 'column_id']);
                         $task->update(['assignees' => $assignees]);
                         $changedTasks[] = [$task->fresh(), $before];
                     }

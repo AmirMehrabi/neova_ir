@@ -192,6 +192,12 @@
                         </div>
                     </div>
                     <div>
+                        <label class="board-field-label mb-2" for="desktop-due-filter">سررسید</label>
+                        <select id="desktop-due-filter" x-model="filterByDue" class="w-full h-9 rounded-lg border border-[#E2E8F0] bg-white px-2 text-[11px]">
+                            <option value="">همه سررسیدها</option><option value="overdue">عقب‌افتاده</option><option value="today">امروز</option><option value="next7">۷ روز آینده</option><option value="undated">بدون سررسید</option>
+                        </select>
+                    </div>
+                    <div>
                         <p class="board-field-label mb-2">برچسب</p>
                         <div class="flex flex-wrap gap-1.5">
                             <template x-for="tag in allTags" :key="'filter-t-' + tag.name">
@@ -288,6 +294,7 @@
                         <span aria-hidden="true">×</span>
                     </button>
                 </template>
+                <button x-show="filterByDue" type="button" @click="filterByDue = ''" class="filter-chip is-active">سررسید: <span x-text="dueFilterLabel()"></span><span aria-hidden="true">×</span></button>
                 <button type="button" @click="clearAllFilters()" class="text-[11px] font-bold text-red-500 mr-auto">پاک کردن همه</button>
             </div>
         </div>
@@ -296,7 +303,7 @@
     {{-- Mobile filter sheet --}}
     <div x-show="filterPanelOpen" x-cloak class="md:hidden fixed inset-0 z-[45]" @keydown.escape.window="filterPanelOpen = false">
         <div class="absolute inset-0 bg-[#071B33]/40" @click="filterPanelOpen = false"></div>
-        <div class="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white border-t border-[#E2E8F0] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3 shadow-lg" @click.stop>
+        <div class="absolute inset-x-0 bottom-0 max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-t-2xl bg-white border-t border-[#E2E8F0] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3 shadow-lg" @click.stop>
             <div class="flex items-center justify-between">
                 <p class="text-[14px] font-black text-[#18212B]">فیلتر تخته</p>
                 <button type="button" @click="filterPanelOpen = false" class="text-[12px] font-bold text-[#64748B] min-h-10 px-2">بستن</button>
@@ -317,6 +324,12 @@
                         <button type="button" @click="togglePriorityFilter(p)" class="filter-chip" :class="filterByPriority.includes(p) ? 'is-active' : ''" x-text="p"></button>
                     </template>
                 </div>
+            </div>
+            <div>
+                <label class="board-field-label" for="mobile-due-filter">سررسید</label>
+                <select id="mobile-due-filter" x-model="filterByDue" class="w-full min-h-11 rounded-lg border border-[#E2E8F0] bg-white px-3 text-[12px]">
+                    <option value="">همه سررسیدها</option><option value="overdue">عقب‌افتاده</option><option value="today">امروز</option><option value="next7">۷ روز آینده</option><option value="undated">بدون سررسید</option>
+                </select>
             </div>
             <div>
                 <p class="board-field-label">برچسب</p>
@@ -378,6 +391,14 @@
                                         <div class="my-1 border-t border-[#F1F5F9]"></div>
                                         <button @click="openColumnMenuId = null; moveColumnByStep(column.id, -1)" :disabled="columnMovePending || colIdx === 0" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به قبل</button>
                                         <button @click="openColumnMenuId = null; moveColumnByStep(column.id, 1)" :disabled="columnMovePending || colIdx === columns.length - 1" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به بعد</button>
+                                        <label class="block px-3 py-2 text-[11px] font-bold text-[#475569]">
+                                            جایگاه دقیق
+                                            <select :value="colIdx" :disabled="columnMovePending" @change="moveColumnToIndex(column.id, $event.target.value); openColumnMenuId = null" class="mt-1 w-full min-h-9 rounded-lg border border-[#E2E8F0] bg-white px-2">
+                                                <template x-for="(destination, position) in columns" :key="'desktop-position-' + destination.id">
+                                                    <option :value="position" x-text="toPersianDigits(position + 1) + ' — ' + destination.title"></option>
+                                                </template>
+                                            </select>
+                                        </label>
                                         <div class="my-1 border-t border-[#F1F5F9]"></div>
                                         <button @click="openColumnMenuId = null; confirmDeleteColumn(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-red-500 hover:bg-red-50">حذف</button>
                                     </div>
@@ -401,7 +422,7 @@
                                     <div class="flex items-start justify-between gap-2 mb-2">
                                         <div class="flex items-center gap-2">
                                             <input type="checkbox" :checked="isTaskSelected(task.dbId)" @click.stop="toggleTaskSelection(task.dbId)" class="board-task-select" aria-label="انتخاب وظیفه">
-                                            <span class="text-[11px] font-bold text-[#94A3B8]" x-text="task.id"></span>
+                                            <span class="task-card__id text-[11px] font-bold text-[#94A3B8]" x-text="task.id"></span>
                                         </div>
                                         <div class="flex flex-wrap gap-1 justify-end">
                                             <span
@@ -435,7 +456,7 @@
                                             <span x-show="(task.comments || []).length > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="toPersianDigits((task.comments || []).length) + ' نظر'"></span>
                                             <div class="flex items-center gap-1" x-show="task.dueDate">
                                                 <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                <span class="text-[11px] font-medium" :class="isOverdue(task.dueDate) ? 'text-red-500' : 'text-[#94A3B8]'" x-text="formatDate(task.dueDate)"></span>
+                                                <span class="text-[11px] font-medium" :class="isOverdue(task.dueDate, task.dueTime) ? 'text-red-500' : 'text-[#94A3B8]'" x-text="formatDate(task.dueDate, task.dueTime)"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -444,7 +465,7 @@
                         </template>
                         <div x-show="column.tasks.length === 0" class="board-empty-state">
                             @if ($canEdit)
-                                <button type="button" @click.stop="openAddModal(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
+                                <button type="button" @click.stop="openQuickComposer(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
                                     <span class="board-create-task__icon" aria-hidden="true">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
                                     </span>
@@ -459,8 +480,12 @@
                         </div>
                         </div>
                         @if ($canEdit)
+                            <form x-show="String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
+                                <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
+                                <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
+                            </form>
                             <div x-show="column.tasks.length > 0" class="board-column-footer">
-                                <button type="button" @click.stop="openAddModal(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
+                                <button type="button" @click.stop="openQuickComposer(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
                                     <span class="board-create-task__icon" aria-hidden="true">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
                                     </span>
@@ -481,10 +506,11 @@
 
         {{-- Mobile column navigator --}}
         <section class="md:hidden bg-white border-b border-[#DCE4EE] shadow-[0_5px_18px_rgba(7,27,51,0.05)] sticky top-[116px] z-20">
-            <div class="mobile-column-tabs flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2" role="tablist" aria-label="ستون‌های تخته">
+            <div x-ref="mobileColumnTabs" class="mobile-column-tabs flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2" role="tablist" aria-label="ستون‌های تخته">
                 <template x-for="(column, index) in columns" :key="'tab-' + column.id">
                     <button
                         @click="scrollToColumn(index)"
+                        :data-tab-index="index"
                         class="min-h-11 px-3 rounded-xl border flex items-center gap-1.5 whitespace-nowrap text-[10px] font-black transition-colors"
                         :class="activeColumnIndex === index ? 'bg-[#F1F3F2] border-[#AEB8B2] text-[#18212B]' : 'bg-white border-[#E2E8F0] text-[#64748B]'"
                         :aria-current="activeColumnIndex === index ? 'true' : 'false'"
@@ -496,17 +522,11 @@
                     </button>
                 </template>
             </div>
-            <div class="px-3 pb-2.5 flex items-center justify-between">
+            <div class="px-3 pb-2.5 flex items-center justify-between gap-2">
+                <button type="button" @click="scrollToColumn(activeColumnIndex - 1)" :disabled="activeColumnIndex === 0" class="mobile-column-nav" aria-label="ستون قبلی">›</button>
                 <span class="text-[9px] font-bold text-[#64748B]" x-text="toPersianDigits(activeColumnIndex + 1) + ' از ' + toPersianDigits(columns.length)"></span>
-                <div class="flex items-center gap-1.5" aria-hidden="true">
-                    <template x-for="(_, index) in columns" :key="'dot-' + index">
-                        <button tabindex="-1" @click="scrollToColumn(index)" class="h-1.5 rounded-full transition-all" :class="activeColumnIndex === index ? 'w-5 bg-[#18212B]' : 'w-1.5 bg-[#CBD5E1]'"></button>
-                    </template>
-                </div>
-                <span class="text-[9px] font-bold text-[#94A3B8] flex items-center gap-1">
-                    ورق بزنید
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7l-5 5 5 5m8-10l5 5-5 5M3 12h18"/></svg>
-                </span>
+                <span class="text-[11px] font-bold text-[#64748B] truncate" x-text="columns[activeColumnIndex]?.title || ''"></span>
+                <button type="button" @click="scrollToColumn(activeColumnIndex + 1)" :disabled="activeColumnIndex === columns.length - 1" class="mobile-column-nav" aria-label="ستون بعدی">‹</button>
             </div>
             @if ($canEdit)
                 <div class="px-3 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی دقیق ستون، جایگاه آن را انتخاب کنید.</div>
@@ -587,7 +607,7 @@
                                             </button>
                                         @endif
                                     </div>
-                                    <span class="block text-[11px] font-bold text-[#94A3B8] mb-1.5" x-text="task.id"></span>
+                                    <span class="task-card__id block text-[11px] font-bold text-[#94A3B8] mb-1.5" x-text="task.id"></span>
                                     <p class="task-card__title" x-html="highlightText(task.title, boardSearchQuery)"></p>
                                     <p x-show="task.description" class="task-card__desc" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="task-card__checklist-bar" x-show="checklistTotal(task) > 0">
@@ -605,16 +625,27 @@
                                             <span x-show="checklistTotal(task) > 0" class="task-card__checklist-count" x-text="checklistLabel(task)"></span>
                                             <div class="flex items-center gap-1" x-show="task.dueDate">
                                                 <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                <span class="text-[11px] font-bold" :class="isOverdue(task.dueDate) ? 'text-red-500' : 'text-[#64748B]'" x-text="formatDate(task.dueDate)"></span>
+                                                <span class="text-[11px] font-bold" :class="isOverdue(task.dueDate, task.dueTime) ? 'text-red-500' : 'text-[#64748B]'" x-text="formatDate(task.dueDate, task.dueTime)"></span>
                                             </div>
                                         </div>
                                     </div>
+                                    @if ($canEdit)
+                                        <label class="mobile-task-move" @click.stop>
+                                            <span>انتقال به ستون</span>
+                                            <select :disabled="taskMovePending" :aria-label="'انتقال وظیفه ' + task.title + ' به ستون'" @click.stop @change.stop="moveTask(column.id, $event.target.value, task.dbId, columns.find(c => String(c.id) === $event.target.value)?.tasks.length || 0); $event.target.value = ''">
+                                                <option value="">انتخاب ستون</option>
+                                                <template x-for="destination in columns.filter(c => c.id !== column.id)" :key="'move-' + task.dbId + '-' + destination.id">
+                                                    <option :value="destination.id" x-text="destination.title"></option>
+                                                </template>
+                                            </select>
+                                        </label>
+                                    @endif
                                 </div>
                             </article>
                         </template>
                         <div x-show="column.tasks.length === 0" class="board-empty-state board-empty-state--mobile">
                             @if ($canEdit)
-                                <button type="button" @click="openAddModal(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
+                                <button type="button" @click="openQuickComposer(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
                                     <span class="board-create-task__icon" aria-hidden="true">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
                                     </span>
@@ -629,8 +660,12 @@
                         </div>
                         </div>
                         @if ($canEdit)
+                            <form x-show="String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
+                                <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
+                                <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
+                            </form>
                             <div x-show="column.tasks.length > 0" class="board-column-footer">
-                                <button type="button" @click="openAddModal(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
+                                <button type="button" @click="openQuickComposer(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
                                     <span class="board-create-task__icon" aria-hidden="true">
                                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2.2" d="M12 5v14m-7-7h14"/></svg>
                                     </span>
@@ -908,8 +943,7 @@
         </aside>
     </div>
 
-    {{-- ======== Trello-Style Task Modal ======== --}}
-    {{-- Backdrop (fixed, never scrolls) --}}
+    {{-- Task modal --}}
     <div
         x-show="showModal"
         x-cloak
@@ -919,25 +953,11 @@
         x-transition:leave="transition-opacity ease-in duration-75"
         x-transition:leave-start="opacity-100"
         x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 bg-[#18212B]/45"
-        @click="requestCloseModal()"
-        x-effect="if (showModal) { document.body.classList.add('modal-open') } else { document.body.classList.remove('modal-open') }"
-    ></div>
-
-    {{-- Scroll container (fixed, independent of backdrop) --}}
-    <div
-        x-show="showModal"
-        x-cloak
-        x-transition:enter="transition-opacity ease-out duration-100"
-        x-transition:enter-start="opacity-0"
-        x-transition:enter-end="opacity-100"
-        x-transition:leave="transition-opacity ease-in duration-75"
-        x-transition:leave-start="opacity-100"
-        x-transition:leave-end="opacity-0"
-        class="fixed inset-0 z-50 overflow-hidden"
+        class="task-drawer-layer fixed inset-0 z-50 overflow-hidden"
         @click="requestCloseModal()"
         @keydown.escape.window="handleTaskEscape($event)"
         @resize.window="floatingMenuRevision++"
+        x-effect="if (showModal) { document.body.classList.add('modal-open') } else { document.body.classList.remove('modal-open') }"
     >
         <div class="h-full min-h-0 flex items-stretch justify-start p-0">
             <div
@@ -962,13 +982,17 @@
                         </div>
                         <p class="task-modal-header__subtitle" x-text="editingTask ? 'جزئیات کارت و روند انجام کار را مدیریت کنید.' : 'یک وظیفه جدید در ستون انتخاب‌شده ایجاد کنید.'"></p>
                     </div>
-                    <button @click="requestCloseModal()" class="text-[#64748B] hover:text-[#18212B] transition-colors w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#F8FAFC]" aria-label="بستن پنجره">
+                    <button x-ref="taskDrawerClose" @click="requestCloseModal()" class="text-[#64748B] hover:text-[#18212B] transition-colors w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#F8FAFC]" aria-label="بستن پنجره">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                     </button>
                 </div>
 
-                {{-- Body: Single column --}}
+                {{-- Task details --}}
                 <div class="task-modal-body p-4 md:p-6 space-y-4" :class="editingTask ? 'task-modal-body--editing' : 'task-modal-body--create'" style="direction: rtl;" @scroll="floatingMenuRevision++">
+                    <div x-show="showUnsavedWarning" x-cloak class="task-unsaved-warning" role="alert">
+                        <p>تغییرات این وظیفه هنوز ذخیره نشده‌اند.</p>
+                        <div><button type="button" @click="saveTask()">ذخیره</button><button type="button" @click="discardTaskChanges()">کنار گذاشتن</button><button type="button" @click="showUnsavedWarning = false">ادامه ویرایش</button></div>
+                    </div>
                     <div x-show="realtimeConflict" x-cloak class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
                         <p x-text="realtimeTaskDeleted ? 'این وظیفه در همین حین حذف شده است. پیش‌نویس شما حفظ شد.' : 'این وظیفه توسط شخص دیگری تغییر کرده است. پیش‌نویس شما حفظ شد.'"></p>
                         <div class="mt-2 flex gap-2">
@@ -976,16 +1000,10 @@
                             <button x-show="!realtimeTaskDeleted" type="button" @click="keepLocalDraft()" class="rounded-lg bg-amber-800 px-3 py-1.5 font-bold text-white">حفظ پیش‌نویس و بازنویسی</button>
                         </div>
                     </div>
-                    {{-- Title --}}
-                    <div class="task-modal-section task-modal-section--description">
-                        <div class="task-modal-section__heading">
-                            <div>
-                                <div class="task-modal-section__title">عنوان و توضیحات</div>
-                                <p class="text-[10px] text-[#94A3B8] mt-1">موضوع کارت و جزئیات انجام آن را مشخص کنید.</p>
-                            </div>
-                            <span x-show="form.description" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.description.length) + ' نویسه'"></span>
-                        </div>
+                    <div class="task-modal-title-field">
+                        <label for="task-title">عنوان وظیفه</label>
                         <input
+                            id="task-title"
                             x-ref="taskTitle"
                             x-model="form.title"
                             type="text"
@@ -993,85 +1011,13 @@
                             class="task-modal-title-input w-full text-base font-bold text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 mb-3 focus:outline-none focus:border-[#111111] transition-colors bg-white placeholder:text-[#CBD5E1]"
                             placeholder="مثلاً طراحی صفحه ورود"
                         >
-                        <textarea
-                            x-ref="descriptionMentionTrigger"
-                            x-model="form.description"
-                            rows="5"
-                            :disabled="!canEdit"
-                            class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#111111] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
-                            placeholder="توضیحات کارت را بنویسید..."
-                            @input="handleMentionInput('description', $event)"
-                            @keydown.down.prevent="moveMentionSelection(1)"
-                            @keydown.up.prevent="moveMentionSelection(-1)"
-                            @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
-                            @keydown.escape="mentionOpen ? closeMentionMenu() : null"
-                            @paste="handleAttachmentPaste($event, 'description')"
-                        ></textarea>
-                        <div x-show="mentionOpen && mentionField === 'description'" x-cloak class="task-floating-menu bg-white border border-[#D8E0EB] rounded-xl shadow-xl overflow-hidden" :style="floatingMenuStyle($refs.descriptionMentionTrigger, 360, 220)">
-                                <template x-for="(person, index) in mentionResults" :key="person.id">
-                                    <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
-                                        <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
-                                        <span class="text-[11px] font-bold text-[#111111]" x-text="person.name"></span>
-                                    </button>
-                                </template>
-                        </div>
-                        <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
-                        @if ($canEdit)
-                        <div
-                            class="mt-3 rounded-xl border-2 border-dashed px-3 py-3 transition-colors"
-                            :class="attachmentDragTarget === 'description' ? 'border-[#0069D9] bg-[#F0F8FF]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
-                            @dragover.prevent="attachmentDragTarget = 'description'"
-                            @dragleave.prevent="attachmentDragTarget = null"
-                            @drop.prevent="attachmentDragTarget = null; queueAttachmentFiles($event.dataTransfer.files, 'description')"
-                        >
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <div>
-                                    <p class="text-[11px] font-bold text-[#334155]">فایل‌های توضیحات</p>
-                                    <p class="mt-0.5 text-[9px] text-[#94A3B8]">فایل‌ها را رها کنید، تصویر را بچسبانید یا تا ۱۰ فایل انتخاب کنید.</p>
-                                </div>
-                                <button type="button" @click="$refs.descriptionFiles.click()" class="rounded-lg border border-[#BFD8EC] bg-white px-3 py-1.5 text-[10px] font-bold text-[#111111]">انتخاب فایل</button>
-                                <input x-ref="descriptionFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'description'); $event.target.value = ''">
-                            </div>
-                            <div x-show="pendingDescriptionFiles.length" x-cloak class="mt-3 grid gap-2 sm:grid-cols-2">
-                                <template x-for="item in pendingDescriptionFiles" :key="item.localId">
-                                    <div class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2">
-                                        <button type="button" @click="openAttachmentPreview(item)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
-                                            <img x-show="item.category === 'image'" :src="item.previewUrl" class="h-full w-full object-cover" alt="">
-                                            <span x-show="item.category !== 'image'" x-text="attachmentLabel(item)"></span>
-                                        </button>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="truncate text-[10px] font-bold text-[#334155]" x-text="item.name"></p>
-                                            <p class="text-[9px] text-[#94A3B8]" x-text="attachmentStatusText(item)"></p>
-                                            <div x-show="item.status === 'uploading'" class="mt-1 h-1 overflow-hidden rounded bg-[#E2E8F0]"><div class="h-full bg-[#0069D9]" :style="`width:${item.progress}%`"></div></div>
-                                        </div>
-                                        <button type="button" @click="removePendingAttachment(item, 'description')" class="shrink-0 text-[9px] font-bold text-red-500" x-text="item.status === 'uploading' ? 'لغو' : 'حذف'"></button>
-                                    </div>
-                                </template>
-                            </div>
-                            <div x-show="descriptionAttachments().length" x-cloak class="mt-3">
-                                <p class="mb-2 flex items-center gap-1.5 text-[9px] font-bold text-emerald-700"><span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>فایل‌های بارگذاری‌شده</p>
-                                <div class="grid gap-2 sm:grid-cols-2">
-                                    <template x-for="attachment in descriptionAttachments()" :key="attachment.id">
-                                        <div class="flex min-w-0 items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 p-2">
-                                            <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-[9px] font-black text-[#64748B] shadow-sm">
-                                                <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
-                                                <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
-                                            </button>
-                                            <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="text-[9px] text-emerald-700">بارگذاری موفق · <span x-text="formatFileSize(attachment.size)"></span></p></div>
-                                            <div class="flex shrink-0 items-center gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[9px] font-bold text-[#0069D9]">نمایش</button><a :href="attachment.downloadUrl" class="text-[9px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[9px] text-red-500">حذف</button>@endif</div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                        @endif
                     </div>
 
-                    {{-- Settings: one clear row on desktop --}}
-                    <section class="task-modal-section" aria-labelledby="task-settings-title">
+                    {{-- Optional details --}}
+                    <section class="task-modal-section task-advanced-section" aria-labelledby="task-settings-title">
                         <div class="task-modal-section__heading">
-                            <div class="task-modal-section__title" id="task-settings-title">تنظیمات</div>
-                            <span class="text-[10px] text-[#94A3B8]">جزئیات اجرایی کارت</span>
+                            <div class="task-modal-section__title" id="task-settings-title">جزئیات وظیفه</div>
+                            <span class="text-[10px] text-[#94A3B8]">ستون، مسئول و سررسید</span>
                         </div>
                     <div class="task-settings-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
                         {{-- Priority --}}
@@ -1112,7 +1058,13 @@
                                 </div>
                                 <button type="button" @click="selectTodayJalaliDate()" class="w-full mt-3 pt-2 border-t border-[#F1F5F9] text-[10px] font-bold text-[#64748B] hover:text-[#18212B]">امروز</button>
                             </div>
-                            <p x-show="form.dueDate && isOverdue(form.dueDate)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
+                            <div class="task-due-time">
+                                <label for="task-due-time">ساعت (اختیاری)</label>
+                                <input id="task-due-time" type="time" x-model="form.dueTime" :disabled="!canEdit || !form.dueDate" aria-label="ساعت سررسید">
+                                <button type="button" x-show="form.dueTime && canEdit" @click="form.dueTime = ''">بدون ساعت</button>
+                            </div>
+                            <p class="task-due-timezone">به وقت {{ $workspace->timezone ?: 'Asia/Tehran' }}</p>
+                            <p x-show="form.dueDate && isOverdue(form.dueDate, form.dueTime)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
                         </div>
 
                         {{-- Column --}}
@@ -1204,7 +1156,7 @@
                         </div>
 
                         {{-- Tags --}}
-                        <div x-show="editingTask" x-cloak x-data="{ tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }">
+                        <div x-data="{ tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="board-field-label mb-0">برچسب‌ها</label>
                                 @if ($canEdit)
@@ -1244,8 +1196,96 @@
                     </div>
                     </section>
 
+                    {{-- Description --}}
+                    <div class="task-modal-section task-modal-section--description">
+                        <div class="task-modal-section__heading">
+                            <div>
+                                <div class="task-modal-section__title">توضیحات</div>
+                                <p class="text-[10px] text-[#94A3B8] mt-1">موضوع کارت و جزئیات انجام آن را مشخص کنید.</p>
+                            </div>
+                            <span x-show="form.description" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.description.length) + ' نویسه'"></span>
+                        </div>
+                        <textarea
+                            x-ref="descriptionMentionTrigger"
+                            x-model="form.description"
+                            rows="5"
+                            :disabled="!canEdit"
+                            class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#111111] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
+                            placeholder="توضیحات کارت را بنویسید..."
+                            @input="handleMentionInput('description', $event)"
+                            @keydown.down.prevent="moveMentionSelection(1)"
+                            @keydown.up.prevent="moveMentionSelection(-1)"
+                            @keydown.enter="if (mentionOpen) { $event.preventDefault(); selectActiveMention() }"
+                            @keydown.escape="mentionOpen ? closeMentionMenu() : null"
+                            @paste="handleAttachmentPaste($event, 'description')"
+                        ></textarea>
+                        <div x-show="mentionOpen && mentionField === 'description'" x-cloak class="task-floating-menu bg-white border border-[#D8E0EB] rounded-xl shadow-xl overflow-hidden" :style="floatingMenuStyle($refs.descriptionMentionTrigger, 360, 220)">
+                                <template x-for="(person, index) in mentionResults" :key="person.id">
+                                    <button @click="selectMention(person)" class="w-full flex items-center gap-2.5 px-3 py-2.5 text-right" :class="mentionIndex === index ? 'bg-[#F1F3F2]' : 'hover:bg-[#F8FAFC]'">
+                                        <span class="w-7 h-7 rounded-full bg-[#071B33] text-white flex items-center justify-center text-[9px] font-bold" x-text="person.name.charAt(0)"></span>
+                                        <span class="text-[11px] font-bold text-[#111111]" x-text="person.name"></span>
+                                    </button>
+                                </template>
+                        </div>
+                        <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                        @if ($canEdit)
+                        <div
+                            class="mt-3 rounded-xl border-2 border-dashed px-3 py-3 transition-colors"
+                            :class="attachmentDragTarget === 'description' ? 'border-[#0069D9] bg-[#F0F8FF]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
+                            @dragover.prevent="attachmentDragTarget = 'description'"
+                            @dragleave.prevent="attachmentDragTarget = null"
+                            @drop.prevent="attachmentDragTarget = null; queueAttachmentFiles($event.dataTransfer.files, 'description')"
+                        >
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p class="text-[11px] font-bold text-[#334155]">فایل‌های توضیحات</p>
+                                    <p class="mt-0.5 text-[9px] text-[#94A3B8]">فایل‌ها را رها کنید، تصویر را بچسبانید یا تا ۱۰ فایل انتخاب کنید.</p>
+                                </div>
+                                <button type="button" @click="$refs.descriptionFiles.click()" class="rounded-lg border border-[#BFD8EC] bg-white px-3 py-1.5 text-[10px] font-bold text-[#111111]">انتخاب فایل</button>
+                                <input x-ref="descriptionFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'description'); $event.target.value = ''">
+                            </div>
+                            <div x-show="pendingDescriptionFiles.length" x-cloak class="mt-3 grid gap-2 sm:grid-cols-2">
+                                <template x-for="item in pendingDescriptionFiles" :key="item.localId">
+                                    <div class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2">
+                                        <button type="button" @click="openAttachmentPreview(item)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
+                                            <img x-show="item.category === 'image'" :src="item.previewUrl" class="h-full w-full object-cover" alt="">
+                                            <span x-show="item.category !== 'image'" x-text="attachmentLabel(item)"></span>
+                                        </button>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate text-[10px] font-bold text-[#334155]" x-text="item.name"></p>
+                                            <p class="text-[9px] text-[#94A3B8]" x-text="attachmentStatusText(item)"></p>
+                                            <div x-show="item.status === 'uploading'" class="mt-1 h-1 overflow-hidden rounded bg-[#E2E8F0]"><div class="h-full bg-[#0069D9]" :style="`width:${item.progress}%`"></div></div>
+                                        </div>
+                                        <button type="button" @click="removePendingAttachment(item, 'description')" class="shrink-0 text-[9px] font-bold text-red-500" x-text="item.status === 'uploading' ? 'لغو' : 'حذف'"></button>
+                                    </div>
+                                </template>
+                            </div>
+                            <div x-show="descriptionAttachments().length" x-cloak class="mt-3">
+                                <p class="mb-2 flex items-center gap-1.5 text-[9px] font-bold text-emerald-700"><span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>فایل‌های بارگذاری‌شده</p>
+                                <div class="grid gap-2 sm:grid-cols-2">
+                                    <template x-for="attachment in descriptionAttachments()" :key="attachment.id">
+                                        <div class="flex min-w-0 items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 p-2">
+                                            <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-[9px] font-black text-[#64748B] shadow-sm">
+                                                <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
+                                                <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
+                                            </button>
+                                            <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="text-[9px] text-emerald-700">بارگذاری موفق · <span x-text="formatFileSize(attachment.size)"></span></p></div>
+                                            <div class="flex shrink-0 items-center gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[9px] font-bold text-[#0069D9]">نمایش</button><a :href="attachment.downloadUrl" class="text-[9px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[9px] text-red-500">حذف</button>@endif</div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                    </div>
+
+                    <button type="button" class="task-details-toggle" @click="extraTaskDetailsOpen = !extraTaskDetailsOpen" :aria-expanded="extraTaskDetailsOpen">
+                        <span x-text="extraTaskDetailsOpen ? 'بستن جزئیات بیشتر' : 'افزودن جزئیات'"></span>
+                        <svg class="w-4 h-4" :class="extraTaskDetailsOpen ? 'rotate-45' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M12 5v14M5 12h14"/></svg>
+                    </button>
+
                     {{-- Checklist --}}
-                    <section x-show="editingTask" x-cloak class="task-modal-section" aria-labelledby="task-checklist-title">
+                    <section x-show="extraTaskDetailsOpen" x-cloak class="task-modal-section task-advanced-section" aria-labelledby="task-checklist-title">
                         <div class="task-modal-section__heading">
                             <div class="task-modal-section__title" id="task-checklist-title">چک‌لیست</div>
                             <span class="text-[12px] font-bold text-[#64748B]" x-text="checklistProgress()"></span>
@@ -1364,7 +1404,7 @@
                     </section>
 
                     {{-- Task file library --}}
-                    <section x-show="editingTask" x-cloak class="task-modal-section" aria-labelledby="task-attachments-title">
+                    <section x-show="editingTask && extraTaskDetailsOpen" x-cloak class="task-modal-section task-advanced-section" aria-labelledby="task-attachments-title">
                         <div class="task-modal-section__heading">
                             <div><div class="task-modal-section__title" id="task-attachments-title">کتابخانه فایل‌های وظیفه</div><p class="mt-1 text-[9px] text-[#94A3B8]">همه فایل‌های توضیحات و گفتگو در یک‌جا</p></div>
                             <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.attachments.length) + ' فایل'"></span>
@@ -1545,6 +1585,11 @@
                 realtimeTaskDeleted: false,
                 forceRealtimeOverwrite: false,
                 showModal: false,
+                showUnsavedWarning: false,
+                extraTaskDetailsOpen: false,
+                quickComposerColumnId: null,
+                quickTaskTitle: '',
+                quickTaskSaving: false,
                 showDeleteModal: false,
                 showColumnModal: false,
                 showColumnDeleteModal: false,
@@ -1557,6 +1602,7 @@
                 filterByAssignee: [],
                 filterByPriority: [],
                 filterByTag: [],
+                filterByDue: '',
                 selectedTaskIds: [],
                 bulkAction: '',
                 bulkValue: '',
@@ -1609,7 +1655,8 @@
                 mentionIndex: 0,
                 mentionStart: null,
                 mentionCursor: null,
-                form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: '', dueDate: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' },
+                form: { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: '', dueDate: '', dueTime: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' },
+                workspaceTimezone: @json($workspace->timezone ?: 'Asia/Tehran'),
                 jalaliDatePicker: { open: false, year: 1400, month: 1 },
                 jalaliWeekdays: ['ش', 'ی', 'د', 'س', 'چ', 'پ', 'ج'],
 
@@ -1663,13 +1710,30 @@
                             this.filterByPriority.includes(task.priority);
                         const matchesTag = this.filterByTag.length === 0 ||
                             (task.tags || []).some(t => this.filterByTag.includes(t));
+                        const matchesDue = this.matchesDueFilter(task);
                         const q = this.boardSearchQuery.trim().toLowerCase();
                         const matchesSearch = !q ||
                             (task.title || '').toLowerCase().includes(q) ||
                             (task.description || '').toLowerCase().includes(q) ||
                             (task.id || '').toLowerCase().includes(q);
-                        return matchesAssignee && matchesPriority && matchesTag && matchesSearch;
+                        return matchesAssignee && matchesPriority && matchesTag && matchesDue && matchesSearch;
                     });
+                },
+
+                dueFilterLabel() {
+                    return { overdue: 'عقب‌افتاده', today: 'امروز', next7: '۷ روز آینده', undated: 'بدون سررسید' }[this.filterByDue] || '';
+                },
+
+                matchesDueFilter(task) {
+                    if (!this.filterByDue) return true;
+                    if (this.filterByDue === 'undated') return !task.dueDate;
+                    if (!task.dueDate) return false;
+                    if (this.filterByDue === 'overdue') return this.isOverdue(task.dueDate, task.dueTime);
+                    const today = this.workspaceNowParts().date;
+                    if (this.filterByDue === 'today') return task.dueDate === today;
+                    const [year, month, day] = today.split('-').map(Number);
+                    const weekEnd = new Date(Date.UTC(year, month - 1, day + 7)).toISOString().slice(0, 10);
+                    return task.dueDate >= today && task.dueDate <= weekEnd;
                 },
 
                 boardStyleStorageKey() {
@@ -1708,7 +1772,7 @@
                 },
 
                 activeFilterCount() {
-                    return this.filterByAssignee.length + this.filterByPriority.length + this.filterByTag.length;
+                    return this.filterByAssignee.length + this.filterByPriority.length + this.filterByTag.length + (this.filterByDue ? 1 : 0);
                 },
 
                 isTaskSelected(taskId) {
@@ -1746,7 +1810,7 @@
                                 if (this.bulkAction === 'priority') task.priority = this.bulkValue;
                                 if (this.bulkAction === 'assignee') task.assignees = this.bulkValue ? [this.bulkValue] : [];
                                 if (this.bulkAction === 'tag' && !(task.tags || []).includes(this.bulkValue.trim())) task.tags = (task.tags || []).concat([this.bulkValue.trim()]);
-                                if (this.bulkAction === 'due_date') task.dueDate = '';
+                                if (this.bulkAction === 'due_date') { task.dueDate = ''; task.dueTime = ''; }
                             }
                         }
                         if (this.bulkAction === 'column') {
@@ -1774,6 +1838,7 @@
                     this.filterByAssignee = [];
                     this.filterByPriority = [];
                     this.filterByTag = [];
+                    this.filterByDue = '';
                 },
 
                 togglePriorityFilter(priority) {
@@ -2009,7 +2074,7 @@
                         }
                         if (!typing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'c' && !this.showModal) {
                             event.preventDefault();
-                            this.openAddModal(this.columns[this.activeColumnIndex]?.id || this.columns[0]?.id);
+                            this.openQuickComposer(this.columns[this.activeColumnIndex]?.id || this.columns[0]?.id);
                         }
                         if (event.key === 'Escape' && !this.showModal && !this.showDeleteModal && !this.showColumnModal && !this.showColumnDeleteModal) {
                             this.clearBoardSearch();
@@ -2129,6 +2194,7 @@
 
                 clearJalaliDate() {
                     this.form.dueDate = '';
+                    this.form.dueTime = '';
                     this.closeJalaliDatePicker();
                 },
 
@@ -2160,6 +2226,7 @@
                 },
 
                 scrollToColumn(index, behavior = 'smooth') {
+                    if (index < 0 || index >= this.columns.length) return;
                     const track = this.$refs.mobileBoardTrack;
                     const target = track?.querySelector(`[data-column-index="${index}"]`);
                     if (!target) return;
@@ -2169,6 +2236,13 @@
                         inline: 'center',
                     });
                     this.activeColumnIndex = index;
+                    this.revealActiveColumnTab();
+                },
+
+                revealActiveColumnTab() {
+                    this.$nextTick(() => this.$refs.mobileColumnTabs
+                        ?.querySelector(`[data-tab-index="${this.activeColumnIndex}"]`)
+                        ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
                 },
 
                 handleMobileBoardScroll() {
@@ -2188,6 +2262,7 @@
                             }
                         });
                         this.activeColumnIndex = closestIndex;
+                        this.revealActiveColumnTab();
                         this.dismissSwipeHint();
                     }, 80);
                 },
@@ -2200,7 +2275,10 @@
                         const visible = entries
                             .filter(entry => entry.isIntersecting)
                             .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-                        if (visible) this.activeColumnIndex = Number(visible.target.dataset.columnIndex);
+                        if (visible) {
+                            this.activeColumnIndex = Number(visible.target.dataset.columnIndex);
+                            this.revealActiveColumnTab();
+                        }
                     }, { root: track, threshold: [0.55, 0.7, 0.9] });
                     track.querySelectorAll('[data-column-index]').forEach(column => this.mobileBoardObserver.observe(column));
                 },
@@ -2661,19 +2739,30 @@
                     });
                 },
 
-                formatDate(dateStr) {
+                formatDate(dateStr, timeStr = '') {
                     if (!dateStr) return '';
                     try {
                         const jalali = moment(dateStr, 'YYYY-MM-DD').locale('fa').format('YYYY/MM/DD');
-                        return this.toPersianDigits(jalali);
+                        return this.toPersianDigits(jalali + (timeStr ? ' · ' + timeStr.slice(0, 5) : ''));
                     } catch {
                         return dateStr;
                     }
                 },
 
-                isOverdue(dateStr) {
+                workspaceNowParts() {
+                    const parts = new Intl.DateTimeFormat('en-US', {
+                        timeZone: this.workspaceTimezone, year: 'numeric', month: '2-digit', day: '2-digit',
+                        hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+                    }).formatToParts(new Date());
+                    const value = type => parts.find(part => part.type === type)?.value || '';
+                    return { date: `${value('year')}-${value('month')}-${value('day')}`, time: `${value('hour')}:${value('minute')}` };
+                },
+
+                isOverdue(dateStr, timeStr = '') {
                     if (!dateStr) return false;
-                    return new Date(dateStr) < new Date();
+                    const now = this.workspaceNowParts();
+                    if (dateStr !== now.date) return dateStr < now.date;
+                    return !!timeStr && timeStr.slice(0, 5) < now.time;
                 },
 
                 initColumnSortable(variant = 'desktop') {
@@ -2691,9 +2780,7 @@
                         chosenClass: 'column-sortable-chosen',
                         dragClass: 'column-sortable-drag',
                         direction: 'horizontal',
-                        swapThreshold: 0.65,
-                        invertSwap: true,
-                        invertedSwapThreshold: 0.35,
+                        swapThreshold: 0.5,
                         draggable: variant === 'mobile' ? '.mobile-board-column' : '.board-column',
                         handle: '.column-drag-handle',
                         delay: variant === 'mobile' ? 140 : 0,
@@ -2714,13 +2801,6 @@
                             if (variant === 'mobile') {
                                 self.mobileDragSuppressClickUntil = Date.now() + 500;
                             }
-                        },
-                        onMove(evt, originalEvent) {
-                            // DOM order runs right-to-left on this board.
-                            const touch = originalEvent?.touches?.[0] || originalEvent?.changedTouches?.[0];
-                            const clientX = touch?.clientX ?? originalEvent?.clientX;
-                            if (evt.related === el || !Number.isFinite(clientX)) return true;
-                            return clientX < evt.relatedRect.left + evt.relatedRect.width / 2 ? 1 : -1;
                         },
                         onEnd(evt) {
                             el.classList.remove('column-order-dragging');
@@ -2912,6 +2992,7 @@
                         id: column.id,
                         tasks: column.tasks.slice(),
                     }));
+                    const previousColumnIndex = this.activeColumnIndex;
                     const [task] = fromCol.tasks.splice(idx, 1);
                     const safeIndex = Math.max(0, Math.min(Number(newIndex) || 0, toCol.tasks.length));
                     toCol.tasks.splice(safeIndex, 0, task);
@@ -2928,11 +3009,13 @@
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok || response.redirected) throw new Error(data.message || 'انتقال وظیفه انجام نشد.');
                         this.showToast(fromColId === toColId ? 'ترتیب وظیفه ذخیره شد' : 'وظیفه به ستون جدید منتقل شد');
+                        if (this.boardMediaQuery?.matches) this.$nextTick(() => this.scrollToColumn(this.activeColumnIndex));
                     } catch (error) {
                         snapshot.forEach(savedColumn => {
                             const column = this.columns.find(item => item.id === savedColumn.id);
                             if (column) column.tasks = savedColumn.tasks.slice();
                         });
+                        this.activeColumnIndex = previousColumnIndex;
                         this.showToast(error.message || 'انتقال وظیفه انجام نشد.');
                         this.destroySortables();
                         this.$nextTick(() => {
@@ -2951,11 +3034,11 @@
                     return JSON.stringify(fields);
                 },
 
-                openAddModal(columnId) {
+                openAddModal(columnId, initialTitle = '') {
                     if (!this.canEdit) return;
                     this.editingTask = null;
                     this.editingDescription = false;
-                    this.form = { id: '', title: '', description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' };
+                    this.form = { id: '', title: initialTitle, description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', dueTime: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' };
                     this.newCheckItem = '';
                     this.newComment = '';
                     this.clearPendingFiles('description');
@@ -2967,6 +3050,8 @@
                     this.realtimeConflict = false;
                     this.realtimeTaskDeleted = false;
                     this.forceRealtimeOverwrite = false;
+                    this.showUnsavedWarning = false;
+                    this.extraTaskDetailsOpen = false;
                     this.showModal = true;
                     this.$nextTick(() => {
                         this.modalSnapshot = this.formFingerprint();
@@ -2980,7 +3065,7 @@
                     const taskAssignees = task.assignees || (task.assignee ? [task.assignee] : []);
                     this.form = {
                         id: task.id, title: task.title, description: task.description || '', priority: task.priority,
-                        assignees: Array.from(taskAssignees), columnId: columnId, dueDate: task.dueDate || '',
+                        assignees: Array.from(taskAssignees), columnId: columnId, dueDate: task.dueDate || '', dueTime: task.dueTime || '',
                         tags: Array.from(task.tags || []), checklist: JSON.parse(JSON.stringify(task.checklist || [])),
                         comments: JSON.parse(JSON.stringify(task.comments || [])), attachments: JSON.parse(JSON.stringify(task.attachments || [])), isBlocked: !!task.isBlocked,
                         blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || '', updatedAt: task.updatedAt || null
@@ -2996,15 +3081,18 @@
                     this.realtimeConflict = false;
                     this.realtimeTaskDeleted = false;
                     this.forceRealtimeOverwrite = false;
+                    this.showUnsavedWarning = false;
+                    this.extraTaskDetailsOpen = false;
                     this.showModal = true;
                     this.$nextTick(() => {
                         this.modalSnapshot = this.formFingerprint();
-                        this.$refs.taskTitle?.focus();
+                        this.$refs.taskDrawerClose?.focus();
                     });
                 },
 
                 closeModal() {
                     this.showModal = false;
+                    this.showUnsavedWarning = false;
                     this.closeJalaliDatePicker();
                     this.editingDescription = false;
                     this.taskError = '';
@@ -3020,8 +3108,62 @@
                 requestCloseModal() {
                     if (this.taskSaving) return;
                     const dirty = (this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot) || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length;
-                    if (dirty && !window.confirm('تغییرات ذخیره نشده‌اند. از بستن پنجره مطمئن هستید؟')) return;
+                    if (dirty) {
+                        this.showUnsavedWarning = true;
+                        return;
+                    }
                     this.closeModal();
+                },
+
+                discardTaskChanges() {
+                    this.modalSnapshot = null;
+                    this.showUnsavedWarning = false;
+                    this.closeModal();
+                },
+
+                openQuickComposer(columnId) {
+                    if (!this.canEdit) return;
+                    this.quickComposerColumnId = columnId;
+                    this.quickTaskTitle = '';
+                    this.$nextTick(() => {
+                        document.querySelector('.board-quick-composer:not([style*="display: none"]) textarea')?.focus();
+                    });
+                },
+
+                closeQuickComposer() {
+                    this.quickComposerColumnId = null;
+                    this.quickTaskTitle = '';
+                },
+
+                async createQuickTask(columnId, openDetails = false) {
+                    if (!this.canEdit || this.quickTaskSaving) return;
+                    if (openDetails) {
+                        const title = this.quickTaskTitle.trim();
+                        this.closeQuickComposer();
+                        this.openAddModal(columnId, title);
+                        return;
+                    }
+                    if (!this.quickTaskTitle.trim()) return;
+                    const column = this.columns.find(item => String(item.id) === String(columnId));
+                    if (!column) return;
+                    this.quickTaskSaving = true;
+                    try {
+                        const response = await window.neovaFetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                            body: JSON.stringify({ column_id: Number(columnId), title: this.quickTaskTitle.trim(), assignees: [] }),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok || response.redirected) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ایجاد وظیفه انجام نشد.');
+                        const task = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority || 'متوسط', assignees: data.assignees || [], dueDate: data.due_date || '', dueTime: data.due_time?.slice(0, 5) || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null };
+                        column.tasks.push(task);
+                        this.closeQuickComposer();
+                        this.showToast('وظیفه اضافه شد');
+                    } catch (error) {
+                        this.showToast(error.message || 'ایجاد وظیفه انجام نشد.');
+                    } finally {
+                        this.quickTaskSaving = false;
+                    }
                 },
 
                 handleTaskEscape(event) {
@@ -3046,7 +3188,8 @@
                 trapModalFocus(event) {
                     if (event.key !== 'Tab') return;
                     const dialog = event.currentTarget;
-                    const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+                    const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                        .filter(element => element.getClientRects().length > 0);
                     if (!focusable.length) return;
                     const first = focusable[0];
                     const last = focusable[focusable.length - 1];
@@ -3077,7 +3220,7 @@
                             const targetCol = this.columns.find(c => c.id === this.form.columnId);
                             const task = sourceCol?.tasks.find(t => t.dbId === this.editingTask);
                             if (!task) throw new Error('وظیفه پیدا نشد.');
-                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId), expected_updated_at: this.form.updatedAt, force: this.forceRealtimeOverwrite };
+                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, due_time: this.form.dueDate ? this.form.dueTime : '', tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId), expected_updated_at: this.form.updatedAt, force: this.forceRealtimeOverwrite };
                             const response = await window.neovaFetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
                             const data = await response.json().catch(() => ({}));
                             if (response.status === 409) {
@@ -3086,7 +3229,7 @@
                                 throw new Error(data.message || 'نسخه جدیدتری از این وظیفه وجود دارد.');
                             }
                             if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره وظیفه انجام نشد.');
-                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)), updatedAt: data.updated_at || data.updatedAt });
+                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, dueTime: this.form.dueTime, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)), updatedAt: data.updated_at || data.updatedAt });
                             if (sourceCol && targetCol && sourceCol.id !== targetCol.id) {
                                 sourceCol.tasks = sourceCol.tasks.filter(item => item.dbId !== task.dbId);
                                 targetCol.tasks.push(task);
@@ -3098,11 +3241,11 @@
                         } else {
                             const col = this.columns.find(c => c.id === this.form.columnId);
                             if (!col) throw new Error('ستون وظیفه پیدا نشد.');
-                            const payload = { column_id: parseInt(this.form.columnId), title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments };
+                            const payload = { column_id: parseInt(this.form.columnId), title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, due_time: this.form.dueDate ? this.form.dueTime : '', tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments };
                             const res = await window.neovaFetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
                             const data = await res.json().catch(() => ({}));
                             if (!res.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ایجاد وظیفه انجام نشد.');
-                            const createdTask = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null };
+                            const createdTask = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', dueTime: data.due_time?.slice(0, 5) || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null };
                             col.tasks.push(createdTask);
                             this.editingTask = data.id;
                             this.form.id = data.display_id;
