@@ -87,7 +87,7 @@ class AuthController extends Controller
         $user = User::where('phone', $phone)->first();
 
         if ($user) {
-            Auth::login($user);
+            Auth::login($user, remember: true);
             app(WorkspaceInvitationService::class)->syncPendingNotifications($user);
             session()->forget(['otp_phone', 'otp_verified_phone']);
 
@@ -141,7 +141,7 @@ class AuthController extends Controller
             'name' => 'فضای کاری من',
         ]);
 
-        Auth::login($user);
+        Auth::login($user, remember: true);
         app(WorkspaceInvitationService::class)->syncPendingNotifications($user);
         session()->forget(['otp_phone', 'otp_verified_phone']);
 

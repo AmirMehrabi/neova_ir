@@ -10,7 +10,8 @@
 <div class="workspace-shell workspace-shell--{{ $active }} {{ $board ? 'workspace-shell--board' : '' }} min-h-screen bg-[#FBFDFF]"
      x-data="workspaceShell({ board: {{ $board ? 'true' : 'false' }}, searchUrl: @js(route('workspace.search', $workspace->slug, false)) })"
      :class="{ 'workspace-shell--collapsed': sidebarCollapsed }"
-     @keydown.slash.window="openSearch($event)">
+     @keydown.slash.window="openSearch($event)"
+     @keydown.window="openSearchShortcut($event)">
     <aside class="workspace-sidebar" :class="{ 'is-collapsed': sidebarCollapsed }">
         <div class="workspace-sidebar__brand">
             <a href="{{ route('today', $workspace->slug) }}" aria-label="خانه نئووا">
@@ -74,7 +75,8 @@
                     <button type="button" @click="workspaceCreating=true; mobileWorkspaceOpen=false">+ فضای کاری جدید</button>
                 </div>
             </div>
-            <button type="button" class="workspace-search-trigger" @click="searchOpen=true; $nextTick(() => $refs.searchInput.focus())" aria-label="جستجوی وظیفه یا پروژه"><span>⌕</span><b>جستجوی وظیفه یا پروژه…</b><kbd>/</kbd></button>
+            {{ $context ?? '' }}
+            <button type="button" class="workspace-search-trigger" @click="showSearch()" aria-label="جستجوی وظیفه یا پروژه"><span>⌕</span><b>جستجوی وظیفه یا پروژه…</b><kbd>/</kbd></button>
             <div class="workspace-topbar__actions">
                 {{ $toolbar ?? '' }}
                 <x-notification-menu />
@@ -136,7 +138,9 @@ function workspaceShell(config) {
         workspaceOpen: false, mobileWorkspaceOpen: false, workspaceCreating: false, accountOpen: false,
         searchOpen: false, searchQuery: '', searchResults: [], searchLoading: false,
         toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; localStorage.setItem('neova_board_sidebar', this.sidebarCollapsed ? 'collapsed' : 'expanded'); },
-        openSearch(event) { if (event.ctrlKey || event.metaKey || event.altKey || ['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName) || event.target.isContentEditable) return; event.preventDefault(); this.searchOpen=true; this.$nextTick(() => this.$refs.searchInput.focus()); },
+        showSearch() { this.searchOpen=true; this.$nextTick(() => this.$refs.searchInput.focus()); },
+        openSearch(event) { if (event.ctrlKey || event.metaKey || event.altKey || ['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName) || event.target.isContentEditable) return; event.preventDefault(); this.showSearch(); },
+        openSearchShortcut(event) { if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k' || ['INPUT','TEXTAREA','SELECT'].includes(event.target.tagName) || event.target.isContentEditable) return; event.preventDefault(); this.showSearch(); },
         async search() { if (!this.searchQuery.trim()) { this.searchResults=[]; return; } this.searchLoading=true; try { const response=await fetch(config.searchUrl+'?q='+encodeURIComponent(this.searchQuery), {headers:{Accept:'application/json'}}); this.searchResults=response.ok ? await response.json() : []; } finally { this.searchLoading=false; } }
     };
 }

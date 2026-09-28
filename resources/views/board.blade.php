@@ -90,86 +90,36 @@
 >
     <x-workspace-shell :workspace="$workspace" active="board" board :active-project="$project->slug">
 
-    {{-- Top Navigation Bar --}}
-    <x-navbar light fluid board-shell embedded>
-        <div class="min-w-0">
-            <div class="flex items-center gap-2 min-w-0">
-                @if ($project->key)
-                    <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-md bg-[#F1EFEA] border border-[#E7E3DA] text-[10px] font-bold text-[#475569] shrink-0">{{ $project->key }}</span>
-                @endif
-                <span class="text-[#18212B] font-black text-[15px] truncate">{{ $project->name }}</span>
-                @if ($project->visibility === 'private')
-                    <span class="inline-flex items-center gap-1 text-[9px] font-bold text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A] px-1.5 py-0.5 rounded-md shrink-0">
-                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                        خصوصی
-                    </span>
-                @endif
+    @slot('context')
+        <div class="board-topbar-context" aria-label="پروژه جاری">
+            <div class="board-topbar-context__identity">
+                @if ($project->key)<span class="board-topbar-context__key">{{ $project->key }}</span>@endif
+                <strong title="{{ $project->name }}">{{ $project->name }}</strong>
+                @if ($project->visibility === 'private')<span class="board-topbar-context__private" title="پروژه خصوصی">خصوصی</span>@endif
             </div>
-            <span class="block text-[#94A3B8] text-[10px] mt-0.5 truncate">{{ $workspace->name }}</span>
+            @if ($canManageProject)
+                <button type="button" class="board-topbar-context__manage" @click="openProjectDrawer()" aria-label="مدیریت پروژه" title="مدیریت پروژه">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v2m0 15v2M2.5 12h2m15 0h2M5.3 5.3l1.5 1.5m10.4 10.4 1.5 1.5m0-13.4-1.5 1.5M6.8 17.2l-1.5 1.5"/></svg>
+                </button>
+            @endif
         </div>
+    @endslot
 
-
-        @slot('search')
-            <div class="relative w-full" @click.away="boardSearchOpen = false">
-                <div class="relative">
-                    <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    <input
-                        x-model="boardSearchQuery"
-                        @input.debounce.200ms="boardSearchOpen = boardSearchQuery.length > 0"
-                        @focus="boardSearchOpen = boardSearchQuery.length > 0"
-                        @keydown.escape="boardSearchQuery = ''; boardSearchOpen = false"
-                        type="text"
-                        data-board-search
-                        class="w-full h-10 text-[12px] font-medium text-[#18212B] bg-[#F8FAF8] border border-[#E2E8E0] rounded-xl pr-9 pl-3 py-2 focus:outline-none focus:bg-white focus:border-[#AEB8B2] focus:ring-4 focus:ring-[#18212B]/10 transition-all placeholder:text-[#94A3B8]"
-                        placeholder="جستجوی وظیفه…"
-                    >
-                </div>
-                <div
-                    x-show="boardSearchOpen && boardSearchQuery.length > 0"
-                    x-transition:enter="transition ease-out duration-150"
-                    x-transition:enter-start="opacity-0 translate-y-1"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    class="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-[#E2E8F0] shadow-xl overflow-hidden z-50"
-                >
-                    <div class="px-3 py-2 border-b border-[#F1F5F9]">
-                        <span class="text-[11px] font-bold text-[#94A3B8]"><span x-text="toPersianDigits(boardSearchResultCount())"></span> نتیجه یافت شد</span>
-                    </div>
-                    <div class="max-h-64 overflow-y-auto">
-                        <template x-for="col in columns" :key="col.id">
-                            <template x-for="task in filteredTasks(col)" :key="task.dbId">
-                                <div class="px-3 py-2.5 border-b border-[#F1F5F9] last:border-0 hover:bg-[#F8FAFC] cursor-pointer transition-colors"
-                                     @click="selectSearchResult(task, col.id)">
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <span class="w-2 h-2 rounded-full shrink-0" :style="'background-color:' + col.dotHex"></span>
-                                        <span class="text-[10px] font-bold text-[#94A3B8]" x-text="task.id"></span>
-                                        <span class="text-[10px] text-[#94A3B8]" x-text="col.title"></span>
-                                    </div>
-                                    <p class="text-[13px] font-bold text-[#1A1D21] truncate leading-relaxed" x-html="highlightText(task.title, boardSearchQuery)"></p>
-                                </div>
-                            </template>
-                        </template>
-                        <div x-show="boardSearchResultCount() === 0" class="px-3 py-6 text-center">
-                            <p class="text-[11px] text-[#94A3B8]">نتیجه‌ای یافت نشد</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        @endslot
-
-        @slot('actions')
-            <div class="relative hidden md:block" @click.away="filterPanelOpen = false">
+    @slot('toolbar')
+        <div class="board-topbar-actions">
+            <div class="relative board-topbar-filter" @click.away="if (window.matchMedia('(min-width: 768px)').matches) filterPanelOpen = false">
                 <button
                     type="button"
                     @click="filterPanelOpen = !filterPanelOpen"
-                    class="board-nav-control"
+                    class="board-nav-control board-topbar-filter__trigger"
                     :class="activeFilterCount() > 0 ? 'ring-2 ring-[#18212B]/15 border-[#18212B]/30' : ''"
                     :aria-expanded="filterPanelOpen"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 12h12M10 20h4"/></svg>
-                    فیلتر
+                    <span class="board-topbar-action-label">فیلتر</span>
                     <span x-show="activeFilterCount() > 0" class="min-w-5 h-5 px-1 rounded-full bg-[#18212B] text-white text-[10px] flex items-center justify-center" x-text="toPersianDigits(activeFilterCount())"></span>
                 </button>
-                <div x-show="filterPanelOpen" x-transition class="absolute left-0 top-full mt-2 w-72 rounded-xl border border-[#E2E8F0] bg-white shadow-sm z-50 p-3 space-y-3">
+                <div x-show="filterPanelOpen" x-transition class="board-desktop-filter-panel absolute left-0 top-full mt-2 w-72 rounded-xl border border-[#E2E8F0] bg-white shadow-sm z-50 p-3 space-y-3">
                     <div class="flex items-center justify-between">
                         <p class="text-[12px] font-black text-[#18212B]">فیلتر تخته</p>
                         <button x-show="activeFilterCount() > 0" type="button" @click="clearAllFilters()" class="text-[11px] font-bold text-red-500">پاک کردن</button>
@@ -207,54 +157,16 @@
                     </div>
                 </div>
             </div>
-            @if ($canManageProject)
-                <button
-                    @click="openProjectDrawer()"
-                    aria-label="مدیریت پروژه"
-                    class="board-nav-control board-nav-control--icon hidden md:flex"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
-                </button>
-            @endif
             @if ($canEdit)
-                <button
-                    @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)"
-                    class="board-nav-control board-nav-control--primary board-nav-control--add-card hidden md:inline-flex whitespace-nowrap shrink-0"
-                    aria-label="ایجاد وظیفه جدید"
-                >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    <span class="board-nav-control__label">وظیفه جدید</span>
+                <button type="button" @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)" class="board-nav-control board-nav-control--primary board-topbar-create" aria-label="ایجاد وظیفه جدید" title="ایجاد وظیفه جدید">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 4v16m8-8H4"/></svg>
+                    <span class="board-topbar-action-label">وظیفه جدید</span>
                 </button>
             @else
-                <span class="hidden md:inline-flex text-[11px] font-bold text-[#64748B] bg-[#F1EFEA] border border-[#E7E3DA] rounded-md px-2.5 py-1.5">فقط مشاهده</span>
+                <span class="board-topbar-readonly">فقط مشاهده</span>
             @endif
-        @endslot
-
-        @slot('mobile')
-            <div class="w-full px-2.5 sm:px-4 py-2.5 flex items-center gap-2.5">
-                <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-2 min-w-0">
-                        <span class="text-[#18212B] font-black text-[13px] truncate">{{ $project->name }}</span>
-                        @if ($project->visibility === 'private')
-                            <span class="inline-flex items-center gap-1 text-[9px] font-bold text-[#92400E] bg-[#FEF3C7] border border-[#FDE68A] px-1.5 py-0.5 rounded-md shrink-0">
-                                <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                                خصوصی
-                            </span>
-                        @endif
-                        @if ($project->key)
-                            <span class="px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-[9px] font-bold text-white/70 shrink-0">{{ $project->key }}</span>
-                        @endif
-                    </div>
-                    <span class="block text-[#94A3B8] text-[9px] mt-0.5 truncate">{{ $workspace->name }}</span>
-                </div>
-                @if ($canManageProject)
-                    <button @click="openProjectDrawer()" class="w-11 h-11 rounded-xl border border-[#E7E3DA] text-[#64748B] flex items-center justify-center active:bg-white" aria-label="مدیریت پروژه">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9" d="M19.4 15a1.7 1.7 0 00.34 1.88l.06.06-2.83 2.83-.06-.06A1.7 1.7 0 0015 19.4a1.7 1.7 0 00-1 .6 1.7 1.7 0 00-.4 1.1V21h-4v-.1A1.7 1.7 0 008.6 19.4a1.7 1.7 0 00-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 004.6 15a1.7 1.7 0 00-.6-1 1.7 1.7 0 00-1.1-.4H3v-4h.1A1.7 1.7 0 004.6 8.6a1.7 1.7 0 00-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 009 4.6a1.7 1.7 0 001-.6 1.7 1.7 0 00.4-1.1V3h4v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.88-.34l.06-.06 2.83 2.83-.06.06A1.7 1.7 0 0019.4 9c.1.38.31.72.6 1 .3.27.68.41 1.1.4h.1v4h-.1a1.7 1.7 0 00-1.7.6z"/></svg>
-                    </button>
-                @endif
-            </div>
-        @endslot
-    </x-navbar>
+        </div>
+    @endslot
 
     <div x-show="selectedTaskIds.length > 0" x-cloak class="board-bulk-bar">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 px-3 sm:px-6 py-2.5">
@@ -505,7 +417,7 @@
         </div>
 
         {{-- Mobile column navigator --}}
-        <section class="md:hidden bg-white border-b border-[#DCE4EE] shadow-[0_5px_18px_rgba(7,27,51,0.05)] sticky top-[116px] z-20">
+        <section class="md:hidden bg-white border-b border-[#DCE4EE] shadow-[0_5px_18px_rgba(7,27,51,0.05)] sticky top-[var(--board-header-height,58px)] z-20">
             <div x-ref="mobileColumnTabs" class="mobile-column-tabs flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2" role="tablist" aria-label="ستون‌های تخته">
                 <template x-for="(column, index) in columns" :key="'tab-' + column.id">
                     <button
@@ -2064,14 +1976,6 @@
                     this.keyboardHandler = event => {
                         const target = event.target;
                         const typing = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
-                        if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k' && !typing) {
-                            event.preventDefault();
-                            this.$nextTick(() => {
-                                const search = Array.from(document.querySelectorAll('[data-board-search]'))
-                                    .find(input => input.offsetParent !== null);
-                                search?.focus();
-                            });
-                        }
                         if (!typing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'c' && !this.showModal) {
                             event.preventDefault();
                             this.openQuickComposer(this.columns[this.activeColumnIndex]?.id || this.columns[0]?.id);

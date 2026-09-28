@@ -101,7 +101,11 @@ class WorkspaceNavigationTest extends TestCase
         $this->actingAs($user)->get(route('board', [$workspace->slug, $project->slug]))
             ->assertOk()
             ->assertSee('workspace-shell--board', false)
-            ->assertSee('app-navbar--embedded', false)
+            ->assertSee('board-topbar-context', false)
+            ->assertSee('board-topbar-actions', false)
+            ->assertSee('workspace-search-trigger', false)
+            ->assertDontSee('app-navbar--embedded', false)
+            ->assertDontSee('data-board-search', false)
             ->assertSee('function workspaceShell', false);
     }
 
