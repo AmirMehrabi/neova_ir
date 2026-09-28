@@ -15,7 +15,7 @@
     <aside class="workspace-sidebar" :class="{ 'is-collapsed': sidebarCollapsed }">
         <div class="workspace-sidebar__brand">
             <a href="{{ route('today', $workspace->slug) }}" aria-label="خانه نئووا">
-                <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا">
+                <img src="{{ asset('assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا">
             </a>
             @if ($board)
                 <button type="button" @click="toggleSidebar()" aria-label="باز و بسته کردن نوار کناری">☰</button>
@@ -68,7 +68,7 @@
     <div class="workspace-stage">
         <header class="workspace-topbar">
             <div class="workspace-mobile-brand">
-                <img src="{{ asset('assets/logo/logo-black-transparent.png') }}" alt="نئووا">
+                <img src="{{ asset('assets/logo/png/symbol-primary-color.png') }}" alt="نئووا">
                 <button type="button" @click="mobileWorkspaceOpen = !mobileWorkspaceOpen"><strong>{{ $workspace->name }}</strong><span>⌄</span></button>
                 <div x-show="mobileWorkspaceOpen" x-cloak @click.away="mobileWorkspaceOpen=false" class="workspace-mobile-switcher">
                     @foreach ($shellWorkspaces as $shellWorkspace)<a href="{{ route('today', $shellWorkspace->slug) }}">{{ $shellWorkspace->name }}</a>@endforeach

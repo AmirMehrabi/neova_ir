@@ -3,7 +3,7 @@
 @section('body')
 <main class="min-h-screen bg-[#F7F7F5] grid place-items-center px-5">
     <section class="w-full max-w-md text-center">
-        <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-9 w-auto mx-auto mb-12">
+        <img src="{{ asset('assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا" class="h-14 w-auto mx-auto mb-12">
         <p class="text-[11px] font-black text-[#8A8A84] mb-3">شروع کار با نئووا</p>
         <h1 class="text-3xl font-black text-[#111111] leading-relaxed">فضای کاری تیم‌تان را بسازید</h1>
         <p class="mt-3 text-sm leading-7 text-[#555552]">پروژه‌ها، کارهای امروز و اعضای تیم در این فضا کنار هم قرار می‌گیرند.</p>

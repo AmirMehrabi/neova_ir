@@ -9,7 +9,7 @@
     <div class="{{ $boardShell ? 'max-w-7xl mx-auto' : ($fluid ? 'max-w-[1600px] mx-auto' : 'max-w-7xl mx-auto') }} px-3 sm:px-6 h-14 md:h-16 flex items-center gap-3 md:gap-4">
         {{-- Logo --}}
         @if (! $embedded)<a href="{{ route('dashboard') }}" class="shrink-0 inline-flex items-center" aria-label="خانه نئووا">
-            <img src="{{ asset($dark ? 'assets/logo/horizental-logo-white-transparent.png' : 'assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا" class="h-7 sm:h-8 w-auto object-contain">
+            <img src="{{ asset($dark ? 'assets/logo/png/logo-monochrome-white.png' : 'assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا" class="h-11 sm:h-12 w-auto object-contain">
         </a>@endif
 
         {{-- Content area: slot + search --}}

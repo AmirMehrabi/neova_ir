@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f7f5ef">
     <title>{{ $page['title'] }}</title><meta name="description" content="{{ $page['description'] }}"><link rel="canonical" href="{{ url($slug) }}">
-    <link rel="icon" type="image/png" href="{{ asset('assets/logo/logo-black-transparent.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/logo/png/app-icon.png') }}">
     <meta property="og:type" content="article"><meta property="og:locale" content="fa_IR"><meta property="og:site_name" content="نئووا"><meta property="og:title" content="{{ $page['title'] }}"><meta property="og:description" content="{{ $page['description'] }}"><meta property="og:url" content="{{ url($slug) }}">
     <meta name="twitter:card" content="summary"><meta name="twitter:title" content="{{ $page['title'] }}"><meta name="twitter:description" content="{{ $page['description'] }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])

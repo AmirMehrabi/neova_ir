@@ -7,7 +7,7 @@
                 <svg class="w-4 h-4 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
             </a>
         @endif
-        <a href="{{ route('dashboard') }}"><img src="{{ asset('assets/logo/horizental-logo-white-transparent.png') }}" alt="نئووا" class="h-7 w-auto object-contain"></a>
+        <a href="{{ route('dashboard') }}"><img src="{{ asset('assets/logo/png/logo-monochrome-white.png') }}" alt="نئووا" class="h-11 w-auto object-contain"></a>
         <span class="h-5 w-px bg-white/15"></span>
         <h1 class="text-sm font-bold text-white truncate">{{ $title }}</h1>
         <div class="mr-auto flex items-center gap-2">

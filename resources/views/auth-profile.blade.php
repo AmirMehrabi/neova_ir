@@ -3,7 +3,7 @@
 <div class="auth-page">
     <div class="auth-shell auth-shell--profile">
         <a href="{{ url('/') }}" class="auth-brand" aria-label="صفحه اصلی نئووا">
-            <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا">
+            <img src="{{ asset('assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا">
         </a>
 
         <div class="auth-heading">

@@ -2172,3 +2172,14 @@
         }
     }
 }
+
+/* The new lockups have built-in clear space; size the image box to keep the mark legible. */
+.nl-page .nl-logo img { height: 55px; }
+.nl-page .nl-product-sidebar > img { height: 38px; }
+.nl-page .nl-footer .nl-logo img { height: 44px; }
+.auth-brand img { height: 74px; }
+@media (max-width: 640px) {
+    .nl-page .nl-logo img { height: 48px; }
+    .nl-page .nl-footer .nl-logo img { height: 42px; }
+    .auth-brand img { height: 62px; }
+}

@@ -303,3 +303,8 @@
 .workspace-shell.workspace-shell--board { background:#F7F5EF !important; }
 .workspace-shell.workspace-shell--today { --shell-sidebar:236px; }
 .workspace-shell.workspace-shell--board:not(.workspace-shell--collapsed) { --shell-sidebar:236px; }
+
+.workspace-sidebar__brand img { height: 45px; }
+@media (max-width: 767px) {
+    .workspace-mobile-brand > img { width: 36px; height: 36px; filter: brightness(0); }
+}

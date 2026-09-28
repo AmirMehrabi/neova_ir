@@ -7,7 +7,7 @@
     <title>نرم افزار مدیریت پروژه فارسی برای تیم‌های کوچک | نئووا</title>
     <meta name="description" content="نئووا نرم افزار مدیریت پروژه فارسی برای برنامه‌ریزی، تعیین مسئول و موعد، مدیریت وظایف و پیگیری پیشرفت تیم‌های کوچک است. رایگان شروع کنید.">
     <link rel="canonical" href="{{ url('/') }}">
-    <link rel="icon" type="image/png" href="{{ asset('assets/logo/logo-black-transparent.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('assets/logo/png/app-icon.png') }}">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="fa_IR">
     <meta property="og:site_name" content="نئووا">
@@ -34,7 +34,7 @@
 <body class="nl-page">
     <a href="#main-content" class="nl-skip-link">رفتن به محتوای اصلی</a>
     <header class="nl-shell nl-header" id="top">
-        <a href="{{ url('/') }}" class="nl-logo" aria-label="نئووا، صفحه اصلی"><img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا"></a>
+        <a href="{{ url('/') }}" class="nl-logo" aria-label="نئووا، صفحه اصلی"><img src="{{ asset('assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا"></a>
         <nav class="nl-nav" aria-label="ناوبری اصلی"><a href="{{ url('project-management') }}">مدیریت پروژه</a><a href="{{ url('project-manager') }}">مدیر پروژه</a><a href="#features">امکانات</a><a href="#faq">سؤال‌ها</a></nav>
         <div class="nl-header-actions">
             @auth
@@ -58,7 +58,7 @@
             <div class="nl-product-window">
                 <div class="nl-product-topbar"><strong>نئووا / تیم ما</strong><span><i></i> همه‌چیز به‌روز است</span></div>
                 <div class="nl-product-layout">
-                    <aside class="nl-product-sidebar" aria-label="نمونه ناوبری محصول"><img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا"><div class="nl-product-nav"><span class="is-active">امروز</span><span>تخته</span><span>پروژه‌ها</span><span>تیم</span></div><div class="nl-product-projects"><small>پروژه‌ها</small><span>پروژه محصول</span><span>فروش و همکاری</span></div></aside>
+                    <aside class="nl-product-sidebar" aria-label="نمونه ناوبری محصول"><img src="{{ asset('assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا"><div class="nl-product-nav"><span class="is-active">امروز</span><span>تخته</span><span>پروژه‌ها</span><span>تیم</span></div><div class="nl-product-projects"><small>پروژه‌ها</small><span>پروژه محصول</span><span>فروش و همکاری</span></div></aside>
                     <div class="nl-today-preview">
                         <div class="nl-today-heading"><div><small>چهارشنبه ۲۹ مرداد</small><h2>امروز من</h2></div><span>+ کار سریع</span></div>
                         <div class="nl-today-grid"><div class="nl-today-list"><article><i></i><div><strong>بازبینی نسخه موبایل</strong><small>پروژه محصول · امروز</small></div><b>سارا</b></article><article><i></i><div><strong>ارسال پیشنهاد همکاری</strong><small>فروش · تا ساعت ۱۵</small></div><b>امیر</b></article><article class="is-done"><i>✓</i><div><strong>متن پیامک تأیید</strong><small>پروژه محصول · انجام شد</small></div></article></div><aside class="nl-team-preview"><strong>تیم امروز</strong><p><span>سارا</span><b>۳ کار</b></p><p><span>محمد</span><b>۲ کار</b></p><p><span>نیلوفر</span><b>۴ کار</b></p></aside></div>
@@ -91,6 +91,6 @@
         <section class="nl-closing" id="start" aria-labelledby="closing-title"><div class="nl-shell"><p class="nl-section-label">قدم بعدی</p><h2 id="closing-title">اولین فضای کاری‌تان را<br>همین امروز بسازید.</h2><p>راه‌اندازی ساده است؛ ادامه کار هم باید همین‌طور باشد.</p><a href="{{ auth()->check() ? route('dashboard') : route('auth') }}" class="nl-button">{{ auth()->check() ? 'رفتن به امروز' : 'رایگان در نسخه بتا شروع کنید' }} <span aria-hidden="true">←</span></a></div></section>
     </main>
 
-    <footer class="nl-footer"><div class="nl-shell nl-footer-inner"><a href="#top" class="nl-logo" aria-label="بازگشت به بالای صفحه"><img src="{{ asset('assets/logo/horizental-logo-white-transparent.png') }}" width="407" height="113" alt="نئووا"></a><nav aria-label="پیوندهای پایانی"><a href="{{ url('features/task-management') }}">مدیریت وظایف</a><a href="{{ url('features/kanban') }}">تخته کانبان</a><a href="{{ url('solutions/small-teams') }}">تیم کوچک</a><a href="{{ url('solutions/software-teams') }}">تیم نرم‌افزاری</a><a href="{{ url('alternatives/trello') }}">جایگزین ترلو</a></nav><p>نئووا؛ نرم افزار مدیریت پروژه فارسی.</p></div></footer>
+    <footer class="nl-footer"><div class="nl-shell nl-footer-inner"><a href="#top" class="nl-logo" aria-label="بازگشت به بالای صفحه"><img src="{{ asset('assets/logo/png/logo-monochrome-white.png') }}" width="2172" height="724" alt="نئووا"></a><nav aria-label="پیوندهای پایانی"><a href="{{ url('features/task-management') }}">مدیریت وظایف</a><a href="{{ url('features/kanban') }}">تخته کانبان</a><a href="{{ url('solutions/small-teams') }}">تیم کوچک</a><a href="{{ url('solutions/software-teams') }}">تیم نرم‌افزاری</a><a href="{{ url('alternatives/trello') }}">جایگزین ترلو</a></nav><p>نئووا؛ نرم افزار مدیریت پروژه فارسی.</p></div></footer>
 </body>
 </html>

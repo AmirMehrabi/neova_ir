@@ -3,7 +3,7 @@
 <div x-data="auth()" x-cloak class="auth-page">
     <div class="auth-shell">
         <a href="{{ url('/') }}" class="auth-brand" aria-label="صفحه اصلی نئووا">
-            <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا">
+            <img src="{{ asset('assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا">
         </a>
 
         <div class="auth-heading">
