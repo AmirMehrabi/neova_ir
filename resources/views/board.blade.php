@@ -326,10 +326,10 @@
                         </div>
                     </div>
 
-                    <form x-show="String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
-                                <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
-                                <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
-                            </form>
+                    <form x-show="!column.collapsed && String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
+                        <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
+                        <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
+                    </form>
                     <div x-show="!column.collapsed" class="board-column-well">
                         <div class="board-task-list" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
                         <template x-for="task in filteredTasks(column)" :key="task.dbId">
@@ -504,9 +504,9 @@
                         </label>
                     @endif
                     <form x-show="String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
-                                <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
-                                <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
-                            </form>
+                        <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
+                        <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
+                    </form>
                     <div
                         class="mobile-task-list flex flex-1 min-h-0 flex-col rounded-xl p-0 bg-[#F1F0EC] border transition-colors"
                         :class="mobileDragActive && activeColumnIndex === colIdx ? 'border-[#18212B]/60 bg-[#EEF1EF]/65' : 'border-[#CBD5E1]/50'"
@@ -3046,7 +3046,9 @@
                     this.quickComposerColumnId = columnId;
                     this.quickTaskTitle = '';
                     this.$nextTick(() => {
-                        document.querySelector('.board-quick-composer:not([style*="display: none"]) textarea')?.focus();
+                        Array.from(document.querySelectorAll('.board-quick-composer'))
+                            .find(form => form.getClientRects().length > 0)
+                            ?.querySelector('textarea')?.focus();
                     });
                 },
 
