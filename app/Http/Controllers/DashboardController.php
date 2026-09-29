@@ -6,6 +6,7 @@ use App\Models\Project;
 use App\Models\Workspace;
 use App\Services\WorkspaceContext;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class DashboardController extends Controller
 {
@@ -90,6 +91,12 @@ class DashboardController extends Controller
         }
 
         $project = Project::where('workspace_id', $workspace->id)->where('slug', $projectSlug)->firstOrFail();
+        $request->validate([
+            'confirmation_name' => ['required', 'string', Rule::in([$project->name])],
+        ], [
+            'confirmation_name.required' => 'برای حذف پروژه، نام آن را وارد کنید.',
+            'confirmation_name.in' => 'نام واردشده با نام پروژه یکسان نیست.',
+        ]);
         $project->delete();
 
         return redirect()->route('projects.index', $workspace->slug);

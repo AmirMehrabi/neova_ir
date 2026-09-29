@@ -17,6 +17,30 @@ class WorkspaceManagementTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_project_deletion_requires_its_exact_name_and_a_workspace_manager(): void
+    {
+        $owner = User::factory()->create();
+        $member = User::factory()->create();
+        $workspace = Workspace::create(['owner_id' => $owner->id, 'name' => 'تیم محصول']);
+        $workspace->members()->attach($member->id, ['role' => 'user']);
+        $project = Project::create(['workspace_id' => $workspace->id, 'name' => 'پروژه اول', 'key' => 'PRJ']);
+        $project->columns()->create(['title' => 'پس‌زمینه', 'position' => 0]);
+        $deleteUrl = route('dashboard.project.destroy', [$workspace->slug, $project->slug]);
+
+        $this->actingAs($owner)->get(route('board', [$workspace->slug, $project->slug]))
+            ->assertOk()->assertSee('حذف دائمی پروژه');
+        $this->actingAs($member)->get(route('board', [$workspace->slug, $project->slug]))
+            ->assertOk()->assertDontSee('حذف دائمی پروژه');
+
+        $this->actingAs($member)->delete($deleteUrl, ['confirmation_name' => $project->name])->assertForbidden();
+        $this->actingAs($owner)->delete($deleteUrl, ['confirmation_name' => 'پروژه دیگر'])->assertSessionHasErrors('confirmation_name');
+        $this->assertDatabaseHas('projects', ['id' => $project->id]);
+
+        $this->actingAs($owner)->delete($deleteUrl, ['confirmation_name' => $project->name])
+            ->assertRedirect(route('projects.index', $workspace->slug));
+        $this->assertDatabaseMissing('projects', ['id' => $project->id]);
+    }
+
     public function test_owner_can_invite_and_user_can_accept_idempotently(): void
     {
         Queue::fake();

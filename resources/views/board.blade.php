@@ -288,13 +288,6 @@
                         </div>
                         <div class="board-column-header__utilities">
                             @if ($canEdit)
-                                <button type="button" class="board-column-add" @click.stop="openQuickComposer(column.id)" :aria-label="'افزودن وظیفه به ستون ' + column.title" title="افزودن وظیفه">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14m-7-7h14"/></svg>
-                                    <span>افزودن</span>
-                                </button>
-                            @endif
-
-                            @if ($canEdit)
                                 <button type="button" class="column-drag-handle board-column-header__button cursor-grab active:cursor-grabbing" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                                 </button>
@@ -326,10 +319,6 @@
                         </div>
                     </div>
 
-                    <form x-show="!column.collapsed && String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
-                        <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
-                        <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
-                    </form>
                     <div x-show="!column.collapsed" class="board-column-well">
                         <div class="board-task-list" :id="'col-desktop-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'desktop'))">
                         <template x-for="task in filteredTasks(column)" :key="task.dbId">
@@ -401,9 +390,7 @@
                                 <p class="board-empty-title">هنوز وظیفه‌ای در این ستون نیست</p>
                             @endif
                         </div>
-                        </div>
                         @if ($canEdit)
-                            
                             <div x-show="column.tasks.length > 0" class="board-column-footer">
                                 <button type="button" @click.stop="openQuickComposer(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
                                     <span class="board-create-task__icon" aria-hidden="true">
@@ -416,6 +403,11 @@
                                 </button>
                             </div>
                         @endif
+                        <form x-show="!column.collapsed && String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
+                            <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
+                            <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
+                        </form>
+                        </div>
                     </div>
                 </div>
             </template>
@@ -478,13 +470,6 @@
                         </div>
                         <div class="board-column-header__utilities">
                             @if ($canEdit)
-                                <button type="button" class="board-column-add" @click.stop="openQuickComposer(column.id)" :aria-label="'افزودن وظیفه به ستون ' + column.title" title="افزودن وظیفه">
-                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14m-7-7h14"/></svg>
-                                    <span>افزودن</span>
-                                </button>
-                            @endif
-
-                            @if ($canEdit)
                                 <button type="button" class="column-drag-handle board-column-header__button board-column-header__button--mobile cursor-grab" title="کشیدن برای جابه‌جایی ستون" aria-label="کشیدن برای جابه‌جایی ستون">
                                     <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                                 </button>
@@ -503,10 +488,6 @@
                             </select>
                         </label>
                     @endif
-                    <form x-show="String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
-                        <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
-                        <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
-                    </form>
                     <div
                         class="mobile-task-list flex flex-1 min-h-0 flex-col rounded-xl p-0 bg-[#F1F0EC] border transition-colors"
                         :class="mobileDragActive && activeColumnIndex === colIdx ? 'border-[#18212B]/60 bg-[#EEF1EF]/65' : 'border-[#CBD5E1]/50'"
@@ -589,9 +570,7 @@
                                 <p class="board-empty-title">هنوز وظیفه‌ای در این ستون نیست</p>
                             @endif
                         </div>
-                        </div>
                         @if ($canEdit)
-                            
                             <div x-show="column.tasks.length > 0" class="board-column-footer">
                                 <button type="button" @click="openQuickComposer(column.id)" class="board-create-task" :aria-label="'ایجاد وظیفه جدید در ستون ' + column.title">
                                     <span class="board-create-task__icon" aria-hidden="true">
@@ -604,6 +583,11 @@
                                 </button>
                             </div>
                         @endif
+                        <form x-show="String(quickComposerColumnId) === String(column.id)" x-cloak @submit.prevent="createQuickTask(column.id)" class="board-quick-composer">
+                            <textarea x-model="quickTaskTitle" @keydown.escape.prevent="closeQuickComposer()" @keydown.enter.exact.prevent="createQuickTask(column.id)" rows="2" placeholder="چه کاری باید انجام شود؟" aria-label="عنوان وظیفه جدید"></textarea>
+                            <div><button type="submit" :disabled="quickTaskSaving || !quickTaskTitle.trim()">افزودن</button><button type="button" @click="closeQuickComposer()">انصراف</button><button type="button" @click="createQuickTask(column.id, true)" :disabled="quickTaskSaving">جزئیات بیشتر</button></div>
+                        </form>
+                        </div>
                     </div>
                 </section>
             </template>
@@ -806,6 +790,26 @@
                             <button @click="addCustomTag()" :disabled="!newTagName.trim()" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] disabled:opacity-40 px-3 py-2 rounded-lg transition-colors">افزودن</button>
                         </div>
                     </div>
+                    @if ($canManageProject)
+                        <div x-data="{ confirmingDeletion: @js($errors->has('confirmation_name')), confirmationName: @js(old('confirmation_name', '')) }" class="border-t border-[#E8EBE9] pt-5">
+                            <h3 class="text-sm font-black text-red-700">حذف پروژه</h3>
+                            <p class="mt-2 text-[11px] leading-6 text-[#64748B]">با حذف پروژه، ستون‌ها، وظیفه‌ها و فایل‌های آن نیز برای همیشه حذف می‌شوند.</p>
+                            <button type="button" x-show="!confirmingDeletion" @click="confirmingDeletion = true; $nextTick(() => { $refs.projectDeleteForm.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $refs.projectDeleteConfirmation.focus(); })" class="mt-3 rounded-lg border border-red-200 px-3 py-2 text-[11px] font-bold text-red-700 hover:bg-red-50">حذف پروژه</button>
+                            <form x-ref="projectDeleteForm" x-show="confirmingDeletion" x-cloak method="POST" action="{{ route('dashboard.project.destroy', [$workspace->slug, $project->slug]) }}" class="mt-4 rounded-xl border border-red-200 bg-red-50/50 p-4">
+                                @csrf
+                                @method('DELETE')
+                                <label for="project-delete-confirmation" class="block text-[11px] font-bold leading-6 text-[#334155]">برای تأیید، نام پروژه «{{ $project->name }}» را وارد کنید.</label>
+                                <input x-ref="projectDeleteConfirmation" id="project-delete-confirmation" name="confirmation_name" type="text" x-model="confirmationName" required autocomplete="off" class="mt-2 w-full rounded-lg border border-red-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-red-600" spellcheck="false">
+                                @error('confirmation_name')
+                                    <p class="mt-2 text-[11px] text-red-700">{{ $message }}</p>
+                                @enderror
+                                <div class="mt-3 flex flex-wrap gap-2">
+                                    <button type="submit" :disabled="confirmationName !== @js($project->name)" class="rounded-lg bg-red-700 px-3 py-2 text-[11px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">حذف دائمی پروژه</button>
+                                    <button type="button" @click="confirmingDeletion = false; confirmationName = ''" class="rounded-lg px-3 py-2 text-[11px] font-bold text-[#475569] hover:bg-white">انصراف</button>
+                                </div>
+                            </form>
+                        </div>
+                    @endif
                 </section>
                 <section x-show="projectDrawerTab === 'activity'" class="space-y-4">
                     <div>
@@ -1521,8 +1525,8 @@
                 showDeleteModal: false,
                 showColumnModal: false,
                 showColumnDeleteModal: false,
-                projectDrawerOpen: false,
-                projectDrawerTab: 'members',
+                projectDrawerOpen: @json($errors->has('confirmation_name')),
+                projectDrawerTab: @json($errors->has('confirmation_name') ? 'settings' : 'members'),
                 projectMemberSearch: '',
                 boardSearchQuery: '',
                 boardSearchOpen: false,
@@ -1983,6 +1987,7 @@
 
                 init() {
                     this.resolveBoardStyle();
+                    if (this.projectDrawerOpen) document.body.classList.add('modal-open');
                     this.realtimeRefresher = window.createRealtimeRefresher({
                         url: @json($boardRealtimeSnapshotUrl),
                         apply: payload => this.applyRealtimeSnapshot(payload),
@@ -3046,9 +3051,10 @@
                     this.quickComposerColumnId = columnId;
                     this.quickTaskTitle = '';
                     this.$nextTick(() => {
-                        Array.from(document.querySelectorAll('.board-quick-composer'))
-                            .find(form => form.getClientRects().length > 0)
-                            ?.querySelector('textarea')?.focus();
+                        const composer = Array.from(document.querySelectorAll('.board-quick-composer'))
+                            .find(form => form.getClientRects().length > 0);
+                        composer?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                        composer?.querySelector('textarea')?.focus();
                     });
                 },
 
