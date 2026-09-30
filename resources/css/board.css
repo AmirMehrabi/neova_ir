@@ -1662,3 +1662,42 @@ body.app-page.neova-board {
 .board-utility-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:8px 24px; border-bottom:1px solid #E8E8E4; background:#F7F7F5; }
 .board-utility-bar .board-sync-status { margin-inline-start:auto; }
 @media(max-width:767px) { .board-utility-bar { padding:8px 12px; gap:8px; } .workspace-shell--board .board-topbar-context__identity { flex:1; } .workspace-shell--board .board-topbar-filter__trigger,.workspace-shell--board .board-topbar-create { width:44px; min-height:44px; } }
+
+/* Keep every board column at a consistent viewport-based height. The column
+   header stays visible while its task area scrolls independently. */
+@media (min-width: 768px) {
+    .workspace-shell--board .neova-board .board-column-shell,
+    .workspace-shell--board .neova-board .board-column-shell:nth-child(n) {
+        height: clamp(30rem, calc(100dvh - 15rem), 45rem);
+        min-height: 0;
+        max-height: none;
+        overflow: hidden;
+    }
+
+}
+
+.workspace-shell--board .neova-board .board-column-well,
+.workspace-shell--board .neova-board .mobile-task-list {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.workspace-shell--board .neova-board .board-task-list,
+.workspace-shell--board .neova-board .mobile-task-scroll {
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+    .workspace-shell--board .neova-board .mobile-board-column,
+    .workspace-shell--board .neova-board .mobile-board-column:nth-child(n) {
+        height: clamp(20rem, calc(100dvh - 21rem), 37.5rem);
+        min-height: 0;
+        max-height: none;
+        overflow: hidden;
+    }
+}
