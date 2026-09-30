@@ -22,17 +22,20 @@ Route::get('/', function () {
 
 Route::get('/sitemap.xml', function () {
     $urls = collect(['/'])->merge(array_keys(config('seo_pages')));
+
     return response()->view('seo.sitemap', compact('urls'))->header('Content-Type', 'application/xml');
 })->name('sitemap');
 
 Route::get('/{seoPage}', function (string $seoPage) {
     abort_unless($page = config("seo_pages.{$seoPage}"), 404);
+
     return view('seo.page', ['page' => $page, 'slug' => $seoPage]);
 })->where('seoPage', 'project-manager|project-management')->name('seo.show');
 
 Route::get('/{section}/{seoPage}', function (string $section, string $seoPage) {
     $slug = "{$section}/{$seoPage}";
     abort_unless($page = config("seo_pages.{$slug}"), 404);
+
     return view('seo.page', compact('page', 'slug'));
 })->where('section', 'features|solutions|alternatives')->where('seoPage', '[a-z0-9-]+');
 
@@ -115,6 +118,7 @@ Route::middleware('auth')->group(function () {
                 });
                 Route::middleware('workspace.editor')->group(function () {
                     Route::patch('/{workspace}/{project}/settings', [BoardController::class, 'updateProject'])->name('board.project.update');
+                    Route::patch('/{workspace}/{project}/archive', [ProjectsController::class, 'archive'])->name('board.project.archive');
                     Route::post('/{workspace}/{project}/members', [BoardController::class, 'addProjectMember'])->name('board.project.members.store');
                     Route::delete('/{workspace}/{project}/members/{user}', [BoardController::class, 'removeProjectMember'])->name('board.project.members.destroy');
                     Route::get('/{workspace}/{project}/activity', [BoardController::class, 'activity'])->name('board.activity');

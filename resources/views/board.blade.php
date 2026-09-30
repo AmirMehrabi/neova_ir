@@ -85,7 +85,6 @@
 <body
     class="app-page neova-board neova-product board-style-editorial min-h-screen overflow-x-hidden"
     x-data="board()"
-    x-init="init()"
     x-cloak
 >
     <x-workspace-shell :workspace="$workspace" active="board" board :active-project="$project->slug">
@@ -93,13 +92,14 @@
     @slot('context')
         <div class="board-topbar-context" aria-label="پروژه جاری">
             <div class="board-topbar-context__identity">
-                @if ($project->key)<span class="board-topbar-context__key">{{ $project->key }}</span>@endif
-                <strong title="{{ $project->name }}">{{ $project->name }}</strong>
+                <span x-show="projectState.key" class="board-topbar-context__key" x-text="projectState.key"></span>
+                <strong :title="projectState.name" x-text="projectState.name"></strong><span x-show="!projectState.isActive" class="text-xs">بایگانی شده</span>
                 @if ($project->visibility === 'private')<span class="board-topbar-context__private" title="پروژه خصوصی">خصوصی</span>@endif
             </div>
             @if ($canManageProject)
                 <button type="button" class="board-topbar-context__manage" @click="openProjectDrawer()" aria-label="مدیریت پروژه" title="مدیریت پروژه">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v2m0 15v2M2.5 12h2m15 0h2M5.3 5.3l1.5 1.5m10.4 10.4 1.5 1.5m0-13.4-1.5 1.5M6.8 17.2l-1.5 1.5"/></svg>
+                    <span>تنظیمات پروژه</span>
                 </button>
             @endif
         </div>
@@ -168,6 +168,12 @@
         </div>
     @endslot
 
+    <div class="board-utility-bar">
+            <label class="board-local-search"><span class="sr-only">جستجو در این تخته</span><input type="search" x-model.debounce.200ms="boardSearchQuery" placeholder="جستجو در این تخته" aria-label="جستجو در این تخته"></label>
+            <span class="board-sync-status" role="status" aria-live="polite" x-text="syncStatusText()"></span>
+            <button x-show="snapshotState !== 'current'" type="button" @click="realtimeRefresher.refreshNow()" class="board-nav-control">تلاش دوباره</button>
+    </div>
+
     <div x-show="selectedTaskIds.length > 0" x-cloak class="board-bulk-bar">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 px-3 sm:px-6 py-2.5">
             <strong class="text-[11px] text-[#111111]" x-text="toPersianDigits(selectedTaskIds.length) + ' وظیفه انتخاب شده' "></strong>
@@ -183,6 +189,7 @@
         </div>
     </div>
 
+    <p x-show="activeFilterCount() > 0 || boardSearchQuery.trim()" class="board-filter-order-note" role="status">برای مرتب‌سازی با کشیدن، فیلتر و جستجو را پاک کنید. انتقال به ستون همچنان در جزئیات وظیفه در دسترس است.</p>
     {{-- Active filters strip --}}
     <div x-show="activeFilterCount() > 0" x-cloak class="board-filter-bar">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5">
@@ -325,7 +332,8 @@
                             <div
                                 class="task-card group"
                                 :class="[isTaskSelected(task.dbId) ? 'is-selected' : '', task.isBlocked ? 'is-blocked' : '']"
-                                tabindex="0"
+                                role="group"
+                                :aria-label="'باز کردن وظیفه: ' + task.title"
                                 :data-id="task.dbId"
                                 :data-column="column.id"
                                 @click="openEditModal(task, column.id)"
@@ -349,7 +357,7 @@
                                             <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
                                         </div>
                                     </div>
-                                    <p class="task-card__title" x-html="highlightText(task.title, boardSearchQuery)"></p>
+                                    <button type="button" class="task-card__title text-right w-full" @click.stop="if (canOpenTaskFromCard()) openEditModal(task, column.id)" :aria-label="'باز کردن وظیفه: ' + task.title" x-html="highlightText(task.title, boardSearchQuery)"></button>
                                     <p x-show="task.description" class="task-card__desc" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="task-card__checklist-bar" x-show="checklistTotal(task) > 0">
                                         <span :style="'width:' + checklistPercentFor(task) + '%'"></span>
@@ -375,6 +383,7 @@
                                 </div>
                             </div>
                         </template>
+                        <div x-show="column.tasks.length > 0 && filteredTasks(column).length === 0" class="board-no-matches"><p>وظیفه‌ای با این فیلترها پیدا نشد.</p><button type="button" @click="clearAllFilters(); clearBoardSearch()">پاک کردن فیلتر و جستجو</button></div>
                         <div x-show="column.tasks.length === 0" class="board-empty-state">
                             @if ($canEdit)
                                 <button type="button" @click.stop="openQuickComposer(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
@@ -497,7 +506,8 @@
                             <article
                                 class="task-card group"
                                 :class="[isTaskSelected(task.dbId) ? 'is-selected' : '', task.isBlocked ? 'is-blocked' : '']"
-                                tabindex="0"
+                                role="group"
+                                :aria-label="'باز کردن وظیفه: ' + task.title"
                                 :data-id="task.dbId"
                                 :data-column="column.id"
                                 @click="if (canOpenTaskFromCard()) openEditModal(task, column.id)"
@@ -520,7 +530,7 @@
                                         @endif
                                     </div>
                                     <span class="task-card__id block text-[11px] font-bold text-[#94A3B8] mb-1.5" x-text="task.id"></span>
-                                    <p class="task-card__title" x-html="highlightText(task.title, boardSearchQuery)"></p>
+                                    <button type="button" class="task-card__title text-right w-full" @click.stop="if (canOpenTaskFromCard()) openEditModal(task, column.id)" :aria-label="'باز کردن وظیفه: ' + task.title" x-html="highlightText(task.title, boardSearchQuery)"></button>
                                     <p x-show="task.description" class="task-card__desc" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="task-card__checklist-bar" x-show="checklistTotal(task) > 0">
                                         <span :style="'width:' + checklistPercentFor(task) + '%'"></span>
@@ -544,7 +554,7 @@
                                     @if ($canEdit)
                                         <label class="mobile-task-move" @click.stop>
                                             <span>انتقال به ستون</span>
-                                            <select :disabled="taskMovePending" :aria-label="'انتقال وظیفه ' + task.title + ' به ستون'" @click.stop @change.stop="moveTask(column.id, $event.target.value, task.dbId, columns.find(c => String(c.id) === $event.target.value)?.tasks.length || 0); $event.target.value = ''">
+                                            <select :disabled="taskMovePending || !canEdit" :aria-label="'انتقال وظیفه ' + task.title + ' به ستون'" @click.stop @change.stop="moveTask(column.id, $event.target.value, task.dbId, columns.find(c => String(c.id) === $event.target.value)?.tasks.length || 0); $event.target.value = ''">
                                                 <option value="">انتخاب ستون</option>
                                                 <template x-for="destination in columns.filter(c => c.id !== column.id)" :key="'move-' + task.dbId + '-' + destination.id">
                                                     <option :value="destination.id" x-text="destination.title"></option>
@@ -555,6 +565,7 @@
                                 </div>
                             </article>
                         </template>
+                        <div x-show="column.tasks.length > 0 && filteredTasks(column).length === 0" class="board-no-matches"><p>وظیفه‌ای با این فیلترها پیدا نشد.</p><button type="button" @click="clearAllFilters(); clearBoardSearch()">پاک کردن فیلتر و جستجو</button></div>
                         <div x-show="column.tasks.length === 0" class="board-empty-state board-empty-state--mobile">
                             @if ($canEdit)
                                 <button type="button" @click="openQuickComposer(column.id)" class="board-empty-state__action" :aria-label="'ایجاد اولین وظیفه در ستون ' + column.title">
@@ -651,25 +662,28 @@
             x-transition:leave-end="opacity-0 -translate-x-full"
             class="absolute inset-y-0 left-0 w-full sm:w-[430px] bg-white shadow-[8px_0_24px_rgba(24,33,43,0.12)] flex flex-col"
             @click.stop
+            x-ref="projectDrawer"
+            role="dialog" aria-modal="true" aria-labelledby="project-settings-title"
+            @keydown="trapProjectFocus($event)"
         >
             <header class="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
                 <div>
-                    <h2 class="text-base font-black text-[#071B33]">مدیریت پروژه</h2>
-                    <p class="text-[11px] text-[#64748B] mt-1" x-text="projectForm.name"></p>
+                    <h2 id="project-settings-title" class="text-base font-black text-[#071B33]">تنظیمات پروژه</h2>
+                    <p class="text-[11px] text-[#64748B] mt-1" x-text="projectState.name"></p>
                 </div>
-                <button @click="closeProjectDrawer()" class="w-9 h-9 rounded-lg text-[#64748B] hover:text-[#071B33] hover:bg-[#F1F5F9] flex items-center justify-center">
+                <button x-ref="projectDrawerClose" aria-label="بستن تنظیمات پروژه" @click="closeProjectDrawer()" class="w-11 h-11 rounded-lg text-[#64748B] hover:text-[#071B33] hover:bg-[#F1F5F9] flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </header>
 
-            <div class="flex border-b border-[#E2E8F0] px-5">
-                <button @click="projectDrawerTab = 'members'" class="px-1 py-3.5 ml-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'members' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">اعضای پروژه</button>
-                <button @click="projectDrawerTab = 'settings'" class="px-1 py-3.5 text-xs font-black border-b-2" :class="projectDrawerTab === 'settings' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">تنظیمات</button>
-                <button @click="projectDrawerTab = 'activity'; if (activityItems.length === 0) loadActivity()" class="px-1 py-3.5 mr-6 text-xs font-black border-b-2" :class="projectDrawerTab === 'activity' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">فعالیت‌ها</button>
+            <div class="flex border-b border-[#E2E8F0] px-5" role="tablist" aria-label="بخش‌های تنظیمات پروژه" @keydown="handleProjectTabKeys($event)">
+                <button type="button" id="project-tab-settings" role="tab" aria-controls="project-panel-settings" :aria-selected="projectDrawerTab === 'settings'" :tabindex="projectDrawerTab === 'settings' ? 0 : -1" @click="selectProjectTab('settings')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'settings' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">عمومی</button>
+                <button type="button" id="project-tab-members" role="tab" aria-controls="project-panel-members" :aria-selected="projectDrawerTab === 'members'" :tabindex="projectDrawerTab === 'members' ? 0 : -1" @click="selectProjectTab('members')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'members' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">اعضای پروژه</button>
+                <button type="button" id="project-tab-activity" role="tab" aria-controls="project-panel-activity" :aria-selected="projectDrawerTab === 'activity'" :tabindex="projectDrawerTab === 'activity' ? 0 : -1" @click="selectProjectTab('activity')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'activity' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">فعالیت‌ها</button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5">
-                <section x-show="projectDrawerTab === 'members'">
+                <section id="project-panel-members" role="tabpanel" aria-labelledby="project-tab-members" x-show="projectDrawerTab === 'members'">
                     <div class="mb-4">
                         <h3 class="text-sm font-black text-[#071B33]">تیم پروژه</h3>
                         <p class="text-[11px] leading-5 text-[#64748B] mt-1">افراد انتخاب‌شده می‌توانند به وظیفه‌ها تخصیص داده شوند و در گفتگوها منشن شوند.</p>
@@ -721,18 +735,21 @@
                     </div>
                 </section>
 
-                <section x-show="projectDrawerTab === 'settings'" class="space-y-5">
+                <section id="project-panel-settings" role="tabpanel" aria-labelledby="project-tab-settings" x-show="projectDrawerTab === 'settings'" class="space-y-5">
+                    <p x-show="projectSettingsError" role="alert" class="rounded-xl bg-red-50 p-3 text-sm text-red-700" x-text="projectSettingsError"></p>
+                    <button type="button" x-show="projectSettingsError" @click="reloadProjectSettings()" class="text-xs font-bold min-h-11">بارگذاری تنظیمات جدید (کنار گذاشتن پیش‌نویس)</button>
+                    <p x-show="projectSettingsDirty()" class="text-xs text-amber-800">تغییرات هنوز ذخیره نشده‌اند.</p>
                     <div>
-                        <label class="board-field-label">نام پروژه</label>
-                        <input x-model="projectForm.name" class="w-full text-sm font-bold border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B]">
+                        <label for="project-settings-name" class="board-field-label">نام پروژه</label>
+                        <input id="project-settings-name" x-model="projectForm.name" class="w-full text-sm font-bold border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B]">
                     </div>
                     <div>
-                        <label class="board-field-label">کلید پروژه</label>
-                        <input x-model="projectForm.key" maxlength="10" dir="ltr" class="w-full text-sm font-bold uppercase border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B]">
+                        <label for="project-settings-key" class="board-field-label">کلید پروژه</label>
+                        <input id="project-settings-key" x-model="projectForm.key" maxlength="10" dir="ltr" class="w-full text-sm font-bold uppercase border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B]">
                     </div>
                     <div>
-                        <label class="board-field-label">توضیحات پروژه</label>
-                        <textarea x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
+                        <label for="project-settings-description" class="board-field-label">توضیحات پروژه</label>
+                        <textarea id="project-settings-description" x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
                     </div>
                     <div class="border-t border-[#E8EBE9] pt-5">
                         <label class="board-field-label">چرخه کاری <span class="font-normal text-[#94A3B8]">(اختیاری)</span></label>
@@ -791,27 +808,30 @@
                         </div>
                     </div>
                     @if ($canManageProject)
-                        <div x-data="{ confirmingDeletion: @js($errors->has('confirmation_name')), confirmationName: @js(old('confirmation_name', '')) }" class="border-t border-[#E8EBE9] pt-5">
-                            <h3 class="text-sm font-black text-red-700">حذف پروژه</h3>
+                        <div class="border-t border-[#E8EBE9] pt-5">
+                            <h3 class="text-sm font-black">بایگانی و حذف پروژه</h3>
+                            <p class="mt-2 text-xs leading-6">بایگانی، پروژه را از کارهای فعال کنار می‌گذارد و وظیفه‌ها و فایل‌ها را نگه می‌دارد.</p>
+                            <button type="button" @click="archiveProject()" :disabled="projectSettingsSaving || projectSettingsDirty()" class="mt-3 rounded-lg border border-[#D8D8D3] px-3 min-h-11 text-xs font-bold" x-text="projectState.isActive ? 'بایگانی پروژه (قابل بازگشت)' : 'بازگرداندن پروژه'"></button>
                             <p class="mt-2 text-[11px] leading-6 text-[#64748B]">با حذف پروژه، ستون‌ها، وظیفه‌ها و فایل‌های آن نیز برای همیشه حذف می‌شوند.</p>
                             <button type="button" x-show="!confirmingDeletion" @click="confirmingDeletion = true; $nextTick(() => { $refs.projectDeleteForm.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $refs.projectDeleteConfirmation.focus(); })" class="mt-3 rounded-lg border border-red-200 px-3 py-2 text-[11px] font-bold text-red-700 hover:bg-red-50">حذف پروژه</button>
                             <form x-ref="projectDeleteForm" x-show="confirmingDeletion" x-cloak method="POST" action="{{ route('dashboard.project.destroy', [$workspace->slug, $project->slug]) }}" class="mt-4 rounded-xl border border-red-200 bg-red-50/50 p-4">
                                 @csrf
                                 @method('DELETE')
-                                <label for="project-delete-confirmation" class="block text-[11px] font-bold leading-6 text-[#334155]">برای تأیید، نام پروژه «{{ $project->name }}» را وارد کنید.</label>
+<p class="text-xs text-red-700" x-show="projectSettingsDirty()">پیش از حذف، تغییرات تنظیمات را ذخیره کنید یا کنار بگذارید.</p>
+                                <label for="project-delete-confirmation" class="block text-[11px] font-bold leading-6 text-[#334155]">برای تأیید، نام پروژه «<span x-text="projectState.name"></span>» را وارد کنید.</label>
                                 <input x-ref="projectDeleteConfirmation" id="project-delete-confirmation" name="confirmation_name" type="text" x-model="confirmationName" required autocomplete="off" class="mt-2 w-full rounded-lg border border-red-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-red-600" spellcheck="false">
                                 @error('confirmation_name')
                                     <p class="mt-2 text-[11px] text-red-700">{{ $message }}</p>
                                 @enderror
                                 <div class="mt-3 flex flex-wrap gap-2">
-                                    <button type="submit" :disabled="confirmationName !== @js($project->name)" class="rounded-lg bg-red-700 px-3 py-2 text-[11px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">حذف دائمی پروژه</button>
+                                    <button type="submit" :disabled="confirmationName !== projectState.name || projectSettingsDirty()" class="rounded-lg bg-red-700 px-3 py-2 text-[11px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">حذف دائمی پروژه</button>
                                     <button type="button" @click="confirmingDeletion = false; confirmationName = ''" class="rounded-lg px-3 py-2 text-[11px] font-bold text-[#475569] hover:bg-white">انصراف</button>
                                 </div>
                             </form>
                         </div>
                     @endif
                 </section>
-                <section x-show="projectDrawerTab === 'activity'" class="space-y-4">
+                <section id="project-panel-activity" role="tabpanel" aria-labelledby="project-tab-activity" x-show="projectDrawerTab === 'activity'" class="space-y-4">
                     <div>
                         <h3 class="text-sm font-black text-[#071B33]">فعالیت‌های پروژه</h3>
                         <p class="text-[11px] leading-5 text-[#64748B] mt-1">تمام تغییرات پروژه، وظایف و اعضا</p>
@@ -854,7 +874,8 @@
                                 </div>
                             </div>
                         </template>
-                        <div x-show="activityItems.length === 0 && !activityLoading" class="py-8 text-center">
+                        <p x-show="activityLoading" role="status" class="text-sm">در حال بارگذاری…</p><div x-show="activityError" role="alert" class="text-sm text-red-700"><span x-text="activityError"></span><button type="button" @click="loadActivity()" class="min-h-11 px-3">تلاش دوباره</button></div>
+                        <div x-show="activityItems.length === 0 && !activityLoading && !activityError" class="py-8 text-center">
                             <p class="text-[11px] text-[#94A3B8]">فعالیتی یافت نشد</p>
                         </div>
                     </div>
@@ -929,6 +950,7 @@
                         <p x-text="realtimeTaskDeleted ? 'این وظیفه در همین حین حذف شده است. پیش‌نویس شما حفظ شد.' : 'این وظیفه توسط شخص دیگری تغییر کرده است. پیش‌نویس شما حفظ شد.'"></p>
                         <div class="mt-2 flex gap-2">
                             <button type="button" @click="loadRemoteTask()" class="rounded-lg bg-white px-3 py-1.5 font-bold border border-amber-300" x-text="realtimeTaskDeleted ? 'بستن پیش‌نویس' : 'بارگذاری نسخه جدید'"></button>
+<button type="button" @click="copyTaskDraft()" class="rounded-lg bg-white px-3 py-1.5 border border-amber-300">کپی پیش‌نویس</button>
                             <button x-show="!realtimeTaskDeleted" type="button" @click="keepLocalDraft()" class="rounded-lg bg-amber-800 px-3 py-1.5 font-bold text-white">حفظ پیش‌نویس و بازنویسی</button>
                         </div>
                     </div>
@@ -1001,8 +1023,8 @@
 
                         {{-- Column --}}
                         <div>
-                            <label class="board-field-label">ستون</label>
-                            <select x-model="form.columnId" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
+                            <label for="task-column" class="board-field-label">انتقال به ستون</label>
+                            <select id="task-column" x-model="form.columnId" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
                                 <template x-for="col in columns" :key="col.id">
                                     <option :value="col.id" x-text="col.title"></option>
                                 </template>
@@ -1463,10 +1485,12 @@
         x-transition:leave-start="opacity-100 translate-y-0"
         x-transition:leave-end="opacity-0 translate-y-2"
         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[70]"
+        :role="toast.type === 'error' ? 'alert' : 'status'"
+        :aria-live="toast.type === 'error' ? 'assertive' : 'polite'"
     >
         <div class="flex items-center gap-2 bg-[#1A1D21] text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-black/20">
-            <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span x-text="toast.message"></span>
+            <svg x-show="toast.type === 'success'" aria-hidden="true" class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <span x-show="toast.type === 'error'" class="text-red-300" aria-hidden="true">!</span><span x-text="toast.message"></span><button type="button" @click="toast.show = false" aria-label="بستن پیام" class="min-w-11 min-h-11">×</button>
         </div>
     </div>
 
@@ -1526,7 +1550,21 @@
                 showColumnModal: false,
                 showColumnDeleteModal: false,
                 projectDrawerOpen: @json($errors->has('confirmation_name')),
-                projectDrawerTab: @json($errors->has('confirmation_name') ? 'settings' : 'members'),
+                projectDrawerTab: 'settings',
+                confirmingDeletion: @json($errors->has('confirmation_name')),
+                confirmationName: @json(old('confirmation_name', '')),
+                projectSettingsError: '',
+                projectBaseline: '',
+                projectBaselineVersion: @json((int) $project->edit_version),
+                projectLastFocused: null,
+                projectState: { name: @json($project->name), key: @json($project->key), isActive: @json((bool) $project->is_active), version: @json((int) $project->edit_version) },
+                initialized: false,
+                destroyed: false,
+                snapshotState: 'current',
+                connectionState: 'connecting',
+                lastSnapshotAt: '',
+                mutationSnapshot: null,
+                mutationTimer: null,
                 projectMemberSearch: '',
                 boardSearchQuery: '',
                 boardSearchOpen: false,
@@ -1543,6 +1581,7 @@
                 activitySearch: '',
                 activityItems: [],
                 activityLoading: false,
+                activityError: '',
                 activityUserId: '',
                 activityKind: '',
                 activityUsers: [],
@@ -1561,7 +1600,7 @@
                 columnFormColor: '#94A3B8',
                 columnFormWipLimit: '',
                 columnEditingId: null,
-                toast: { show: false, message: '' },
+                toast: { show: false, message: '', type: 'success' },
                 newCheckItem: '',
                 newComment: '',
                 commentPosting: false,
@@ -1643,11 +1682,11 @@
                         const matchesTag = this.filterByTag.length === 0 ||
                             (task.tags || []).some(t => this.filterByTag.includes(t));
                         const matchesDue = this.matchesDueFilter(task);
-                        const q = this.boardSearchQuery.trim().toLowerCase();
+                        const q = this.normalizeSearch(this.boardSearchQuery);
                         const matchesSearch = !q ||
-                            (task.title || '').toLowerCase().includes(q) ||
-                            (task.description || '').toLowerCase().includes(q) ||
-                            (task.id || '').toLowerCase().includes(q);
+                            this.normalizeSearch(task.title).includes(q) ||
+                            this.normalizeSearch(task.description).includes(q) ||
+                            this.normalizeSearch(task.id).includes(q);
                         return matchesAssignee && matchesPriority && matchesTag && matchesDue && matchesSearch;
                     });
                 },
@@ -1734,7 +1773,7 @@
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
                             body: JSON.stringify({ task_ids: this.selectedTaskIds, action: this.bulkAction, value: this.bulkValue || null }),
                         });
-                        if (!response.ok) throw new Error('bulk update failed');
+                        if (!response.ok) { const error = await response.json().catch(() => ({})); throw new Error(error.message || 'ذخیره تغییرات گروهی انجام نشد'); }
                         const selected = new Set(this.selectedTaskIds);
                         for (const column of this.columns) {
                             for (const task of column.tasks) {
@@ -1760,7 +1799,7 @@
                         this.showToast('تغییرات گروهی ذخیره شد');
                         this.clearSelection();
                     } catch (error) {
-                        this.showToast('ذخیره تغییرات گروهی انجام نشد');
+                        this.showToast(error.message || 'ذخیره تغییرات گروهی انجام نشد', 'error');
                     } finally {
                         this.bulkLoading = false;
                     }
@@ -1851,8 +1890,13 @@
                     return this.toPersianDigits(this.checklistDone(task)) + '/' + this.toPersianDigits(this.checklistTotal(task));
                 },
 
+                normalizeSearch(value) {
+                    return String(value || '').normalize('NFKC').toLowerCase().replace(/ي/g, 'ی').replace(/ك/g, 'ک').replace(/[۰-۹]/g, digit => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit))).replace(/[\u200c\s]+/g, '');
+                },
+
                 highlightText(text, query) {
-                    if (!query || !text) return text || '';
+                    text = String(text || '').replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[char]));
+                    if (!query || !text) return text;
                     const q = query.trim();
                     if (!q) return text;
                     const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -1886,18 +1930,20 @@
                 async loadActivity(page = 1) {
                     if (this.activityLoading) return;
                     this.activityLoading = true;
+                    this.activityError = '';
                     try {
                         const params = new URLSearchParams({ page, search: this.activitySearch, user_id: this.activityUserId, kind: this.activityKind });
                         const res = await window.neovaFetch('{{ route("board.activity", [$workspace->slug, $project->slug], false) }}?' + params.toString(), {
                             headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                         });
                         const payload = await res.json();
+                        if (!res.ok) throw new Error(payload.message || 'بارگذاری فعالیت‌ها انجام نشد.');
                         this.activityItems = payload.data || [];
                         this.activityMeta = payload.meta || { current_page: 1, last_page: 1, total: 0 };
                         this.activityUsers = payload.filters?.users || this.activityUsers;
                         this.activityKinds = payload.filters?.kinds || this.activityKinds;
                     } catch (e) {
-                        this.activityItems = [];
+                        this.activityError = e.message || 'بارگذاری فعالیت‌ها انجام نشد.';
                     } finally {
                         this.activityLoading = false;
                     }
@@ -1917,42 +1963,97 @@
                     return labels[kind] || kind;
                 },
 
-                applyRealtimeSnapshot(payload) {
-                    if (this.realtimeDragActive || this.taskMovePending || this.columnMovePending) {
+                boardMutationBusy() {
+                    return this.realtimeDragActive || this.taskMovePending || this.columnMovePending || this.taskSaving || this.quickTaskSaving || this.columnSaving || this.taskDeleting || this.columnDeleting || this.bulkLoading || this.projectSettingsSaving || this.projectMemberSaving || this.commentPosting || this.attachmentUploading;
+                },
+
+                queueMutationSnapshot(payload) {
+                    if (this.mutationSnapshot?.generatedAt && payload.generatedAt < this.mutationSnapshot.generatedAt) return;
+                    this.mutationSnapshot = payload;
+                    clearTimeout(this.mutationTimer);
+                    const flush = () => {
+                        if (this.destroyed) return;
+                        if (this.boardMutationBusy()) { this.mutationTimer = setTimeout(flush, 25); return; }
+                        const snapshot = this.mutationSnapshot;
+                        this.mutationSnapshot = null;
+                        this.applyRealtimeSnapshot(snapshot, { ownMutation: true });
+                        if (this.pendingRealtimeSnapshot) {
+                            const pending = this.pendingRealtimeSnapshot;
+                            this.pendingRealtimeSnapshot = null;
+                            this.applyRealtimeSnapshot(pending);
+                        }
+                    };
+                    this.mutationTimer = setTimeout(flush, 0);
+                },
+
+                applyRealtimeSnapshot(payload, { ownMutation = false } = {}) {
+                    if (!payload || (this.lastSnapshotAt && payload.generatedAt && payload.generatedAt < this.lastSnapshotAt)) return;
+                    if (this.boardMutationBusy()) {
+                        if (this.pendingRealtimeSnapshot?.generatedAt && payload.generatedAt < this.pendingRealtimeSnapshot.generatedAt) return;
                         this.pendingRealtimeSnapshot = payload;
+                        clearTimeout(this.remoteSnapshotTimer);
+                        this.remoteSnapshotTimer = setTimeout(() => {
+                            if (this.destroyed || !this.pendingRealtimeSnapshot) return;
+                            const pending = this.pendingRealtimeSnapshot;
+                            this.pendingRealtimeSnapshot = null;
+                            this.applyRealtimeSnapshot(pending);
+                        }, 50);
                         return;
                     }
+                    this.lastSnapshotAt = payload.generatedAt || this.lastSnapshotAt;
+                    if (typeof payload.canEdit === 'boolean') this.canEdit = payload.canEdit;
+                    const activeId = this.columns[this.activeColumnIndex]?.id;
                     const collapsed = new Set(this.columns.filter(column => column.collapsed).map(column => String(column.id)));
                     const remoteTask = this.editingTask
                         ? payload.columns.flatMap(column => column.tasks).find(task => Number(task.dbId) === Number(this.editingTask))
                         : null;
                     const draftIsDirty = this.showModal && this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot;
                     const attachmentBusy = this.attachmentUploading || this.commentPosting || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length;
-                    if (this.showModal && this.editingTask && draftIsDirty) {
+                    const remoteChanged = !remoteTask || (remoteTask.version != null && this.form.version != null ? Number(remoteTask.version) !== Number(this.form.version) : remoteTask.updatedAt !== this.form.updatedAt);
+                    const ownTaskChanged = ownMutation && (payload.originTaskIds || []).includes(Number(this.editingTask));
+                    if (this.showModal && this.editingTask && !ownTaskChanged && remoteChanged && (draftIsDirty || attachmentBusy)) {
                         this.realtimeConflict = true;
                         this.realtimeTaskDeleted = !remoteTask;
                     }
                     this.columns = payload.columns.map(column => ({ ...column, collapsed: collapsed.has(String(column.id)) }));
+                    this.activeColumnIndex = Math.max(0, this.columns.findIndex(column => column.id === activeId));
+                    const existingIds = new Set(this.columns.flatMap(column => column.tasks.map(task => Number(task.dbId))));
+                    this.selectedTaskIds = this.selectedTaskIds.filter(id => existingIds.has(Number(id)));
                     this.projectMembers = payload.members;
                     this.workspacePeople = payload.workspacePeople;
                     this.assignees = payload.members.map(member => member.name);
                     this.customTags = payload.project.customTags || [];
                     this.activeCycle = payload.activeCycle;
-                    Object.assign(this.projectForm, {
+                    Object.assign(this.projectState, payload.project);
+                    const baselineSettings = this.projectBaseline ? JSON.parse(this.projectBaseline) : {};
+                    const settingsUnchanged = baselineSettings.name === payload.project.name && baselineSettings.key === payload.project.key && baselineSettings.description === payload.project.description && baselineSettings.board_style === payload.project.boardStyle;
+                    if (settingsUnchanged) this.projectBaselineVersion = payload.project.version;
+                    if (!this.projectSettingsDirty()) {
+                      Object.assign(this.projectForm, {
                         name: payload.project.name,
                         key: payload.project.key,
                         description: payload.project.description,
                         board_style: payload.project.boardStyle,
                     });
-                    if (this.showModal && this.editingTask && !draftIsDirty && !attachmentBusy && remoteTask) {
-                        const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
-                        this.openEditModal(remoteTask, column.id);
+                      this.projectBaseline = JSON.stringify(this.projectForm);
+                      this.projectBaselineVersion = payload.project.version;
                     }
+                    if (ownTaskChanged && this.showModal && remoteTask) { this.form.updatedAt = remoteTask.updatedAt; this.form.version = remoteTask.version; }
+                    if (this.showModal && remoteTask) {
+                        this.form.comments = JSON.parse(JSON.stringify(remoteTask.comments || []));
+                        this.form.attachments = JSON.parse(JSON.stringify(remoteTask.attachments || []));
+                    }
+                    if (this.showModal && this.editingTask && !draftIsDirty && !attachmentBusy && remoteTask && remoteChanged) {
+                        const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
+                        this.openEditModal(remoteTask, column.id, { preserveFocus: true });
+                    }
+                    if (this.showModal && this.editingTask && !remoteTask && !draftIsDirty && !attachmentBusy) this.closeModal();
                     this.destroySortables();
                     this.destroyColumnSortables();
                     this.$nextTick(() => {
                         this.columns.forEach(column => this.initSortable(column.id, this.boardMediaQuery?.matches ? 'mobile' : 'desktop'));
                         this.initColumnSortable(this.boardMediaQuery?.matches ? 'mobile' : 'desktop');
+                        if (this.boardMediaQuery?.matches) this.initMobileBoardObserver();
                     });
                 },
 
@@ -1973,11 +2074,17 @@
                 loadRemoteTask() {
                     const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
                     const task = column?.tasks.find(item => Number(item.dbId) === Number(this.editingTask));
-                    if (!task) { this.closeModal(); return; }
+                    if (!task) { this.requestCloseModal(); return; }
+                    if ((this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot) && !window.confirm('پیش‌نویس شما کنار گذاشته و نسخه جدید بارگذاری شود؟')) return;
                     this.realtimeConflict = false;
                     this.realtimeTaskDeleted = false;
                     this.forceRealtimeOverwrite = false;
                     this.openEditModal(task, column.id);
+                },
+
+                async copyTaskDraft() {
+                    try { await navigator.clipboard.writeText(JSON.stringify(this.form, null, 2)); this.showToast('پیش‌نویس کپی شد'); }
+                    catch { this.taskError = 'کپی انجام نشد. متن پیش‌نویس را دستی انتخاب و کپی کنید.'; }
                 },
 
                 keepLocalDraft() {
@@ -1986,18 +2093,36 @@
                 },
 
                 init() {
+                    if (this.initialized) return;
+                    this.initialized = true;
+                    ['filterByAssignee', 'filterByPriority', 'filterByTag', 'filterByDue', 'boardSearchQuery'].forEach(key => this.$watch(key, () => this.setSortablesDisabled(this.taskMovePending || this.columnMovePending)));
+                    this.projectBaseline = JSON.stringify(this.projectForm);
                     this.resolveBoardStyle();
                     if (this.projectDrawerOpen) document.body.classList.add('modal-open');
                     this.realtimeRefresher = window.createRealtimeRefresher({
                         url: @json($boardRealtimeSnapshotUrl),
                         apply: payload => this.applyRealtimeSnapshot(payload),
+                        onState: detail => { this.snapshotState = detail.state; this.snapshotAccessStatus = detail.status; },
                     });
-                    window.subscribeProjectRealtime(this.projectId, () => this.realtimeRefresher.schedule());
-                    window.addEventListener('neova:realtime-reconnected', () => this.realtimeRefresher.refreshNow());
+                    this.realtimeChannel = window.subscribeProjectRealtime(this.projectId, () => this.realtimeRefresher.schedule());
+                    this.realtimeChannel?.subscribed(() => { this.connectionState = 'connected'; this.realtimeRefresher.refreshNow(); });
+                    this.realtimeChannel?.error(() => { this.connectionState = 'failed'; this.snapshotState = 'stale'; });
+                    this.connectionState = window.Echo?.connector?.pusher?.connection?.state || 'unavailable';
+                    this.reconnectHandler = () => this.realtimeRefresher.refreshNow();
+                    this.connectionHandler = event => { this.connectionState = event.detail.state; };
+                    this.mutationHandler = event => this.queueMutationSnapshot(event.detail);
+                    this.visibilityHandler = () => { if (!document.hidden) this.realtimeRefresher.refreshNow(); };
+                    window.addEventListener('neova:realtime-reconnected', this.reconnectHandler);
+                    window.addEventListener('neova:realtime-state', this.connectionHandler);
+                    window.addEventListener('neova:mutation-snapshot', this.mutationHandler);
+                    document.addEventListener('visibilitychange', this.visibilityHandler);
+                    this.pollTimer = setInterval(() => {
+                        if (!document.hidden && this.connectionState !== 'connected' && this.snapshotState !== 'access-error') this.realtimeRefresher.refreshNow();
+                    }, 30000);
                     this.keyboardHandler = event => {
                         const target = event.target;
-                        const typing = target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName);
-                        if (!typing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'c' && !this.showModal) {
+                        const typing = target && (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName));
+                        if (!typing && !event.metaKey && !event.ctrlKey && !event.altKey && event.key.toLowerCase() === 'c' && !this.showModal && !this.projectDrawerOpen && !this.showColumnModal && !this.showDeleteModal && !this.showColumnDeleteModal) {
                             event.preventDefault();
                             this.openQuickComposer(this.columns[this.activeColumnIndex]?.id || this.columns[0]?.id);
                         }
@@ -2014,7 +2139,7 @@
                     }
 
                     this.boardMediaQuery = window.matchMedia('(max-width: 767px)');
-                    this.boardMediaQuery.addEventListener('change', () => {
+                    this.mediaHandler = () => {
                         this.destroySortables();
                         this.destroyColumnSortables();
                         this.$nextTick(() => {
@@ -2025,7 +2150,8 @@
                             if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
                             else this.destroyMobileBoardObserver();
                         });
-                    });
+                    };
+                    this.boardMediaQuery.addEventListener('change', this.mediaHandler);
 
                     this.$nextTick(() => {
                         if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
@@ -2033,6 +2159,11 @@
 
                     this.$nextTick(() => {
                         this.initJalaliDatePicker();
+                        const section = @json(request()->query('settings'));
+                        if (this.canManageProject && ['general', 'members', 'activity', 'delete'].includes(section)) {
+                            this.openProjectDrawer(section === 'members' || section === 'activity' ? section : 'settings');
+                            if (section === 'delete') { this.confirmingDeletion = true; this.$nextTick(() => this.$refs.projectDeleteForm?.scrollIntoView({ block: 'center' })); }
+                        }
                         const requestedTask = Number(@json(request()->query('task')) || 0);
                         if (requestedTask) {
                             for (const column of this.columns) {
@@ -2041,6 +2172,27 @@
                             }
                         }
                     });
+                },
+
+                destroy() {
+                    this.destroyed = true;
+                    clearTimeout(this.mutationTimer); clearTimeout(this.remoteSnapshotTimer); clearTimeout(this.toastTimer); clearInterval(this.pollTimer);
+                    this.realtimeRefresher?.dispose();
+                    window.Echo?.leave(`project.${this.projectId}`);
+                    window.removeEventListener('keydown', this.keyboardHandler);
+                    window.removeEventListener('neova:realtime-reconnected', this.reconnectHandler);
+                    window.removeEventListener('neova:realtime-state', this.connectionHandler);
+                    window.removeEventListener('neova:mutation-snapshot', this.mutationHandler);
+                    document.removeEventListener('visibilitychange', this.visibilityHandler);
+                    this.boardMediaQuery?.removeEventListener('change', this.mediaHandler);
+                    this.destroySortables(); this.destroyColumnSortables(); this.destroyMobileBoardObserver();
+                    this.endMobileDrag(); clearTimeout(this.mobileScrollTimer);
+                },
+
+                syncStatusText() {
+                    if (this.snapshotState === 'access-error') return this.snapshotAccessStatus === 404 ? 'پروژه دیگر در دسترس نیست؛ پیش‌نویس شما حفظ شد' : 'دسترسی قطع شد؛ پیش‌نویس شما حفظ شد';
+                    if (this.snapshotState === 'stale') return 'به‌روزرسانی انجام نشد';
+                    return this.connectionState === 'connected' ? 'به‌روز' : 'به‌روزرسانی زنده قطع است';
                 },
 
                 clearBoardSearch() {
@@ -2324,16 +2476,88 @@
                     document.body.classList.remove('mobile-task-dragging');
                 },
 
-                openProjectDrawer() {
+                async reloadProjectSettings() {
+                    if (this.projectSettingsDirty() && !window.confirm('پیش‌نویس تنظیمات کنار گذاشته و نسخه جدید بارگذاری شود؟')) return;
+                    // Preserve the draft if the request fails.
+                    const response = await window.neovaFetch(@json($boardRealtimeSnapshotUrl), { headers: { Accept: 'application/json' }, cache: 'no-store' }).catch(() => null);
+                    if (!response?.ok) { this.projectSettingsError = 'بارگذاری تنظیمات انجام نشد. دوباره تلاش کنید.'; return; }
+                    const payload = await response.json();
+                    this.projectForm = { name: payload.project.name, key: payload.project.key, description: payload.project.description, board_style: payload.project.boardStyle };
+                    this.projectBaseline = JSON.stringify(this.projectForm);
+                    this.projectBaselineVersion = payload.project.version;
+                    this.projectSettingsError = '';
+                    this.applyRealtimeSnapshot(payload);
+                },
+
+                async archiveProject() {
+                    if (!this.canManageProject || this.projectSettingsSaving || this.projectSettingsDirty()) return;
+                    this.projectSettingsSaving = true;
+                    try {
+                        const response = await window.neovaFetch('{{ route("board.project.archive", [$workspace->slug, $project->slug], false) }}', {
+                            method: 'PATCH', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ is_active: !this.projectState.isActive }),
+                        });
+                        const data = await response.json();
+                        if (!response.ok) throw new Error(data.message || 'بایگانی انجام نشد.');
+                        window.location.assign('{{ route("projects.index", $workspace->slug, false) }}' + (this.projectState.isActive ? '?archived=1' : ''));
+                    } catch (error) { this.projectSettingsError = error.message; }
+                    finally { this.projectSettingsSaving = false; }
+                },
+
+                projectSettingsDirty() {
+                    return !!this.projectBaseline && JSON.stringify(this.projectForm) !== this.projectBaseline;
+                },
+
+                selectProjectTab(tab) {
+                    this.projectDrawerTab = tab;
+                    if (tab === 'activity' && !this.activityItems.length) this.loadActivity();
+                },
+
+                handleProjectTabKeys(event) {
+                    const tabs = ['settings', 'members', 'activity'];
+                    const index = tabs.indexOf(this.projectDrawerTab);
+                    let next;
+                    if (event.key === 'ArrowLeft') next = (index + 1) % tabs.length;
+                    if (event.key === 'ArrowRight') next = (index + tabs.length - 1) % tabs.length;
+                    if (event.key === 'Home') next = 0;
+                    if (event.key === 'End') next = tabs.length - 1;
+                    if (next === undefined) return;
+                    event.preventDefault();
+                    this.selectProjectTab(tabs[next]);
+                    document.getElementById('project-tab-' + tabs[next])?.focus();
+                },
+
+                trapProjectFocus(event) {
+                    if (event.key !== 'Tab') return;
+                    const controls = Array.from(this.$refs.projectDrawer.querySelectorAll('button, input, textarea, select, a[href], [tabindex="0"]')).filter(el => !el.disabled && el.getClientRects().length);
+                    const first = controls[0], last = controls.at(-1);
+                    if (event.shiftKey && (document.activeElement === first || !this.$refs.projectDrawer.contains(document.activeElement))) { event.preventDefault(); last?.focus(); }
+                    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+                },
+
+                openProjectDrawer(tab = 'settings') {
                     if (!this.canManageProject) return;
+                    this.projectLastFocused = document.activeElement;
                     this.projectDrawerOpen = true;
-                    this.projectDrawerTab = 'members';
+                    this.projectDrawerTab = tab;
+                    if (tab === 'activity') this.loadActivity();
                     document.body.classList.add('modal-open');
+                    this.$nextTick(() => this.$refs.projectDrawerClose?.focus());
                 },
 
                 closeProjectDrawer() {
+                    if (!this.projectDrawerOpen) return;
+                    if (this.projectSettingsSaving) return;
+                    if (this.projectSettingsDirty() && !window.confirm('تغییرات تنظیمات ذخیره نشده‌اند. کنار گذاشته شوند؟')) return;
+                    if (this.projectSettingsDirty()) {
+                        const baseline = JSON.parse(this.projectBaseline);
+                        this.projectForm = { name: this.projectState.name, key: this.projectState.key, description: this.projectState.description ?? baseline.description, board_style: this.projectState.boardStyle ?? baseline.board_style };
+                        this.projectBaseline = JSON.stringify(this.projectForm);
+                        this.projectBaselineVersion = this.projectState.version;
+                    }
                     this.projectDrawerOpen = false;
                     document.body.classList.remove('modal-open');
+                    this.$nextTick(() => this.projectLastFocused?.focus?.());
                 },
 
                 isProjectMember(userId) {
@@ -2379,7 +2603,7 @@
                         this.assignees = this.projectMembers.map(member => member.name);
                         this.showToast(data.message);
                     } catch (error) {
-                        this.showToast(error.message);
+                        this.showToast(error.message, 'error');
                     } finally {
                         this.projectMemberSaving = null;
                     }
@@ -2388,6 +2612,7 @@
                 async saveProjectSettings() {
                     if (!this.canManageProject || this.projectSettingsSaving) return;
                     this.projectSettingsSaving = true;
+                    this.projectSettingsError = '';
                     try {
                         const response = await window.neovaFetch('{{ route("board.project.update", [$workspace->slug, $project->slug], false) }}', {
                             method: 'PATCH',
@@ -2396,18 +2621,22 @@
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}',
                                 'Accept': 'application/json',
                             },
-                            body: JSON.stringify(this.projectForm),
+                            body: JSON.stringify({ ...this.projectForm, expected_version: this.projectBaselineVersion }),
                         });
                         const data = await response.json();
                         if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره تنظیمات انجام نشد.');
                         this.projectForm = Object.assign({}, this.projectForm, data.project);
+                        this.projectBaseline = JSON.stringify(this.projectForm);
+                        this.projectBaselineVersion = data.board?.project.version;
+                        Object.assign(this.projectState, data.board?.project || data.project);
                         if (data.project?.board_style) {
                             this.projectBoardStyleDefault = data.project.board_style;
                             this.setBoardStyle(data.project.board_style, { persistLocal: true });
                         }
                         this.showToast(data.message);
                     } catch (error) {
-                        this.showToast(error.message);
+                        this.projectSettingsError = error.message;
+                        this.showToast(error.message, 'error');
                     } finally {
                         this.projectSettingsSaving = false;
                     }
@@ -2422,7 +2651,7 @@
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || 'ذخیره چرخه انجام نشد.');
                         this.cycleLength = data.cycleLengthWeeks || ''; this.showToast('تنظیم چرخه ذخیره شد');
-                    } catch (error) { this.showToast(error.message); }
+                    } catch (error) { this.showToast(error.message, 'error'); }
                 },
 
                 async startCycle() {
@@ -2435,7 +2664,7 @@
                         if (!response.ok) throw new Error(data.message || 'شروع چرخه انجام نشد.');
                         this.activeCycle = { id:data.cycle.id, number:data.cycle.number, startsOn:data.cycle.startsOn, endsOn:data.cycle.endsOn, taskIds:data.cycle.tasks.map(task => task.id), openTaskIds:data.cycle.tasks.map(task => task.id) };
                         this.showToast('چرخه شروع شد');
-                    } catch (error) { this.showToast(error.message); }
+                    } catch (error) { this.showToast(error.message, 'error'); }
                 },
 
                 async finishCycle() {
@@ -2447,7 +2676,7 @@
                         if (!response.ok) throw new Error(data.message || 'پایان چرخه انجام نشد.');
                         this.activeCycle = data.nextCycle ? { id:data.nextCycle.id, number:data.nextCycle.number, startsOn:data.nextCycle.startsOn, endsOn:data.nextCycle.endsOn, taskIds:data.nextCycle.tasks.map(task => task.id), openTaskIds:data.nextCycle.tasks.map(task => task.id) } : null;
                         this.showToast('چرخه جدید شروع شد');
-                    } catch (error) { this.showToast(error.message); }
+                    } catch (error) { this.showToast(error.message, 'error'); }
                 },
 
                 async saveColumnRole(column) {
@@ -2457,7 +2686,7 @@
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok) throw new Error(data.message || 'ذخیره نقش ستون انجام نشد.');
                         column.workflowRole = data.workflow_role; this.showToast('نقش ستون ذخیره شد');
-                    } catch (error) { this.showToast(error.message); }
+                    } catch (error) { this.showToast(error.message, 'error'); }
                 },
 
                 mentionableMembers() {
@@ -2642,7 +2871,7 @@
                         this.closeMentionMenu();
                         this.showToast('پیام ارسال شد.');
                     } catch (error) {
-                        this.showToast(error.message);
+                        this.showToast(error.message, 'error');
                     } finally {
                         this.commentPosting = false;
                     }
@@ -2657,8 +2886,10 @@
                         this.pendingCommentFiles.forEach(item => { body.append('files[]', item.file); item.status = 'uploading'; });
                         xhr.open('POST', '{{ route("board.task.comments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', this.editingTask));
                         xhr.setRequestHeader('Accept', 'application/json'); xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+                        const socketId = window.Echo?.socketId?.(); if (socketId) xhr.setRequestHeader('X-Socket-ID', socketId);
+                        xhr.timeout = 30000; xhr.ontimeout = () => reject(new Error('ارتباط کند است. وضعیت را بررسی و دوباره تلاش کنید.'));
                         xhr.upload.onprogress = event => { if (event.lengthComputable) this.pendingCommentFiles.forEach(item => item.progress = Math.round(event.loaded / event.total * 100)); };
-                        xhr.onload = () => { const data = JSON.parse(xhr.responseText || '{}'); xhr.status >= 200 && xhr.status < 300 ? resolve(data) : reject(new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ارسال پیام انجام نشد.')); };
+                        xhr.onload = () => { try { const data = JSON.parse(xhr.responseText || '{}'); xhr.status >= 200 && xhr.status < 300 ? resolve(window.neovaMutationResponse(data)) : reject(new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ارسال پیام انجام نشد.')); } catch { reject(new Error('پاسخ سرور معتبر نیست.')); } };
                         xhr.onerror = () => reject(new Error('ارتباط هنگام ارسال فایل قطع شد.'));
                         xhr.send(body);
                     });
@@ -2795,7 +3026,7 @@
                         this.columns = snapshot;
                         this.activeColumnIndex = Math.max(0, this.columns.findIndex(column => column.id === activeColumnId));
                         this.$nextTick(() => this.scrollToColumn(this.activeColumnIndex, 'auto'));
-                        this.showToast(error.message || 'ترتیب ستون‌ها ذخیره نشد.');
+                        this.showToast(error.message || 'ترتیب ستون‌ها ذخیره نشد.', 'error');
                         this.destroySortables();
                         this.destroyColumnSortables();
                         this.$nextTick(() => {
@@ -2820,6 +3051,7 @@
                     const self = this;
                     const instance = new Sortable(el, {
                         group: variant === 'mobile' ? false : 'tasks',
+                        disabled: this.taskMovePending || this.columnMovePending || this.activeFilterCount() > 0 || !!this.boardSearchQuery.trim(),
                         animation: 200,
                         ghostClass: 'sortable-ghost',
                         chosenClass: 'sortable-chosen',
@@ -2887,7 +3119,8 @@
                 },
 
                 setSortablesDisabled(disabled) {
-                    this.sortableInstances.forEach(item => item.instance.option('disabled', disabled));
+                    const filtered = this.activeFilterCount() > 0 || !!this.boardSearchQuery.trim();
+                    this.sortableInstances.forEach(item => item.instance.option('disabled', disabled || filtered || !this.canEdit));
                 },
 
                 setColumnSortablesDisabled(disabled) {
@@ -2941,7 +3174,7 @@
                             if (column) column.tasks = savedColumn.tasks.slice();
                         });
                         this.activeColumnIndex = previousColumnIndex;
-                        this.showToast(error.message || 'انتقال وظیفه انجام نشد.');
+                        this.showToast(error.message || 'انتقال وظیفه انجام نشد.', 'error');
                         this.destroySortables();
                         this.$nextTick(() => {
                             this.columns.forEach(column => {
@@ -2955,7 +3188,7 @@
                 },
 
                 formFingerprint() {
-                    const { comments, attachments, updatedAt, ...fields } = this.form;
+                    const { id, workflowRole, comments, attachments, updatedAt, version, ...fields } = this.form;
                     return JSON.stringify(fields);
                 },
 
@@ -2984,7 +3217,7 @@
                     });
                 },
 
-                openEditModal(task, columnId) {
+                openEditModal(task, columnId, { preserveFocus = false } = {}) {
                     this.editingTask = task.dbId;
                     this.editingDescription = false;
                     const taskAssignees = task.assignees || (task.assignee ? [task.assignee] : []);
@@ -2993,7 +3226,7 @@
                         assignees: Array.from(taskAssignees), columnId: columnId, dueDate: task.dueDate || '', dueTime: task.dueTime || '',
                         tags: Array.from(task.tags || []), checklist: JSON.parse(JSON.stringify(task.checklist || [])),
                         comments: JSON.parse(JSON.stringify(task.comments || [])), attachments: JSON.parse(JSON.stringify(task.attachments || [])), isBlocked: !!task.isBlocked,
-                        blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || '', updatedAt: task.updatedAt || null
+                        blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || '', updatedAt: task.updatedAt || null, version: task.version || null
                     };
                     this.newCheckItem = '';
                     this.newComment = '';
@@ -3001,7 +3234,7 @@
                     this.clearPendingFiles('comment');
                     this.attachmentFilter = 'all';
                     this.taskError = '';
-                    this.modalLastFocused = document.activeElement;
+                    if (!this.showModal) this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
                     this.realtimeConflict = false;
                     this.realtimeTaskDeleted = false;
@@ -3011,7 +3244,7 @@
                     this.showModal = true;
                     this.$nextTick(() => {
                         this.modalSnapshot = this.formFingerprint();
-                        this.$refs.taskDrawerClose?.focus();
+                        if (!preserveFocus) this.$refs.taskDrawerClose?.focus();
                     });
                 },
 
@@ -3083,12 +3316,12 @@
                         });
                         const data = await response.json().catch(() => ({}));
                         if (!response.ok || response.redirected) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ایجاد وظیفه انجام نشد.');
-                        const task = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority || 'متوسط', assignees: data.assignees || [], dueDate: data.due_date || '', dueTime: data.due_time?.slice(0, 5) || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null };
+                        const task = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority || 'متوسط', assignees: data.assignees || [], dueDate: data.due_date || '', dueTime: data.due_time?.slice(0, 5) || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null, version: data.edit_version };
                         column.tasks.push(task);
                         this.closeQuickComposer();
                         this.showToast('وظیفه اضافه شد');
                     } catch (error) {
-                        this.showToast(error.message || 'ایجاد وظیفه انجام نشد.');
+                        this.showToast(error.message || 'ایجاد وظیفه انجام نشد.', 'error');
                     } finally {
                         this.quickTaskSaving = false;
                     }
@@ -3148,7 +3381,7 @@
                             const targetCol = this.columns.find(c => c.id === this.form.columnId);
                             const task = sourceCol?.tasks.find(t => t.dbId === this.editingTask);
                             if (!task) throw new Error('وظیفه پیدا نشد.');
-                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, due_time: this.form.dueDate ? this.form.dueTime : '', tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId), expected_updated_at: this.form.updatedAt, force: this.forceRealtimeOverwrite };
+                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, due_time: this.form.dueDate ? this.form.dueTime : '', tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId), expected_updated_at: this.form.updatedAt, expected_version: this.form.version, force: this.forceRealtimeOverwrite };
                             const response = await window.neovaFetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
                             const data = await response.json().catch(() => ({}));
                             if (response.status === 409) {
@@ -3157,7 +3390,7 @@
                                 throw new Error(data.message || 'نسخه جدیدتری از این وظیفه وجود دارد.');
                             }
                             if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره وظیفه انجام نشد.');
-                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, dueTime: this.form.dueTime, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)), updatedAt: data.updated_at || data.updatedAt });
+                            Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, dueTime: this.form.dueTime, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)), updatedAt: data.updated_at || data.updatedAt, version: data.edit_version });
                             if (sourceCol && targetCol && sourceCol.id !== targetCol.id) {
                                 sourceCol.tasks = sourceCol.tasks.filter(item => item.dbId !== task.dbId);
                                 targetCol.tasks.push(task);
@@ -3173,11 +3406,12 @@
                             const res = await window.neovaFetch('{{ route("board.task.store", [$workspace->slug, $project->slug], false) }}', { method: 'POST', headers, body: JSON.stringify(payload) });
                             const data = await res.json().catch(() => ({}));
                             if (!res.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ایجاد وظیفه انجام نشد.');
-                            const createdTask = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', dueTime: data.due_time?.slice(0, 5) || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null };
+                            const createdTask = { id: data.display_id, dbId: data.id, title: data.title, description: data.description || '', priority: data.priority, assignees: data.assignees || [], dueDate: data.due_date || '', dueTime: data.due_time?.slice(0, 5) || '', tags: data.tags || [], checklist: data.checklist || [], comments: data.comments || [], attachments: [], updatedAt: data.updated_at || null, version: data.edit_version };
                             col.tasks.push(createdTask);
                             this.editingTask = data.id;
                             this.form.id = data.display_id;
                             this.form.updatedAt = data.updated_at || null;
+                            this.form.version = data.edit_version;
                             if (!await this.uploadQueuedDescription(data.id)) { this.taskError = 'وظیفه ایجاد شد، اما برخی فایل‌ها بارگذاری نشدند. برای تلاش دوباره «ذخیره تغییرات» را بزنید.'; this.modalSnapshot = this.formFingerprint(); return; }
                             this.showToast('وظیفه جدید ایجاد شد');
                         }
@@ -3191,7 +3425,7 @@
                 },
 
                 async stateTask(action) {
-                    if (!this.editingTask || this.taskSaving) return;
+                    if (!this.canEdit || !this.editingTask || this.taskSaving) return;
                     let reason = null;
                     if (action === 'block') {
                         reason = window.prompt('دلیل انسداد چیست؟', this.form.blockedReason || '');
@@ -3302,8 +3536,10 @@
                         const body = new FormData(); body.append('context', 'description'); body.append('files[]', item.file);
                         xhr.open('POST', '{{ route("task.attachments.store", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', taskId));
                         xhr.setRequestHeader('Accept', 'application/json'); xhr.setRequestHeader('X-CSRF-TOKEN', '{{ csrf_token() }}');
+                        const socketId = window.Echo?.socketId?.(); if (socketId) xhr.setRequestHeader('X-Socket-ID', socketId);
+                        xhr.timeout = 30000; xhr.ontimeout = () => reject(new Error('ارتباط کند است. وضعیت را بررسی و دوباره تلاش کنید.'));
                         xhr.upload.onprogress = event => { if (event.lengthComputable) item.progress = Math.round(event.loaded / event.total * 100); };
-                        xhr.onload = () => { const data = JSON.parse(xhr.responseText || '{}'); xhr.status >= 200 && xhr.status < 300 ? resolve(data) : reject(new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'بارگذاری انجام نشد.')); };
+                        xhr.onload = () => { try { const data = JSON.parse(xhr.responseText || '{}'); xhr.status >= 200 && xhr.status < 300 ? resolve(window.neovaMutationResponse(data)) : reject(new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'بارگذاری انجام نشد.')); } catch { reject(new Error('پاسخ سرور معتبر نیست.')); } };
                         xhr.onerror = () => reject(new Error('ارتباط هنگام بارگذاری قطع شد.'));
                         xhr.onabort = () => { item.status = 'cancelled'; reject(new Error('بارگذاری لغو شد.')); };
                         xhr.send(body);
@@ -3395,7 +3631,7 @@
                         }
                         this.closeColumnModal();
                         this.showToast(editing ? 'نام ستون ویرایش شد' : 'ستون جدید اضافه شد');
-                        if (!editing) this.$nextTick(() => this.initSortable(String(data.id), 'desktop'));
+                        if (!editing) this.$nextTick(() => { this.initSortable(String(data.id), this.boardMediaQuery?.matches ? 'mobile' : 'desktop'); if (this.boardMediaQuery?.matches) this.initMobileBoardObserver(); });
                     } catch (error) {
                         this.columnError = error.message || 'ذخیره ستون انجام نشد.';
                     } finally {
@@ -3456,15 +3692,16 @@
                         this.showDeleteModal = false;
                         this.deleteTarget = { columnId: null, taskId: null };
                     } catch (error) {
-                        this.showToast(error.message || 'حذف وظیفه انجام نشد.');
+                        this.showToast(error.message || 'حذف وظیفه انجام نشد.', 'error');
                     } finally {
                         this.taskDeleting = false;
                     }
                 },
 
-                showToast(message) {
-                    this.toast = { show: true, message };
-                    setTimeout(() => { this.toast.show = false; }, 2500);
+                showToast(message, type = 'success') {
+                    clearTimeout(this.toastTimer);
+                    this.toast = { show: true, message, type };
+                    if (type === 'success') this.toastTimer = setTimeout(() => { this.toast.show = false; }, 4000);
                 }
             };
         }

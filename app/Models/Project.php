@@ -6,12 +6,14 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class Project extends Model
 {
+    protected $attributes = ['edit_version' => 1];
+
     public const BOARD_STYLES = ['simple', 'creative'];
 
     protected $fillable = ['workspace_id', 'name', 'slug', 'description', 'custom_tags', 'key', 'is_active', 'visibility', 'board_style', 'cycle_length_weeks'];
@@ -20,6 +22,11 @@ class Project extends Model
 
     protected static function booted(): void
     {
+        static::updating(function (Project $project) {
+            if ($project->isDirty()) {
+                $project->edit_version = (int) $project->getOriginal('edit_version') + 1;
+            }
+        });
         static::creating(function (Project $project) {
             if (empty($project->slug)) {
                 $project->slug = Str::slug($project->name);
@@ -30,7 +37,9 @@ class Project extends Model
         });
         static::deleting(function (Project $project) {
             $paths = TaskAttachment::query()->whereHas('task.column', fn ($query) => $query->where('project_id', $project->id))->pluck('path');
-            if ($paths->isNotEmpty()) Storage::disk('local')->delete($paths->all());
+            if ($paths->isNotEmpty()) {
+                Storage::disk('local')->delete($paths->all());
+            }
         });
     }
 
@@ -95,8 +104,7 @@ class Project extends Model
 
         if ($this->visibility === 'private') {
             $projectMemberIds = $this->members()->pluck('users.id');
-            $people = $people->filter(fn (User $user) =>
-                $workspace->isOwnedBy($user)
+            $people = $people->filter(fn (User $user) => $workspace->isOwnedBy($user)
                 || $workspace->roleFor($user) === 'admin'
                 || $projectMemberIds->contains($user->id)
             );

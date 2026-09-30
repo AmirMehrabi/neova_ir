@@ -99,7 +99,6 @@ class DashboardController extends Controller
         ]);
         $project->delete();
 
-        return redirect()->route('projects.index', $workspace->slug);
+        return redirect()->route('projects.index', $workspace->slug)->with('status', 'پروژه برای همیشه حذف شد.');
     }
-
 }

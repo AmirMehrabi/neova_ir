@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ProjectColumn;
+use App\Models\Project;
 use App\Models\Task;
 use App\Models\TaskPlan;
+use App\Models\User;
+use App\Services\ProjectActivityLogger;
+use App\Services\ProjectActivityNotifier;
 use App\Services\TaskAssignmentService;
 use App\Services\TaskData;
 use App\Services\TaskWorkflowService;
 use App\Services\TodayService;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
-use App\Models\Project;
-use App\Services\ProjectActivityLogger;
-use App\Services\ProjectActivityNotifier;
 use Illuminate\Support\Facades\DB;
-use App\Models\User;
+use Illuminate\Validation\Rule;
 
 class TodayController extends Controller
 {
@@ -29,7 +28,9 @@ class TodayController extends Controller
         $requestedView = $request->query('view');
         if (in_array($requestedView, ['mine', 'team'], true)) {
             $selectedView = $requestedView === 'team' && ! $canManageTeam ? 'mine' : $requestedView;
-            if ($user->today_view !== $selectedView) $user->update(['today_view' => $selectedView]);
+            if ($user->today_view !== $selectedView) {
+                $user->update(['today_view' => $selectedView]);
+            }
         }
         $viewMode = ($requestedView ?? $user->today_view) === 'team' && $canManageTeam ? 'team' : 'mine';
 
@@ -53,7 +54,7 @@ class TodayController extends Controller
             ->get()->reject(fn (Task $task) => $items->contains('dbId', $task->id))
             ->map(fn (Task $task) => $taskData->make($task))->values();
 
-        $projects = $workspace->projects()->with('columns')->get()
+        $projects = $workspace->projects()->where('is_active', true)->with('columns')->get()
             ->filter(fn ($project) => $project->canUserView($user, $workspace))->values();
         $projectEligibility = $projects->mapWithKeys(fn (Project $project) => [
             $project->id => $project->eligibleAssignees()->pluck('id')->map(fn ($id) => (int) $id)->all(),
@@ -175,14 +176,15 @@ class TodayController extends Controller
             'user_id' => ['nullable', 'integer', 'exists:users,id'],
         ]);
         $target = $this->targetUser($request, $today, $validated['user_id'] ?? null);
-        $project = Project::with('columns')->findOrFail($validated['project_id']);
+        $project = Project::with('columns')->where('is_active', true)->findOrFail($validated['project_id']);
         abort_unless($project->workspace_id === $workspaceModel->id && $project->canUserView($request->user(), $workspaceModel), 404);
         abort_unless($project->eligibleAssignees()->contains('id', $target->id), 422, 'این شخص نمی‌تواند مسئول وظیفه‌ای در این پروژه باشد.');
         $column = $project->columns->firstWhere('workflow_role', 'backlog') ?? $project->columns->first();
         abort_unless($column, 422, 'این پروژه ستون کاری ندارد.');
 
         $task = DB::transaction(function () use ($project, $column, $validated, $request, $assignments, $today, $workspaceModel, $target) {
-            Project::whereKey($project->id)->lockForUpdate()->first();
+            $locked = Project::whereKey($project->id)->lockForUpdate()->firstOrFail();
+            abort_unless($locked->is_active, 422, 'این پروژه بایگانی شده است.');
             $maxNumber = Task::whereHas('column', fn ($query) => $query->where('project_id', $project->id))->max('task_number') ?? 0;
             $task = Task::create([
                 'column_id' => $column->id,
@@ -196,10 +198,13 @@ class TodayController extends Controller
                 $date = $today->date($workspaceModel)->addDays($validated['when'] === 'tomorrow' ? 1 : 0);
                 $today->plan($task, $target, $request->user(), $date->toDateString(), $validated['bucket'] ?? 'must');
             }
+
             return $task;
         });
         $activityLogger->taskCreated($task, $request->user());
-        if ($validated['when'] === 'unscheduled') $notifier->taskCreated($task, $request->user());
+        if ($validated['when'] === 'unscheduled') {
+            $notifier->taskCreated($task, $request->user());
+        }
 
         return response()->json(['task' => $taskData->make($task->fresh(), $target, $today->date($workspaceModel))], 201);
     }
@@ -219,6 +224,7 @@ class TodayController extends Controller
             app(TaskAssignmentService::class)->assign($task, $target);
         }
         $today->plan($task, $target, $request->user(), $validated['planned_for'], $validated['bucket'], $validated['position'] ?? null);
+
         return response()->json(['task' => $taskData->make($task->fresh(), $target, $today->date($request->attributes->get('workspace')))]);
     }
 
@@ -228,6 +234,7 @@ class TodayController extends Controller
         $validated = $request->validate(['planned_for' => ['required', 'date'], 'user_id' => ['nullable', 'integer', 'exists:users,id']]);
         $target = $this->targetUser($request, $today, $validated['user_id'] ?? null);
         $today->unplan($task, $target, $request->user(), $validated['planned_for']);
+
         return response()->json(['success' => true]);
     }
 
@@ -297,6 +304,7 @@ class TodayController extends Controller
             'block' => $workflow->block($task, trim((string) ($validated['reason'] ?? '')), $request->user()),
             'unblock' => $workflow->unblock($task, $request->user()),
         };
+
         return response()->json(['task' => $taskData->make($task, $request->user(), app(TodayService::class)->date($request->attributes->get('workspace')))]);
     }
 

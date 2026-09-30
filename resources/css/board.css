@@ -1568,15 +1568,22 @@ body.app-page.neova-board {
 
 /* Project context and actions live in the shared workspace header. */
 .workspace-shell--board .workspace-topbar { gap: 10px; }
-.workspace-shell--board .board-topbar-context { display: flex; align-items: center; gap: 5px; min-width: 0; max-width: 240px; }
+.workspace-shell--board .board-topbar-context { display: flex; align-items: center; gap: 5px; min-width: 0; max-width: 400px; }
 .workspace-shell--board .board-topbar-context__identity { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .workspace-shell--board .board-topbar-context__identity strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #111; font-size: 14px; font-weight: 900; }
 .workspace-shell--board .board-topbar-context__key,
 .workspace-shell--board .board-topbar-context__private { flex: none; padding: 3px 5px; border-radius: 5px; background: #F0F0ED; color: #666660; font-size: 9px; font-weight: 800; }
 .workspace-shell--board .board-topbar-context__private { background: #FEF3C7; color: #92400E; }
-.workspace-shell--board .board-topbar-context__manage { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 7px; color: #666660; }
+.workspace-shell--board .board-topbar-context__manage { flex: none; display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 10px; border: 1px solid #D8D8D3; border-radius: 7px; color: #333; font-size: 12px; font-weight: 700; }
 .workspace-shell--board .board-topbar-context__manage:hover,
 .workspace-shell--board .board-topbar-context__manage:focus-visible { background: #F0F0ED; color: #111; }
+.board-sync-status { font-size: 11px; color: #66717A; max-width: 200px; }
+.board-local-search input { width: 170px; min-height: 44px; border: 1px solid #D8D8D3; border-radius: 8px; padding: 0 10px; font-size: 12px; background: white; }
+.board-filter-order-note { padding: 8px 24px; font-size: 12px; color: #66717A; background: #F0F0ED; }
+.board-no-matches { padding: 20px 12px; text-align: center; color: #66717A; font-size: 13px; }
+.board-no-matches button { min-height: 44px; font-weight: 700; text-decoration: underline; }
+.task-card:focus-visible { outline: 2px solid #111; outline-offset: 3px; }
+@media(max-width:767px) { .board-local-search input { width: 130px; } .board-sync-status { max-width: 120px; } .workspace-shell--board .board-topbar-actions { flex-wrap: wrap; justify-content: flex-end; } }
 .workspace-shell--board .board-topbar-context__manage svg,
 .workspace-shell--board .board-topbar-create svg { width: 17px; height: 17px; }
 .workspace-shell--board .workspace-search-trigger { flex: 1 1 180px; min-width: 95px; max-width: 360px; width: auto; }
@@ -1597,17 +1604,17 @@ body.app-page.neova-board {
 }
 
 @media (max-width: 767px) {
-    .workspace-shell--board { --board-header-height: 96px; }
-    .workspace-shell--board .workspace-topbar { display: grid; grid-template-columns: minmax(0,1fr) auto auto; grid-template-rows: 42px 30px; column-gap: 3px; row-gap: 4px; height: var(--board-header-height); padding: 7px 10px; }
+    .workspace-shell--board { --board-header-height: 110px; }
+    .workspace-shell--board .workspace-topbar { display: grid; grid-template-columns: minmax(0,1fr) auto auto; grid-template-rows: 42px 44px; column-gap: 3px; row-gap: 4px; height: var(--board-header-height); padding: 7px 10px; }
     .workspace-shell--board .workspace-mobile-brand { grid-column: 1; grid-row: 1; min-width: 0; }
     .workspace-shell--board .workspace-mobile-brand > button strong { max-width: 80px; }
     .workspace-shell--board .workspace-search-trigger { grid-column: 2; grid-row: 1; flex: none; min-width: 32px; width: 32px; height: 36px; border: 0; background: transparent; }
     .workspace-shell--board .workspace-topbar__actions { grid-column: 3; grid-row: 1; gap: 1px; }
     .workspace-shell--board .workspace-topbar__actions .relative > button[aria-label="اعلان‌ها"] { width: 36px; height: 36px; }
     .workspace-shell--board .workspace-profile-link { width: 32px; height: 36px; }
-    .workspace-shell--board .board-topbar-context { grid-column: 1 / -1; grid-row: 2; max-width: none; height: 30px; padding-inline: 2px; border-top: 1px solid #E8E8E4; }
+    .workspace-shell--board .board-topbar-context { grid-column: 1 / -1; grid-row: 2; max-width: none; height: 44px; padding-inline: 2px; border-top: 1px solid #E8E8E4; }
     .workspace-shell--board .board-topbar-context__identity strong { font-size: 12px; }
-    .workspace-shell--board .board-topbar-context__manage { width: 30px; height: 28px; }
+    .workspace-shell--board .board-topbar-context__manage { min-height: 44px; font-size: 11px; padding: 0 8px; }
     .workspace-shell--board .board-topbar-filter__trigger,
     .workspace-shell--board .board-topbar-create { width: 34px; min-height: 36px; padding: 0; }
     .workspace-shell--board .board-topbar-action-label,
@@ -1651,3 +1658,7 @@ body.app-page.neova-board {
         border-bottom: 1px solid #DCDCD6;
     }
 }
+
+.board-utility-bar { display:flex; flex-wrap:wrap; align-items:center; gap:12px; padding:8px 24px; border-bottom:1px solid #E8E8E4; background:#F7F7F5; }
+.board-utility-bar .board-sync-status { margin-inline-start:auto; }
+@media(max-width:767px) { .board-utility-bar { padding:8px 12px; gap:8px; } .workspace-shell--board .board-topbar-context__identity { flex:1; } .workspace-shell--board .board-topbar-filter__trigger,.workspace-shell--board .board-topbar-create { width:44px; min-height:44px; } }

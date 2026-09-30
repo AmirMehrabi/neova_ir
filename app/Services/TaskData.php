@@ -29,6 +29,8 @@ class TaskData
         return [
             'id' => $task->display_id,
             'dbId' => $task->id,
+            'updatedAt' => $task->updated_at->toIso8601String(),
+            'version' => (int) $task->edit_version,
             'title' => $task->title,
             'description' => $task->description ?? '',
             'priority' => $task->priority,

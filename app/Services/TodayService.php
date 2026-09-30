@@ -26,14 +26,16 @@ class TodayService
 
     public function visibleProjectIds(Workspace $workspace, User $user): Collection
     {
-        return $workspace->projects()->get()
+        return $workspace->projects()->where('is_active', true)->get()
             ->filter(fn (Project $project) => $project->canUserView($user, $workspace))
             ->pluck('id')->values();
     }
 
     public function canManage(User $actor, User $target, Workspace $workspace): bool
     {
-        if (! $workspace->hasMember($target)) return false;
+        if (! $workspace->hasMember($target)) {
+            return false;
+        }
 
         return $actor->is($target) || in_array($workspace->roleFor($actor), ['owner', 'admin'], true);
     }
@@ -52,9 +54,11 @@ class TodayService
                 ['bucket' => $bucket, 'position' => max(1, $position)],
             );
             $this->activityLogger->taskPlanned($task, $actor, $target, $date, $bucket);
+
             return $plan;
         });
         $this->notifier->todayPlanChanged($task, $actor, $target, 'planned', $date);
+
         return $plan;
     }
 
@@ -83,9 +87,11 @@ class TodayService
             $position = (int) TaskPlan::where('user_id', $target->id)->whereDate('planned_for', $toDate)->where('bucket', $bucket)->max('position') + 1;
             $plan = TaskPlan::create(['task_id' => $task->id, 'user_id' => $target->id, 'planned_for' => $toDate, 'bucket' => $bucket, 'position' => $position]);
             $this->activityLogger->taskPlanMoved($task, $actor, $target, $fromDate, $toDate);
+
             return $plan;
         });
         $this->notifier->todayPlanChanged($task, $actor, $target, 'moved', $toDate);
+
         return $plan;
     }
 }

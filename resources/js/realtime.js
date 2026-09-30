@@ -5,44 +5,79 @@ const socketHeaders = (headers = {}) => {
     return result
 }
 
-window.neovaFetch = (input, init = {}) => window.fetch(input, {
-    ...init,
-    headers: socketHeaders(init.headers),
-})
+window.neovaMutationResponse = data => {
+    if (data?.board) window.dispatchEvent(new CustomEvent('neova:mutation-snapshot', { detail: data.board }))
+    return data
+}
 
-window.createRealtimeRefresher = ({ url, apply }) => {
+window.neovaFetch = async (input, init = {}) => {
+    const response = await window.fetch(input, { ...init, signal: init.signal || AbortSignal.timeout(30000), headers: socketHeaders(init.headers) })
+    if (response.ok && !['GET', 'HEAD'].includes((init.method || 'GET').toUpperCase())
+        && response.headers.get('content-type')?.includes('application/json')) {
+        window.neovaMutationResponse(await response.clone().json())
+    }
+    return response
+}
+
+window.createRealtimeRefresher = ({ url, apply, onState = () => {}, timeoutMs = 10000 }) => {
     let timer = null
-    let running = false
+    let running = null
     let pending = false
+    let disposed = false
+    let failures = 0
+    let controller = null
 
-    const refreshNow = async () => {
-        if (running) { pending = true; return }
-        running = true
-        try {
+    const refreshNow = () => {
+        if (disposed) return Promise.resolve(false)
+        if (running) { pending = true; return running }
+        clearTimeout(timer)
+        running = (async () => {
+          controller = new AbortController()
+          const timeout = setTimeout(() => controller.abort(), timeoutMs)
+          try {
             const response = await window.neovaFetch(url, {
                 headers: { Accept: 'application/json' },
                 cache: 'no-store',
+                signal: controller.signal,
             })
             if ([401, 403, 404].includes(response.status)) {
-                window.location.reload()
-                return
+                onState({ state: 'access-error', status: response.status })
+                pending = false
+                return false
             }
             if (!response.ok) throw new Error(`Snapshot failed (${response.status})`)
-            await apply(await response.json())
-        } catch (error) {
-            console.error('Realtime refresh failed', error)
-        } finally {
-            running = false
-            if (pending) { pending = false; await refreshNow() }
-        }
+            const data = await response.json()
+            if (disposed) return false
+            await apply(data)
+            failures = 0
+            onState({ state: 'current' })
+            return true
+          } catch (error) {
+            if (!disposed) {
+                failures++
+                onState({ state: 'stale' })
+                timer = setTimeout(refreshNow, Math.min(30000, 1000 * 2 ** Math.min(failures, 5)))
+            }
+            return false
+          } finally {
+            clearTimeout(timeout)
+            controller = null
+          }
+        })().finally(() => {
+            running = null
+            if (pending && !disposed) { pending = false; refreshNow() }
+        })
+        return running
     }
 
     return {
         refreshNow,
         schedule() {
+            if (disposed) return
             clearTimeout(timer)
             timer = setTimeout(refreshNow, 100)
         },
+        dispose() { disposed = true; clearTimeout(timer); controller?.abort() },
     }
 }
 

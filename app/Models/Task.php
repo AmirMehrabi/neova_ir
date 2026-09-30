@@ -10,11 +10,21 @@ use Illuminate\Support\Facades\Storage;
 
 class Task extends Model
 {
+    protected $attributes = ['edit_version' => 1];
+
     protected static function booted(): void
     {
+        static::updating(function (Task $task) {
+            // Position and appended discussion do not overwrite editor fields.
+            if ($task->isDirty(array_diff($task->getFillable(), ['position', 'comments']))) {
+                $task->edit_version = (int) $task->getOriginal('edit_version') + 1;
+            }
+        });
         static::deleting(function (Task $task) {
             $paths = $task->attachments()->pluck('path');
-            if ($paths->isNotEmpty()) Storage::disk('local')->delete($paths->all());
+            if ($paths->isNotEmpty()) {
+                Storage::disk('local')->delete($paths->all());
+            }
         });
     }
 

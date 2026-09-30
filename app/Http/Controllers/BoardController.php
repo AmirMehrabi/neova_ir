@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Project;
 use App\Models\ProjectActivity;
 use App\Models\ProjectColumn;
 use App\Models\Task;
@@ -27,7 +28,9 @@ class BoardController extends Controller
     {
         $project = $request->attributes->get('project');
         $workspace = $request->attributes->get('workspace');
-        $request->session()->put("last_project.{$workspace->id}", $project->id);
+        if ($request->route()?->getName() === 'board') {
+            $request->session()->put("last_project.{$workspace->id}", $project->id);
+        }
 
         $columns = $project->columns()->with('tasks.attachments.uploader')->orderBy('position')->get();
 
@@ -36,7 +39,7 @@ class BoardController extends Controller
             ->merge($workspace->members()->orderBy('name')->get())
             ->unique('id')
             ->values();
-        $canEdit = $workspace->canEditBoards($request->user());
+        $canEdit = $project->is_active && $workspace->canEditBoards($request->user());
         $canManageProject = $workspace->canManageMembers($request->user());
 
         $colColors = [
@@ -92,6 +95,7 @@ class BoardController extends Controller
                     'comments' => $comments,
                     'attachments' => $attachments->all(),
                     'updatedAt' => $t->updated_at->toIso8601String(),
+                    'version' => (int) $t->edit_version,
                 ];
             })->toArray(),
         ])->toArray();
@@ -141,22 +145,30 @@ class BoardController extends Controller
 
     public function snapshot(Request $request)
     {
-        $data = $this->show($request)->getData();
+        return DB::transaction(function () use ($request) {
+            $project = $request->attributes->get('project');
+            $fresh = Project::whereKey($project->id)->sharedLock()->firstOrFail();
+            $request->attributes->set('project', $fresh);
+            $data = $this->show($request)->getData();
 
-        return response()->json([
-            'columns' => $data['columnsData'],
-            'members' => $data['membersData'],
-            'workspacePeople' => $data['workspacePeopleData'],
-            'project' => [
-                'name' => $data['project']->name,
-                'key' => $data['project']->key,
-                'description' => $data['project']->description ?? '',
-                'boardStyle' => $data['boardStyle'],
-                'customTags' => $data['customTags'],
-            ],
-            'activeCycle' => $data['activeCycle'],
-            'generatedAt' => now()->toIso8601String(),
-        ]);
+            return response()->json([
+                'columns' => $data['columnsData'],
+                'members' => $data['membersData'],
+                'workspacePeople' => $data['workspacePeopleData'],
+                'project' => [
+                    'name' => $data['project']->name,
+                    'key' => $data['project']->key,
+                    'description' => $data['project']->description ?? '',
+                    'boardStyle' => $data['boardStyle'],
+                    'customTags' => $data['customTags'],
+                    'isActive' => (bool) $data['project']->is_active,
+                    'version' => (int) $data['project']->edit_version,
+                ],
+                'activeCycle' => $data['activeCycle'],
+                'canEdit' => $data['canEdit'],
+                'generatedAt' => now()->toISOString(),
+            ]);
+        });
     }
 
     public function storeTask(
@@ -239,13 +251,17 @@ class BoardController extends Controller
             'column_id' => ['sometimes', 'integer', 'exists:project_columns,id'],
             'position' => ['sometimes', 'integer', 'min:0'],
             'expected_updated_at' => ['sometimes', 'nullable', 'date'],
+            'expected_version' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'force' => ['sometimes', 'boolean'],
         ]);
         if ($request->filled('due_time') && ! ($request->filled('due_date') || $task->due_date && ! $request->has('due_date'))) {
             throw ValidationException::withMessages(['due_date' => 'برای تعیین ساعت، تاریخ سررسید را نیز انتخاب کنید.']);
         }
         $this->ensureTaskInCurrentProject($request, $task);
-        if (! $request->boolean('force') && isset($validated['expected_updated_at'])
+        if (! $request->boolean('force') && isset($validated['expected_version']) && (int) $task->edit_version !== (int) $validated['expected_version']) {
+            return response()->json(['message' => 'این وظیفه توسط شخص دیگری تغییر کرده است.', 'conflict' => true], 409);
+        }
+        if (! $request->boolean('force') && ! isset($validated['expected_version']) && isset($validated['expected_updated_at'])
             && $task->updated_at->toIso8601String() !== Carbon::parse($validated['expected_updated_at'])->toIso8601String()) {
             return response()->json([
                 'message' => 'این وظیفه توسط شخص دیگری تغییر کرده است.',
@@ -458,7 +474,7 @@ class BoardController extends Controller
         abort_unless($workspaceModel->canManageMembers($request->user()), 403);
 
         $validated = $request->validate([
-            'name' => ['nullable', 'string', 'max:255'],
+            'name' => ['sometimes', 'required', 'string', 'max:100'],
             'key' => [
                 'nullable',
                 'string',
@@ -469,7 +485,12 @@ class BoardController extends Controller
             ],
             'description' => ['nullable', 'string', 'max:2000'],
             'board_style' => ['nullable', 'string', Rule::in(['simple', 'creative'])],
+            'expected_version' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ]);
+
+        if (isset($validated['expected_version']) && (int) $validated['expected_version'] !== (int) $projectModel->edit_version) {
+            return response()->json(['message' => 'تنظیمات پروژه تغییر کرده است. پیش‌نویس شما حفظ شد؛ تنظیمات جدید را بارگذاری کنید.', 'conflict' => true], 409);
+        }
 
         $before = $projectModel->only(['name', 'key', 'description', 'board_style', 'custom_tags']);
         $projectModel->update([
