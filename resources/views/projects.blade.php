@@ -35,7 +35,7 @@
             @endforelse
         </div>
         @if ($canManage && ! $archived)
-            <form class="project-create-inline" method="POST" action="{{ route('dashboard.project.store', $workspace->slug) }}">
+            <form id="project-create" x-init="if (window.location.hash === '#project-create') $nextTick(() => $el.querySelector('input[name=name]').focus())" class="project-create-inline" method="POST" action="{{ route('dashboard.project.store', $workspace->slug) }}">
                 @csrf
                 <label for="project-name">نام پروژه<input id="project-name" name="name" value="{{ old('name') }}" required maxlength="100" placeholder="نام پروژه جدید"></label>
                 <label for="project-key">کلید (اختیاری)<input id="project-key" name="key" value="{{ old('key') }}" maxlength="10" pattern="[A-Z]+" dir="ltr" placeholder="TEAM"><small>حروف بزرگ انگلیسی</small></label>

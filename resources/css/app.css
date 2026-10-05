@@ -3,6 +3,7 @@
 
 @import './today.css';
 @import './board-direction.css';
+@import './workspace-sidebar.css';
 
 :root {
     --neova-paper: #F7F7F5;

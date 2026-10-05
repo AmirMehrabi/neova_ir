@@ -29,6 +29,9 @@ class BoardController extends Controller
         $workspace = $request->attributes->get('workspace');
         if ($request->route()?->getName() === 'board') {
             $request->session()->put("last_project.{$workspace->id}", $project->id);
+            $recent = collect($request->session()->get("recent_projects.{$workspace->id}", []))
+                ->reject(fn ($id) => (int) $id === $project->id)->prepend($project->id)->take(5)->values()->all();
+            $request->session()->put("recent_projects.{$workspace->id}", $recent);
         }
 
         $columns = $project->columns()->with(['tasks' => fn ($query) => $query->active(), 'tasks.attachments.uploader'])->orderBy('position')->get();

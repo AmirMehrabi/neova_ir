@@ -124,7 +124,7 @@
 
         {{-- Notification Preferences --}}
         <div class="bg-white border border-[#DFE5EF] rounded-xl p-5">
-            <h3 class="text-sm font-bold text-[#172B4D] mb-1">تنظیمات اعلان‌ها</h3>
+            <h3 id="notification-preferences" class="text-sm font-bold text-[#172B4D] mb-1">تنظیمات اعلان‌ها</h3>
             <p class="text-[10px] text-[#94A3B8] mb-4">اعلان‌های ایمیلی مورد نظر خود را انتخاب کنید.</p>
 
             <form method="POST" action="{{ route('profile.notifications') }}">
