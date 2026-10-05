@@ -116,9 +116,17 @@ body.app-page.neova-board.board-direction {
 .board-direction .board-column-shell:hover .board-column-header__utilities > button,
 .board-direction .board-column-shell:focus-within .board-column-header__utilities > button { opacity: 1; }
 .board-direction .workspace-shell--board .board-column-well,
-.board-direction .workspace-shell--board .mobile-task-list { background: transparent !important; border: 0 !important; border-radius: 0; }
+.board-direction .workspace-shell--board .mobile-task-list { background: transparent !important; border: 0 !important; border-radius: 0; box-shadow: none; }
 .board-direction .workspace-shell--board .board-task-list,
-.board-direction .workspace-shell--board .mobile-task-scroll { gap: 8px; padding: 0 10px 8px; scrollbar-width: thin; scrollbar-gutter: stable both-edges; }
+.board-direction .workspace-shell--board .mobile-task-scroll { gap: 8px; padding: 0 10px 8px; scrollbar-width: thin; scrollbar-gutter: stable both-edges; scrollbar-color: rgba(0, 0, 0, .16) transparent; }
+.board-direction .board-task-list::-webkit-scrollbar,
+.board-direction .mobile-task-scroll::-webkit-scrollbar { width: 4px; height: 4px; }
+.board-direction .board-task-list::-webkit-scrollbar-track,
+.board-direction .mobile-task-scroll::-webkit-scrollbar-track { background: transparent; }
+.board-direction .board-task-list::-webkit-scrollbar-thumb,
+.board-direction .mobile-task-scroll::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, .16); border-radius: 99px; }
+.board-direction .board-task-list::-webkit-scrollbar-thumb:hover,
+.board-direction .mobile-task-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, .24); }
 .board-direction .workspace-shell--board .task-card,
 .board-direction .workspace-shell--board .mobile-task-list .task-card {
     min-height: 120px;

@@ -134,7 +134,7 @@
         "resources/css/app.css": "9051e2287244be44c7e5b37e972c78489a375655d2cbeab2661428844dda4a5f",
         "resources/css/today.css": "5301cb9470852185487348776daa9e9b9a8a5ad4124f80fb8218fc3ffb75484e",
         "resources/css/board.css": "1818a8cfaad0b06eaa52dd0ebc2fcd1b7bd30d12b28aa7174ae45495f15f849d",
-        "resources/css/board-direction.css": "fee7b64c93ed335346be078d3f9010f44494d988d9306b6f2496f1182cb0b261"
+        "resources/css/board-direction.css": "e924d1eb5804e0442b2121efbc6b09e9d4383aafb71c4ad7c573edbdbc061d71"
       },
       "components": [],
       "drafts": {
@@ -162,7 +162,7 @@
           "parentDraftId": "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c"
         }
       },
-      "updatedAt": "2026-10-05T21:32:48.148371+00:00",
+      "updatedAt": "2026-10-05T21:40:49.899216+00:00",
       "approvalStatus": "implemented",
       "reviewDraftIds": [
         "0010ce4b-fb1f-4869-92c6-b215f7ec2c49",
