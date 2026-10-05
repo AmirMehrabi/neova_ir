@@ -8,7 +8,7 @@
             <div>
                 <h1>امروز</h1>
                 <p x-text="formattedDate"></p>
-                <small><span x-text="activeCount"></span> کار باقی مانده · <span x-text="doneTasks.length"></span> کار انجام شد</small>
+                <small>اولویت‌های روز را مشخص کنید، موانع را پیگیری کنید و پیشرفت را ببینید.</small>
             </div>
             @if ($canEdit && $projects->isNotEmpty())
                 <button type="button" class="today-create" @click="quickOpen = true; $nextTick(() => $refs.quickTitle.focus())">
@@ -26,6 +26,17 @@
                 <a href="{{ route('today', $workspace->slug) }}?view=team" class="{{ $viewMode === 'team' ? 'is-active' : '' }}">امروز تیم</a>
             </nav>
         @endif
+
+        <div class="today-overview" aria-label="خلاصه روز">
+            <div><span>باقی‌مانده امروز</span><strong x-text="dailyRemaining"></strong></div>
+            <div :class="dailyBlocked ? 'needs-attention' : ''"><span>مسدود · نیاز به پیگیری</span><strong x-text="dailyBlocked"></strong></div>
+            @if ($viewMode === 'mine')
+                <div :class="overdueTasks.length ? 'needs-attention' : ''"><span>عقب‌افتاده · نیاز به برنامه</span><strong x-text="overdueTasks.length"></strong></div>
+            @else
+                <div><span>اعضای بدون برنامه امروز</span><strong x-text="teamDays.filter(member => teamRemaining(member) === 0 && member.doneTasks.length === 0).length"></strong></div>
+            @endif
+            <div><span>انجام‌شده امروز</span><strong x-text="dailyDone"></strong></div>
+        </div>
 
         @if ($viewMode === 'mine')
         <div class="today-dashboard__grid">
@@ -88,15 +99,24 @@
         <section class="today-section today-secondary-section" x-show="blockedTasks.length">
             <div class="today-section__heading"><h2>مسدود</h2></div>
             <template x-for="task in blockedTasks" :key="task.dbId">
-                <div class="today-row is-blocked" :class="busyTasks.includes(task.dbId) ? 'is-busy' : ''"><span class="today-row__warning">!</span><div><strong x-text="task.title"></strong><small x-text="task.blockedReason || 'منتظر رفع مانع'"></small></div><span class="today-row__project" x-text="task.project.name"></span>@if($canEdit)<div class="today-row__actions"><button type="button" @click="moveTomorrow(task)">فردا</button><button type="button" @click="removeTask(task)" aria-label="برداشتن از امروز">×</button></div>@endif</div>
+                <div class="today-row is-blocked" :class="busyTasks.includes(task.dbId) ? 'is-busy' : ''"><span class="today-row__warning">!</span><div class="today-row__copy"><strong x-text="task.title"></strong><small x-text="task.blockedReason || 'منتظر رفع مانع'"></small></div><span class="today-row__project" x-text="task.project.name"></span>@if($canEdit)<div class="today-row__actions"><button type="button" @click="moveTomorrow(task)">فردا</button><button type="button" @click="removeTask(task)" aria-label="برداشتن از امروز">×</button></div>@endif</div>
             </template>
         </section>
 
         <section class="today-section today-secondary-section" x-show="overdueTasks.length">
             <div class="today-section__heading"><h2>عقب‌افتاده</h2><span x-text="overdueTasks.length"></span></div>
-            <template x-for="task in overdueTasks" :key="task.dbId">
-                <div class="today-row"><span class="today-row__due">!</span><div><strong x-text="task.title"></strong><small x-text="task.project.name + ' · سررسید ' + task.dueDate + (task.dueTime ? ' · ' + task.dueTime : '')"></small></div><button @click="addExisting(task, false)">افزودن به امروز</button></div>
-            </template>
+            <p class="today-section__description">کارهای سررسید گذشته را مرور کنید و موارد ضروری را به برنامه امروز بیاورید.</p>
+            <div class="today-secondary-list">
+                <template x-for="task in overdueTasks" :key="task.dbId">
+                    <article class="today-row today-overdue-row" :class="busyTasks.includes(task.dbId) ? 'is-busy' : ''">
+                        <span class="today-row__due" aria-hidden="true">!</span>
+                        <div class="today-row__copy"><strong x-text="task.title"></strong><small><span x-text="task.project.name"></span><span class="today-overdue-date" x-text="'سررسید ' + task.dueDate + (task.dueTime ? ' · ' + task.dueTime : '')"></span></small></div>
+                        @if ($canEdit)
+                            <button type="button" class="today-plan-action" @click="existingTargetId = @js(auth()->id()); addExisting(task, false)" :disabled="busyTasks.includes(task.dbId)" :aria-label="'افزودن به امروز: ' + task.title" x-text="busyTasks.includes(task.dbId) ? 'در حال افزودن…' : 'افزودن به امروز'"></button>
+                        @endif
+                    </article>
+                </template>
+            </div>
         </section>
 
         <section class="today-section today-secondary-section" x-show="doneTasks.length">
@@ -189,6 +209,9 @@
                 quick: { title: '', projectId: @js($projects->first()?->id), userId: @js(auth()->id()), when: 'today' },
                 get formattedDate() { return new Intl.DateTimeFormat('fa-IR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(this.today + 'T12:00:00')); },
                 get activeCount() { return this.mustTasks.length + this.optionalTasks.length; },
+                get dailyRemaining() { return this.viewMode === 'team' ? this.teamDays.reduce((sum, member) => sum + this.teamRemaining(member), 0) : this.activeCount + this.blockedTasks.length; },
+                get dailyBlocked() { return this.viewMode === 'team' ? this.teamDays.reduce((sum, member) => sum + member.blockedTasks.length, 0) : this.blockedTasks.length; },
+                get dailyDone() { return this.viewMode === 'team' ? this.teamDays.reduce((sum, member) => sum + member.doneTasks.length, 0) : this.doneTasks.length; },
                 get activeTasks() { return this.mustTasks.concat(this.optionalTasks); },
                 get eligibleProjects() { const id=Number(this.quick.userId); return this.projects.filter(p => p.eligibleUserIds.includes(id)); },
                 get filteredAvailable() { const q = this.existingSearch.trim().toLowerCase(); const member=this.teamDays.find(m=>m.id===Number(this.existingTargetId)); const planned = new Set(member ? this.teamActive(member).concat(member.doneTasks).map(t=>t.dbId) : this.activeTasks.concat(this.blockedTasks).map(t => t.dbId)); return this.availableTasks.filter(t => t.eligibleUserIds.includes(Number(this.existingTargetId)) && !planned.has(t.dbId) && (!q || t.title.toLowerCase().includes(q) || t.project.name.toLowerCase().includes(q))); },

@@ -285,3 +285,35 @@
 .workspace-shell--unified .today-capture select {
     background: var(--shell-content) !important;
 }
+
+/* Daily planning overview and explicit layouts for secondary task lists. */
+.today-overview { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; margin-bottom:28px; }
+.today-overview > div { padding:16px 18px; border:1px solid var(--shell-card-line,#E2E4DE); border-radius:10px; background:var(--shell-card,#F8F8F5); }
+.today-overview span { display:block; color:#65655F; font-size:11px; line-height:1.7; }
+.today-overview strong { display:block; margin-top:6px; color:#111; font-size:25px; line-height:1.3; font-variant-numeric:tabular-nums; }
+.today-overview .needs-attention strong { color:#9A4A3A; }
+.today-section__description { margin:-4px 0 16px; color:#65655F; font-size:11px; line-height:1.9; }
+.today-secondary-list { display:grid; gap:10px; }
+.today-secondary-section > .today-row { margin-top:10px; }
+.today-dashboard .today-overdue-row { grid-template-columns:22px minmax(0,1fr) auto; gap:14px; min-height:78px; padding:14px 16px; }
+.today-dashboard .today-row__copy strong { white-space:normal; overflow-wrap:anywhere; line-height:1.8; }
+.today-dashboard .today-row__copy small { white-space:normal; line-height:1.8; }
+.today-overdue-row .today-row__copy small { display:flex; flex-wrap:wrap; column-gap:12px; row-gap:2px; margin-top:5px; }
+.today-overdue-date { color:#9A4A3A; }
+.today-dashboard .today-row > .today-plan-action { display:inline-flex; align-items:center; justify-content:center; min-height:38px; padding:8px 13px; border:1px solid #D5D8D2; border-radius:8px; background:#fff; color:#333330; opacity:1; white-space:nowrap; font-size:11px; font-weight:750; }
+.today-dashboard .today-row > .today-plan-action:hover { border-color:#111; background:#111; color:#fff; }
+.today-dashboard .today-plan-action:disabled { cursor:wait; opacity:.55; }
+.today-dashboard :is(button,a,input,select):focus-visible { outline:2px solid #555D50; outline-offset:3px; }
+.today-dashboard .today-drag { opacity:1; }
+@media (hover:none) { .today-dashboard .today-row__actions,.today-dashboard .today-undo { opacity:1; } }
+@media (max-width:767px) {
+    .today-overview { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .today-overview > div { padding:12px; }
+    .today-overview span { font-size:10px; }
+    .today-secondary-section { padding:16px; }
+    .today-dashboard .today-overdue-row { grid-template-columns:20px minmax(0,1fr); gap:8px 10px; padding:12px; }
+    .today-dashboard .today-overdue-row .today-plan-action { grid-column:2; justify-self:start; }
+    .today-dashboard .today-row.is-blocked { grid-template-columns:auto minmax(0,1fr); }
+    .today-dashboard .today-row.is-blocked :is(.today-row__project,.today-row__actions) { grid-column:2; }
+    .today-dashboard .today-row__actions button:first-child { display:inline-block; }
+}
