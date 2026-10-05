@@ -2280,7 +2280,7 @@
                     const tracks = [document.getElementById('desktop-column-track'), document.getElementById('mobile-column-track')];
                     for (const track of tracks) {
                         if (!track || !track.getClientRects().length) continue;
-                        const offset = Math.ceil(track.getBoundingClientRect().top + window.scrollY + parseFloat(window.getComputedStyle(track).paddingTop));
+                        const offset = Math.ceil(track.getBoundingClientRect().top + window.scrollY + (track.closest('.workspace-content')?.scrollTop || 0) + parseFloat(window.getComputedStyle(track).paddingTop));
                         track.style.setProperty('--board-column-offset', `${offset}px`);
                     }
                 },

@@ -70,7 +70,7 @@
             </div>
         </header>
 
-        <main class="workspace-main">{{ $slot }}</main>
+        <main class="workspace-main"><div class="workspace-content">{{ $slot }}</div></main>
     </div>
 
     <nav class="workspace-mobile-nav" aria-label="ناوبری موبایل">
