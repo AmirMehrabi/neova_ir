@@ -103,7 +103,7 @@
             </template>
         </section>
 
-        <section class="today-section today-secondary-section" x-show="overdueTasks.length">
+        <section class="today-section today-secondary-section today-overdue-section" x-show="overdueTasks.length">
             <div class="today-section__heading"><h2>عقب‌افتاده</h2><span x-text="overdueTasks.length"></span></div>
             <p class="today-section__description">کارهای سررسید گذشته را مرور کنید و موارد ضروری را به برنامه امروز بیاورید.</p>
             <div class="today-secondary-list">
