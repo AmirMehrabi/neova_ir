@@ -1715,6 +1715,7 @@
 
                 boardCompact: false,
                 columnColors: [
+                    { name: 'خاکستری خنثی', hex: '#E2E2DE', surface: '#F7F7F5' },
                     { name: 'خاکستری گرم', hex: '#8B938E', surface: '#ECEBE6' },
                     { name: 'آبی آرام', hex: '#7183A3', surface: '#E7EAF0' },
                     { name: 'سبز جنگلی', hex: '#4E6B5C', surface: '#E7EEE9' },
