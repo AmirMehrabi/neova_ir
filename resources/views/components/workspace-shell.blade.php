@@ -39,26 +39,26 @@
         </div>
 
         <div class="workspace-sidebar__footer">
-        <div class="workspace-switcher" @click.away="workspaceOpen = false" @keydown="handleFooterMenuKey($event, 'workspace')" @focusout="if (!$el.contains($event.relatedTarget)) workspaceOpen = false">
-            <button type="button" class="workspace-switcher__trigger" x-ref="workspaceTrigger" @click="toggleFooterMenu('workspace')" @keydown.arrow-down.prevent="openFooterMenu('workspace')" :aria-expanded="workspaceOpen" aria-controls="sidebar-workspace-menu" aria-label="تغییر فضای کاری" title="{{ $workspace->name }} — تغییر فضای کاری">
-                <span class="workspace-switcher__mark">{{ mb_substr($workspace->name, 0, 1) }}</span>
-                <span class="workspace-switcher__copy"><strong>{{ $workspace->name }}</strong><small>تغییر فضای کاری</small></span>
-                <span class="workspace-switcher__chevron">⌃</span>
-            </button>
-            <div id="sidebar-workspace-menu" x-ref="workspaceMenu" x-show="workspaceOpen" x-cloak x-transition class="workspace-switcher__menu">
-                <p>فضاهای کاری</p>
-                @foreach ($shellWorkspaces as $shellWorkspace)
-                    <a href="{{ route('today', $shellWorkspace->slug) }}" class="{{ $shellWorkspace->id === $workspace->id ? 'is-current' : '' }}">
-                        <span>{{ mb_substr($shellWorkspace->name, 0, 1) }}</span><strong>{{ $shellWorkspace->name }}</strong>
-                        @if ($shellWorkspace->id === $workspace->id)<i>✓</i>@endif
-                    </a>
-                @endforeach
-                <button type="button" @click="workspaceCreating = true; workspaceOpen = false">+ فضای کاری جدید</button>
-                @if ($canManageWorkspace)
-                    <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="workspace-switcher__manage">تنظیمات فضای کاری</a>
-                @endif
+            <div class="workspace-switcher" @click.away="workspaceOpen = false" @keydown="handleFooterMenuKey($event, 'workspace')" @focusout="if (!$el.contains($event.relatedTarget)) workspaceOpen = false">
+                <button type="button" class="workspace-switcher__trigger" x-ref="workspaceTrigger" @click="toggleFooterMenu('workspace')" @keydown.arrow-down.prevent="openFooterMenu('workspace')" :aria-expanded="workspaceOpen" aria-controls="sidebar-workspace-menu" aria-label="تغییر فضای کاری" title="{{ $workspace->name }} — تغییر فضای کاری">
+                    <span class="workspace-switcher__mark">{{ mb_substr($workspace->name, 0, 1) }}</span>
+                    <span class="workspace-switcher__copy"><strong>{{ $workspace->name }}</strong><small>تغییر فضای کاری</small></span>
+                    <span class="workspace-switcher__chevron">⌃</span>
+                </button>
+                <div id="sidebar-workspace-menu" x-ref="workspaceMenu" x-show="workspaceOpen" x-cloak x-transition class="workspace-switcher__menu">
+                    <p>فضاهای کاری</p>
+                    @foreach ($shellWorkspaces as $shellWorkspace)
+                        <a href="{{ route('today', $shellWorkspace->slug) }}" class="{{ $shellWorkspace->id === $workspace->id ? 'is-current' : '' }}">
+                            <span>{{ mb_substr($shellWorkspace->name, 0, 1) }}</span><strong>{{ $shellWorkspace->name }}</strong>
+                            @if ($shellWorkspace->id === $workspace->id)<i>✓</i>@endif
+                        </a>
+                    @endforeach
+                    <button type="button" @click="workspaceCreating = true; workspaceOpen = false">+ فضای کاری جدید</button>
+                    @if ($canManageWorkspace)
+                        <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="workspace-switcher__manage">تنظیمات فضای کاری</a>
+                    @endif
+                </div>
             </div>
-        </div>
 
             <div class="workspace-sidebar__profile" @click.away="profileOpen = false" @keydown="handleFooterMenuKey($event, 'profile')" @focusout="if (!$el.contains($event.relatedTarget)) profileOpen = false">
                 <button type="button" class="workspace-sidebar__profile-trigger" x-ref="profileTrigger" @click="toggleFooterMenu('profile')" @keydown.arrow-down.prevent="openFooterMenu('profile')" :aria-expanded="profileOpen" aria-controls="sidebar-profile-menu" aria-label="حساب کاربری" title="{{ auth()->user()->full_name }} — حساب کاربری">
@@ -85,10 +85,14 @@
                     <button type="button" @click="workspaceCreating=true; mobileWorkspaceOpen=false">+ فضای کاری جدید</button>
                 </div>
             </div>
-            <div class="workspace-header-context">
+            @if($board)
                 {{ $context ?? '' }}
-                @unless($board)<small class="workspace-header-workspace" title="{{ $workspace->name }}">{{ $workspace->name }}</small>@endunless
-            </div>
+            @else
+                <div class="workspace-header-context">
+                    {{ $context ?? '' }}
+                    <small class="workspace-header-workspace" title="{{ $workspace->name }}">{{ $workspace->name }}</small>
+                </div>
+            @endif
             <button type="button" class="workspace-search-trigger" @click="showSearch()" aria-label="جستجوی وظیفه یا پروژه"><span>⌕</span><b>جستجوی وظیفه یا پروژه…</b><kbd>/</kbd></button>
             <div class="workspace-topbar__actions">
                 {{ $toolbar ?? '' }}
