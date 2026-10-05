@@ -47,7 +47,7 @@ body.app-page.neova-board.board-direction {
 .board-direction .workspace-shell--board .board-topbar-context {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     gap: 4px 10px;
     min-width: 170px;
     max-width: 300px;
@@ -56,17 +56,8 @@ body.app-page.neova-board.board-direction {
 .board-direction .workspace-shell--board .board-topbar-context__identity strong { font-size: 13px; color: #17201C; }
 .board-direction .board-topbar-context__workspace { grid-column: 1; font-size: 9px; color: #8B938E; }
 .board-direction .workspace-shell--board .board-topbar-context__key { background: #E7EEE9; color: #4E6B5C; }
-.board-direction .workspace-shell--board .board-topbar-context__manage {
-    grid-column: 2;
-    grid-row: 1 / 3;
-    width: 40px;
-    min-height: 40px;
-    justify-content: center;
-    padding: 0;
-    border: 1px solid var(--board-line);
-    border-radius: 50%;
-    background: #FFF;
-}
+.board-direction .workspace-shell--board .board-topbar-manage { display: inline-flex; align-items: center; gap: 6px; width: auto; padding-inline: 12px; white-space: nowrap; font-size: 11px; font-weight: 700; }
+.board-direction .board-topbar-manage svg { flex: none; width: 17px; height: 17px; }
 .board-direction .workspace-shell--board .workspace-search-trigger { height: 40px; max-width: 300px; border: 1px solid var(--board-line); border-radius: 999px; background: #FFF; }
 .board-direction .workspace-shell--board .board-nav-control { min-height: 40px; border: 1px solid var(--board-line); border-radius: 999px; background: #FFF; color: #68726C; }
 .board-direction .workspace-shell--board .board-nav-control--primary { padding-inline: 18px; background: #17201C; border-color: #17201C; color: #FFF; }
@@ -241,7 +232,7 @@ body.app-page.board-direction .task-modal-body > .task-modal-section:not(.task-m
     .board-direction .workspace-shell--board .workspace-topbar { height: var(--board-header-height, 110px); padding: 7px 12px; gap: 4px; }
     .board-direction .workspace-shell--board .board-topbar-context { display: flex; min-width: 0; max-width: none; grid-row: 2; gap: 8px; }
     .board-direction .board-topbar-context__workspace { display: none; }
-    .board-direction .workspace-shell--board .board-topbar-context__manage { width: 40px; flex: none; margin-inline-start: auto; }
+    .board-direction .workspace-shell--board .board-topbar-manage { padding-inline: 8px; font-size: 10px; }
     .board-direction .board-overview { padding: 16px; gap: 10px; align-items: flex-start; flex-wrap: wrap; }
     .board-direction .board-overview h1 { font-size: 24px; line-height: 1.25; }
     .board-direction .board-overview__eyebrow { margin-bottom: 4px; }

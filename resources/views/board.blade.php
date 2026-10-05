@@ -98,12 +98,7 @@
                 @if ($project->visibility === 'private')<span class="board-topbar-context__private" title="پروژه خصوصی">خصوصی</span>@endif
             </div>
             <small class="board-topbar-context__workspace">فضای کاری {{ $workspace->name }}</small>
-            @if ($canManageProject)
-                <button type="button" class="board-topbar-context__manage" @click="openProjectDrawer()" aria-label="مدیریت پروژه" title="مدیریت پروژه">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v2m0 15v2M2.5 12h2m15 0h2M5.3 5.3l1.5 1.5m10.4 10.4 1.5 1.5m0-13.4-1.5 1.5M6.8 17.2l-1.5 1.5"/></svg>
-                    <span class="sr-only">تنظیمات پروژه</span>
-                </button>
-            @endif
+
         </div>
     @endslot
 
@@ -159,6 +154,12 @@
                     </div>
                 </div>
             </div>
+            @if ($canManageProject)
+                <button type="button" class="board-nav-control board-topbar-manage" @click="openProjectDrawer()" aria-label="مدیریت پروژه" title="مدیریت پروژه">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3h4l.5 2.5 2 .9 2.2-1.3 2 3.5-1.8 1.7V13l1.8 1.7-2 3.5-2.2-1.3-2 .9L14 21h-4l-.5-2.5-2-.9-2.2 1.3-2-3.5L5 13v-2.7L3.2 8.6l2-3.5L7.4 6.4l2-.9L10 3Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <span>مدیریت پروژه</span>
+                </button>
+            @endif
             @if ($canEdit)
                 <button type="button" @click="openAddModal(columns[activeColumnIndex]?.id || columns[0]?.id)" class="board-nav-control board-nav-control--primary board-topbar-create" aria-label="ایجاد وظیفه جدید" title="ایجاد وظیفه جدید">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 4v16m8-8H4"/></svg>
