@@ -48,15 +48,39 @@ class BoardRealtimeUxTest extends TestCase
         $this->assertSame('Second edit', $task->fresh()->title);
     }
 
-    public function test_stale_edit_is_rejected_even_within_the_same_second(): void
+    public function test_last_task_save_wins_even_with_an_older_version_in_the_same_second(): void
     {
         extract($this->board());
         $this->freezeTime();
         $version = $task->fresh()->edit_version;
         $url = route('board.task.update', [$workspace->slug, $project->slug, $task]);
         $this->putJson($url, ['title' => 'Remote edit', 'expected_version' => $version])->assertOk();
-        $this->putJson($url, ['title' => 'Stale edit', 'expected_version' => $version])->assertStatus(409);
-        $this->assertSame('Remote edit', $task->fresh()->title);
+        $this->actingAs($member);
+        $this->putJson($url, ['title' => 'Last edit', 'expected_version' => $version])->assertOk();
+        $this->assertSame('Last edit', $task->fresh()->title);
+        $this->assertGreaterThan($version, $task->fresh()->edit_version);
+    }
+
+    public function test_last_task_save_wins_with_an_older_timestamp(): void
+    {
+        extract($this->board());
+        $url = route('board.task.update', [$workspace->slug, $project->slug, $task]);
+        $timestamp = $task->updated_at->toISOString();
+        $this->travel(2)->seconds();
+        $this->putJson($url, ['title' => 'First edit'])->assertOk();
+        $this->putJson($url, ['title' => 'Last edit', 'expected_updated_at' => $timestamp])->assertOk();
+        $this->assertSame('Last edit', $task->fresh()->title);
+    }
+
+    public function test_invalid_edit_returns_json_errors_and_can_be_corrected_without_refreshing(): void
+    {
+        extract($this->board());
+        $url = route('board.task.update', [$workspace->slug, $project->slug, $task]);
+        $version = $task->fresh()->edit_version;
+        $this->putJson($url, ['title' => '', 'expected_version' => $version])
+            ->assertUnprocessable()->assertJsonValidationErrors('title');
+        $this->assertSame($version, $task->fresh()->edit_version);
+        $this->putJson($url, ['title' => 'Corrected', 'expected_version' => $version])->assertOk();
     }
 
     public function test_reordering_siblings_and_appending_comments_do_not_invalidate_editor_fields(): void

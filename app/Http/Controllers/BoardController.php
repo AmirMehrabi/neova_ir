@@ -16,7 +16,6 @@ use App\Services\TaskWorkflowService;
 use App\Services\TodayService;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
@@ -250,24 +249,12 @@ class BoardController extends Controller
             'checklist' => ['sometimes', 'array'],
             'column_id' => ['sometimes', 'integer', 'exists:project_columns,id'],
             'position' => ['sometimes', 'integer', 'min:0'],
-            'expected_updated_at' => ['sometimes', 'nullable', 'date'],
-            'expected_version' => ['sometimes', 'nullable', 'integer', 'min:1'],
-            'force' => ['sometimes', 'boolean'],
         ]);
         if ($request->filled('due_time') && ! ($request->filled('due_date') || $task->due_date && ! $request->has('due_date'))) {
             throw ValidationException::withMessages(['due_date' => 'برای تعیین ساعت، تاریخ سررسید را نیز انتخاب کنید.']);
         }
         $this->ensureTaskInCurrentProject($request, $task);
-        if (! $request->boolean('force') && isset($validated['expected_version']) && (int) $task->edit_version !== (int) $validated['expected_version']) {
-            return response()->json(['message' => 'این وظیفه توسط شخص دیگری تغییر کرده است.', 'conflict' => true], 409);
-        }
-        if (! $request->boolean('force') && ! isset($validated['expected_version']) && isset($validated['expected_updated_at'])
-            && $task->updated_at->toIso8601String() !== Carbon::parse($validated['expected_updated_at'])->toIso8601String()) {
-            return response()->json([
-                'message' => 'این وظیفه توسط شخص دیگری تغییر کرده است.',
-                'conflict' => true,
-            ], 409);
-        }
+        // Task edits use last-save-wins, including clients with an older version.
         $this->validateAssignees($request, $task);
         if (isset($validated['column_id'])) {
             $this->ensureColumnInCurrentProject($request, ProjectColumn::findOrFail($validated['column_id']));

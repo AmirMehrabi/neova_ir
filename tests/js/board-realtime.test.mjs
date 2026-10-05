@@ -20,13 +20,13 @@ function board() {
         columns: snapshot().columns, selectedTaskIds: [], activeColumnIndex: 0,
         showModal: true, editingTask: 7, modalSnapshot: 'original', formFingerprint: () => 'draft',
         form: { title: 'My draft', version: 1, updatedAt: 'same-second' },
-        pendingDescriptionFiles: [], pendingCommentFiles: [], realtimeConflict: false,
+        pendingDescriptionFiles: [], pendingCommentFiles: [],
         projectState: {}, projectForm: { name: 'Project', key: 'UX', description: '', board_style: 'simple' },
         projectBaseline: '', lastSnapshotAt: '',
         destroySortables() {}, destroyColumnSortables() {}, $nextTick() {},
         openEditModal(task) { this.form = { ...task }; }, closeModal() { this.showModal = false; },
     };
-    for (const name of ['boardMutationBusy', 'projectSettingsDirty', 'applyRealtimeSnapshot', 'queueMutationSnapshot']) state[name] = method(name);
+    for (const name of ['boardMutationBusy', 'projectSettingsDirty', 'applyRealtimeSnapshot', 'queueMutationSnapshot', 'flushMutationSnapshot']) state[name] = method(name);
     state.projectBaseline = JSON.stringify(state.projectForm);
     return state;
 }
@@ -34,14 +34,14 @@ function board() {
 test('unrelated remote updates preserve drafts without a conflict banner', () => {
     const state = board();
     state.applyRealtimeSnapshot(snapshot());
-    assert.equal(state.realtimeConflict, false);
+    assert.equal(state.realtimeConflict, undefined);
     assert.equal(state.form.title, 'My draft');
 });
-test('same-second task version changes flag genuine conflicts and retain baseline', () => {
+test('live task changes retain the draft without a conflict prompt', () => {
     const state = board();
     state.applyRealtimeSnapshot(snapshot(2));
-    assert.equal(state.realtimeConflict, true);
-    assert.equal(state.form.version, 1);
+    assert.equal(state.realtimeConflict, undefined);
+    assert.equal(state.form.version, 2);
     assert.equal(state.form.title, 'My draft');
 });
 test('own comment update advances the edit baseline without discarding task draft', () => {
@@ -49,13 +49,13 @@ test('own comment update advances the edit baseline without discarding task draf
     state.applyRealtimeSnapshot({ ...snapshot(2), originTaskIds: [7] }, { ownMutation: true });
     assert.equal(state.form.version, 2);
     assert.equal(state.form.title, 'My draft');
-    assert.equal(state.realtimeConflict, false);
+    assert.equal(state.realtimeConflict, undefined);
 });
-test('an own update to another task must not hide concurrent changes to the edited task', () => {
+test('another task update preserves the draft when the edited task also changes', () => {
     const state = board();
     state.applyRealtimeSnapshot({ ...snapshot(2), originTaskIds: [8] }, { ownMutation: true });
-    assert.equal(state.form.version, 1);
-    assert.equal(state.realtimeConflict, true);
+    assert.equal(state.form.version, 2);
+    assert.equal(state.realtimeConflict, undefined);
 });
 test('live project rename preserves dirty settings while updating displayed identity', () => {
     const state = board();
@@ -70,7 +70,7 @@ test('discussion is updated alongside a preserved task draft without a false con
     state.applyRealtimeSnapshot(data);
     assert.equal(state.form.comments[0].text, 'Remote comment');
     assert.equal(state.form.title, 'My draft');
-    assert.equal(state.realtimeConflict, false);
+    assert.equal(state.realtimeConflict, undefined);
 });
 test('changes to cycle or tags do not make an unchanged settings baseline stale', () => {
     const state = board();
@@ -110,15 +110,55 @@ test('delayed older mutation responses cannot replace a newer queued response', 
     assert.equal(state.projectState.name, 'New');
     clearTimeout(state.mutationTimer);
 });
-test('deleting the edited task preserves queued files and warns of deletion', () => {
+test('deleting the edited task preserves the draft and queued files', () => {
     const state = board();
     state.formFingerprint = () => 'original';
     state.pendingDescriptionFiles = [{ name: 'draft.txt' }];
     const data = snapshot(); data.columns[0].tasks = [];
     state.applyRealtimeSnapshot(data);
-    assert.equal(state.realtimeTaskDeleted, true);
+    assert.equal(state.realtimeTaskDeleted, undefined);
     assert.equal(state.pendingDescriptionFiles.length, 1);
     assert.equal(state.showModal, true);
+});
+
+test('the next edit uses the acknowledged version before the queue timer runs', () => {
+    const state = board();
+    state.queueMutationSnapshot({ ...snapshot(2), originTaskIds: [7] });
+    state.flushMutationSnapshot();
+    assert.equal(state.form.version, 2);
+    assert.equal(state.form.title, 'My draft');
+    assert.equal(state.realtimeConflict, undefined);
+    assert.equal(state.mutationSnapshot, null);
+});
+
+test('a delayed read cannot revert a queued move or flag our own write as a conflict', () => {
+    const state = board();
+    const moved = snapshot(2, 'Project', '2026-09-30T10:00:02.000000Z');
+    moved.columns[0].id = '2';
+    state.queueMutationSnapshot({ ...moved, originTaskIds: [7] });
+    state.applyRealtimeSnapshot(snapshot());
+    assert.equal(state.columns[0].id, '2');
+    assert.equal(state.form.version, 2);
+    assert.equal(state.realtimeConflict, undefined);
+});
+
+test('queued writes to different tasks retain the edited task acknowledgement', () => {
+    const state = board();
+    state.queueMutationSnapshot({ ...snapshot(2), originTaskIds: [7] });
+    state.queueMutationSnapshot({ ...snapshot(2, 'Project', '2026-09-30T10:00:01.000000Z'), originTaskIds: [8] });
+    state.flushMutationSnapshot();
+    assert.equal(state.form.version, 2);
+    assert.equal(state.realtimeConflict, undefined);
+});
+
+test('a newer queued response updates the board while retaining the local draft', () => {
+    const state = board();
+    state.queueMutationSnapshot({ ...snapshot(2), originTaskIds: [7] });
+    state.queueMutationSnapshot({ ...snapshot(3, 'Project', '2026-09-30T10:00:01.000000Z'), originTaskIds: [8] });
+    state.flushMutationSnapshot();
+    assert.equal(state.form.version, 3);
+    assert.equal(state.form.title, 'My draft');
+    assert.equal(state.realtimeConflict, undefined);
 });
 test('Persian character variants and spacing match without rendering task HTML', () => {
     const normalize = method('normalizeSearch');

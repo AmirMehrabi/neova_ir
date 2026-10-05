@@ -39,7 +39,7 @@ class BoardOrderingTest extends TestCase
         [$workspace, $project, $columns] = $this->board();
         $this->postJson(route('board.columns.reorder', [$workspace->slug, $project->slug]), [
             'column_ids' => [$columns[0]->id, $columns[0]->id, $columns[2]->id, $columns[3]->id],
-        ])->assertRedirect()->assertSessionHasErrors(['column_ids.0', 'column_ids.1']);
+        ])->assertUnprocessable()->assertJsonValidationErrors(['column_ids.0', 'column_ids.1']);
         $this->assertSame($columns->pluck('id')->all(), $project->columns()->orderBy('position')->pluck('id')->all());
     }
 

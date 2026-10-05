@@ -61,6 +61,6 @@ class TaskDueTimeTest extends TestCase
             'column_id' => $column->id,
             'title' => 'تحویل طرح',
             'due_time' => '14:30',
-        ])->assertRedirect()->assertSessionHasErrors('due_date');
+        ])->assertUnprocessable()->assertJsonValidationErrors('due_date');
     }
 }

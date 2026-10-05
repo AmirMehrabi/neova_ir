@@ -1666,9 +1666,9 @@ body.app-page.neova-board {
 /* Keep every board column at a consistent viewport-based height. The column
    header stays visible while its task area scrolls independently. */
 @media (min-width: 768px) {
-    .workspace-shell--board .neova-board .board-column-shell,
-    .workspace-shell--board .neova-board .board-column-shell:nth-child(n) {
-        height: clamp(30rem, calc(100dvh - 15rem), 45rem);
+    .neova-board .workspace-shell--board .board-column-shell,
+    .neova-board .workspace-shell--board .board-column-shell:nth-child(n) {
+        height: max(12rem, calc(100dvh - var(--board-column-offset, 15rem) - 24px));
         min-height: 0;
         max-height: none;
         overflow: hidden;
@@ -1676,14 +1676,14 @@ body.app-page.neova-board {
 
 }
 
-.workspace-shell--board .neova-board .board-column-well,
-.workspace-shell--board .neova-board .mobile-task-list {
+.neova-board .workspace-shell--board .board-column-well,
+.neova-board .workspace-shell--board .mobile-task-list {
     min-height: 0;
     overflow: hidden;
 }
 
-.workspace-shell--board .neova-board .board-task-list,
-.workspace-shell--board .neova-board .mobile-task-scroll {
+.neova-board .workspace-shell--board .board-task-list,
+.neova-board .workspace-shell--board .mobile-task-scroll {
     min-height: 0;
     overflow-x: hidden;
     overflow-y: auto;
@@ -1692,10 +1692,15 @@ body.app-page.neova-board {
     -webkit-overflow-scrolling: touch;
 }
 
+.neova-board .board-column-header,
+.neova-board .board-column-mobile-header {
+    flex-shrink: 0;
+}
+
 @media (max-width: 767px) {
-    .workspace-shell--board .neova-board .mobile-board-column,
-    .workspace-shell--board .neova-board .mobile-board-column:nth-child(n) {
-        height: clamp(20rem, calc(100dvh - 21rem), 37.5rem);
+    .neova-board .workspace-shell--board .mobile-board-column,
+    .neova-board .workspace-shell--board .mobile-board-column:nth-child(n) {
+        height: max(12rem, calc(100dvh - var(--board-column-offset, 21rem) - 96px - env(safe-area-inset-bottom, 0px)));
         min-height: 0;
         max-height: none;
         overflow: hidden;

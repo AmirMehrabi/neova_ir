@@ -946,14 +946,6 @@
                         <p>تغییرات این وظیفه هنوز ذخیره نشده‌اند.</p>
                         <div><button type="button" @click="saveTask()">ذخیره</button><button type="button" @click="discardTaskChanges()">کنار گذاشتن</button><button type="button" @click="showUnsavedWarning = false">ادامه ویرایش</button></div>
                     </div>
-                    <div x-show="realtimeConflict" x-cloak class="rounded-xl border border-amber-300 bg-amber-50 p-3 text-xs text-amber-900">
-                        <p x-text="realtimeTaskDeleted ? 'این وظیفه در همین حین حذف شده است. پیش‌نویس شما حفظ شد.' : 'این وظیفه توسط شخص دیگری تغییر کرده است. پیش‌نویس شما حفظ شد.'"></p>
-                        <div class="mt-2 flex gap-2">
-                            <button type="button" @click="loadRemoteTask()" class="rounded-lg bg-white px-3 py-1.5 font-bold border border-amber-300" x-text="realtimeTaskDeleted ? 'بستن پیش‌نویس' : 'بارگذاری نسخه جدید'"></button>
-<button type="button" @click="copyTaskDraft()" class="rounded-lg bg-white px-3 py-1.5 border border-amber-300">کپی پیش‌نویس</button>
-                            <button x-show="!realtimeTaskDeleted" type="button" @click="keepLocalDraft()" class="rounded-lg bg-amber-800 px-3 py-1.5 font-bold text-white">حفظ پیش‌نویس و بازنویسی</button>
-                        </div>
-                    </div>
                     <div class="task-modal-title-field">
                         <label for="task-title">عنوان وظیفه</label>
                         <input
@@ -1537,9 +1529,6 @@
                 realtimeRefresher: null,
                 realtimeDragActive: false,
                 pendingRealtimeSnapshot: null,
-                realtimeConflict: false,
-                realtimeTaskDeleted: false,
-                forceRealtimeOverwrite: false,
                 showModal: false,
                 showUnsavedWarning: false,
                 extraTaskDetailsOpen: false,
@@ -1974,19 +1963,27 @@
                     const flush = () => {
                         if (this.destroyed) return;
                         if (this.boardMutationBusy()) { this.mutationTimer = setTimeout(flush, 25); return; }
-                        const snapshot = this.mutationSnapshot;
-                        this.mutationSnapshot = null;
-                        this.applyRealtimeSnapshot(snapshot, { ownMutation: true });
-                        if (this.pendingRealtimeSnapshot) {
-                            const pending = this.pendingRealtimeSnapshot;
-                            this.pendingRealtimeSnapshot = null;
-                            this.applyRealtimeSnapshot(pending);
-                        }
+                        this.flushMutationSnapshot();
                     };
                     this.mutationTimer = setTimeout(flush, 0);
                 },
 
+                flushMutationSnapshot() {
+                    if (this.boardMutationBusy() || !this.mutationSnapshot) return;
+                    clearTimeout(this.mutationTimer);
+                    const snapshot = this.mutationSnapshot;
+                    this.mutationSnapshot = null;
+                    this.applyRealtimeSnapshot(snapshot, { ownMutation: true });
+                    if (this.pendingRealtimeSnapshot) {
+                        const pending = this.pendingRealtimeSnapshot;
+                        this.pendingRealtimeSnapshot = null;
+                        this.applyRealtimeSnapshot(pending);
+                    }
+                },
+
                 applyRealtimeSnapshot(payload, { ownMutation = false } = {}) {
+                    // A delayed read must never beat the acknowledgement of our write.
+                    if (!ownMutation) this.flushMutationSnapshot();
                     if (!payload || (this.lastSnapshotAt && payload.generatedAt && payload.generatedAt < this.lastSnapshotAt)) return;
                     if (this.boardMutationBusy()) {
                         if (this.pendingRealtimeSnapshot?.generatedAt && payload.generatedAt < this.pendingRealtimeSnapshot.generatedAt) return;
@@ -2010,11 +2007,6 @@
                     const draftIsDirty = this.showModal && this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot;
                     const attachmentBusy = this.attachmentUploading || this.commentPosting || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length;
                     const remoteChanged = !remoteTask || (remoteTask.version != null && this.form.version != null ? Number(remoteTask.version) !== Number(this.form.version) : remoteTask.updatedAt !== this.form.updatedAt);
-                    const ownTaskChanged = ownMutation && (payload.originTaskIds || []).includes(Number(this.editingTask));
-                    if (this.showModal && this.editingTask && !ownTaskChanged && remoteChanged && (draftIsDirty || attachmentBusy)) {
-                        this.realtimeConflict = true;
-                        this.realtimeTaskDeleted = !remoteTask;
-                    }
                     this.columns = payload.columns.map(column => ({ ...column, collapsed: collapsed.has(String(column.id)) }));
                     this.activeColumnIndex = Math.max(0, this.columns.findIndex(column => column.id === activeId));
                     const existingIds = new Set(this.columns.flatMap(column => column.tasks.map(task => Number(task.dbId))));
@@ -2038,7 +2030,7 @@
                       this.projectBaseline = JSON.stringify(this.projectForm);
                       this.projectBaselineVersion = payload.project.version;
                     }
-                    if (ownTaskChanged && this.showModal && remoteTask) { this.form.updatedAt = remoteTask.updatedAt; this.form.version = remoteTask.version; }
+                    if (this.showModal && remoteTask) { this.form.updatedAt = remoteTask.updatedAt; this.form.version = remoteTask.version; }
                     if (this.showModal && remoteTask) {
                         this.form.comments = JSON.parse(JSON.stringify(remoteTask.comments || []));
                         this.form.attachments = JSON.parse(JSON.stringify(remoteTask.attachments || []));
@@ -2069,27 +2061,6 @@
                         this.pendingRealtimeSnapshot = null;
                         this.applyRealtimeSnapshot(payload);
                     }, 0);
-                },
-
-                loadRemoteTask() {
-                    const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
-                    const task = column?.tasks.find(item => Number(item.dbId) === Number(this.editingTask));
-                    if (!task) { this.requestCloseModal(); return; }
-                    if ((this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot) && !window.confirm('پیش‌نویس شما کنار گذاشته و نسخه جدید بارگذاری شود؟')) return;
-                    this.realtimeConflict = false;
-                    this.realtimeTaskDeleted = false;
-                    this.forceRealtimeOverwrite = false;
-                    this.openEditModal(task, column.id);
-                },
-
-                async copyTaskDraft() {
-                    try { await navigator.clipboard.writeText(JSON.stringify(this.form, null, 2)); this.showToast('پیش‌نویس کپی شد'); }
-                    catch { this.taskError = 'کپی انجام نشد. متن پیش‌نویس را دستی انتخاب و کپی کنید.'; }
-                },
-
-                keepLocalDraft() {
-                    this.forceRealtimeOverwrite = true;
-                    this.realtimeConflict = false;
                 },
 
                 init() {
@@ -2155,6 +2126,11 @@
 
                     this.$nextTick(() => {
                         if (this.boardMediaQuery.matches) this.initMobileBoardObserver();
+                        this.columnHeightHandler = () => this.updateColumnHeight();
+                        this.columnHeightObserver = new ResizeObserver(this.columnHeightHandler);
+                        document.querySelectorAll('.workspace-topbar, .workspace-main').forEach(element => this.columnHeightObserver.observe(element));
+                        window.addEventListener('resize', this.columnHeightHandler);
+                        this.updateColumnHeight();
                     });
 
                     this.$nextTick(() => {
@@ -2175,6 +2151,8 @@
                 },
 
                 destroy() {
+                    this.columnHeightObserver?.disconnect();
+                    window.removeEventListener('resize', this.columnHeightHandler);
                     this.destroyed = true;
                     clearTimeout(this.mutationTimer); clearTimeout(this.remoteSnapshotTimer); clearTimeout(this.toastTimer); clearInterval(this.pollTimer);
                     this.realtimeRefresher?.dispose();
@@ -2187,6 +2165,15 @@
                     this.boardMediaQuery?.removeEventListener('change', this.mediaHandler);
                     this.destroySortables(); this.destroyColumnSortables(); this.destroyMobileBoardObserver();
                     this.endMobileDrag(); clearTimeout(this.mobileScrollTimer);
+                },
+
+                updateColumnHeight() {
+                    const tracks = [document.getElementById('desktop-column-track'), this.$refs.mobileBoardTrack];
+                    for (const track of tracks) {
+                        if (!track || !track.getClientRects().length) continue;
+                        const offset = Math.ceil(track.getBoundingClientRect().top + window.scrollY + parseFloat(window.getComputedStyle(track).paddingTop));
+                        track.style.setProperty('--board-column-offset', `${offset}px`);
+                    }
                 },
 
                 syncStatusText() {
@@ -3129,6 +3116,7 @@
 
                 async moveTask(fromColId, toColId, taskId, newIndex, oldIndex = null) {
                     if (!this.canEdit || this.taskMovePending) return;
+                    this.flushMutationSnapshot();
                     const fromCol = this.columns.find(c => c.id === fromColId);
                     const toCol = this.columns.find(c => c.id === toColId);
                     if (!fromCol || !toCol) return;
@@ -3183,6 +3171,7 @@
                         });
                     } finally {
                         this.taskMovePending = false;
+                        this.flushMutationSnapshot();
                         this.setSortablesDisabled(false);
                     }
                 },
@@ -3205,9 +3194,6 @@
                     this.taskError = '';
                     this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
-                    this.realtimeConflict = false;
-                    this.realtimeTaskDeleted = false;
-                    this.forceRealtimeOverwrite = false;
                     this.showUnsavedWarning = false;
                     this.extraTaskDetailsOpen = false;
                     this.showModal = true;
@@ -3218,6 +3204,12 @@
                 },
 
                 openEditModal(task, columnId, { preserveFocus = false } = {}) {
+                    this.flushMutationSnapshot();
+                    const currentColumn = this.columns.find(column => column.tasks.some(item => Number(item.dbId) === Number(task.dbId)));
+                    if (currentColumn) {
+                        task = currentColumn.tasks.find(item => Number(item.dbId) === Number(task.dbId));
+                        columnId = currentColumn.id;
+                    }
                     this.editingTask = task.dbId;
                     this.editingDescription = false;
                     const taskAssignees = task.assignees || (task.assignee ? [task.assignee] : []);
@@ -3236,9 +3228,6 @@
                     this.taskError = '';
                     if (!this.showModal) this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
-                    this.realtimeConflict = false;
-                    this.realtimeTaskDeleted = false;
-                    this.forceRealtimeOverwrite = false;
                     this.showUnsavedWarning = false;
                     this.extraTaskDetailsOpen = false;
                     this.showModal = true;
@@ -3365,6 +3354,7 @@
 
                 async saveTask() {
                     if (!this.canEdit || this.taskSaving) return;
+                    this.flushMutationSnapshot();
                     if (!this.form.title.trim()) {
                         this.taskError = 'عنوان وظیفه را وارد کنید.';
                         this.$nextTick(() => this.$refs.taskTitle?.focus());
@@ -3381,16 +3371,13 @@
                             const targetCol = this.columns.find(c => c.id === this.form.columnId);
                             const task = sourceCol?.tasks.find(t => t.dbId === this.editingTask);
                             if (!task) throw new Error('وظیفه پیدا نشد.');
-                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, due_time: this.form.dueDate ? this.form.dueTime : '', tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId), expected_updated_at: this.form.updatedAt, expected_version: this.form.version, force: this.forceRealtimeOverwrite };
+                            const payload = { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees, due_date: this.form.dueDate, due_time: this.form.dueDate ? this.form.dueTime : '', tags: this.form.tags, checklist: this.form.checklist, comments: this.form.comments, column_id: parseInt(this.form.columnId) };
                             const response = await window.neovaFetch('{{ route("board.task.update", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', task.dbId), { method: 'PUT', headers, body: JSON.stringify(payload) });
                             const data = await response.json().catch(() => ({}));
-                            if (response.status === 409) {
-                                this.realtimeConflict = true;
-                                await this.realtimeRefresher.refreshNow();
-                                throw new Error(data.message || 'نسخه جدیدتری از این وظیفه وجود دارد.');
-                            }
                             if (!response.ok) throw new Error(data.message || Object.values(data.errors || {})[0]?.[0] || 'ذخیره وظیفه انجام نشد.');
                             Object.assign(task, { title: this.form.title, description: this.form.description, priority: this.form.priority, assignees: this.form.assignees.slice(), dueDate: this.form.dueDate, dueTime: this.form.dueTime, tags: this.form.tags.slice(), checklist: JSON.parse(JSON.stringify(this.form.checklist)), comments: JSON.parse(JSON.stringify(this.form.comments)), updatedAt: data.updated_at || data.updatedAt, version: data.edit_version });
+                            this.form.updatedAt = task.updatedAt;
+                            this.form.version = task.version;
                             if (sourceCol && targetCol && sourceCol.id !== targetCol.id) {
                                 sourceCol.tasks = sourceCol.tasks.filter(item => item.dbId !== task.dbId);
                                 targetCol.tasks.push(task);
@@ -3421,6 +3408,7 @@
                         this.taskError = error.message || 'ذخیره وظیفه انجام نشد.';
                     } finally {
                         this.taskSaving = false;
+                        this.flushMutationSnapshot();
                     }
                 },
 
