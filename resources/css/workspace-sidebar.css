@@ -1,4 +1,33 @@
-/* The shared shell owns sidebar geometry and appearance on every page. */
+/* One navigation frame surrounds the inset content surface on every workspace page. */
+body.app-page .workspace-shell.workspace-shell--unified {
+    --shell-frame: #FFFFFF;
+    --shell-content: #F7F7F5;
+    --shell-content-radius: 28px;
+    background: var(--shell-frame) !important;
+}
+.workspace-shell.workspace-shell--unified .workspace-stage {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    background: var(--shell-frame);
+}
+.workspace-shell.workspace-shell--unified .workspace-topbar {
+    flex-shrink: 0;
+    border-bottom: 0;
+    background: var(--shell-frame);
+    backdrop-filter: none;
+}
+.workspace-shell.workspace-shell--unified .workspace-main {
+    flex: 1;
+    min-width: 0;
+    margin-inline-end: 12px;
+    margin-bottom: 12px;
+    border-top-right-radius: var(--shell-content-radius);
+    background: var(--shell-content);
+}
+.workspace-shell.workspace-shell--unified .workspace-mobile-nav a.is-active { color: #244C38; }
+.workspace-icon { display: block; width: 20px; height: 20px; flex-shrink: 0; }
+.workspace-sidebar__brand button { display: grid; place-items: center; }
 .workspace-shell--unified .workspace-sidebar {
     position: sticky;
     top: 0;
@@ -11,8 +40,8 @@
     flex-direction: column;
     overflow: visible;
     padding: 20px 14px;
-    border-inline-end: 1px solid #E2E2DE;
-    background: #fff;
+    border-inline-end: 0;
+    background: var(--shell-frame);
     color: #18212B;
 }
 .workspace-sidebar__brand { display: flex; flex-shrink: 0; height: 40px; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 24px; padding: 0 4px; }
@@ -23,10 +52,10 @@
 .workspace-nav { display: grid; flex-shrink: 0; gap: 4px; }
 .workspace-nav__item { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: 10px; color: #68726C; font-size: 12px; font-weight: 700; }
 .workspace-nav__item span { display: grid; place-items: center; flex: 0 0 20px; }
-.workspace-nav__item svg { width: 18px; height: 18px; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.workspace-nav__item svg { width: 20px; height: 20px; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .workspace-nav__item:hover,
-.workspace-nav__item.is-active { color: #18212B; background: #E7EEE9; }
-.workspace-nav__item.is-parent-active { color: #18212B; background: #F4F3EF; }
+.workspace-nav__item.is-active { color: #244C38; background: #E7EEE9; }
+.workspace-nav__item.is-parent-active { color: #244C38; background: #F4F3EF; }
 .workspace-sidebar__projects { display: grid; align-content: start; flex: 1; min-height: 0; gap: 3px; overflow-y: auto; overscroll-behavior: contain; margin: 24px 0 16px; padding-top: 18px; border-top: 1px solid #E2E2DE; }
 .workspace-sidebar__projects > div { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 10px; }
 .workspace-sidebar__projects > div p { color: #8B938E; font-size: 10px; font-weight: 700; }
@@ -85,6 +114,11 @@
 #project-create,
 #notification-preferences { scroll-margin-top: 80px; }
 @media (max-width: 767px) {
+    .workspace-shell.workspace-shell--unified .workspace-main {
+        margin-inline-end: 0;
+        margin-bottom: 0;
+        border-top-right-radius: 20px;
+    }
     .workspace-shell--unified .workspace-sidebar,
     .workspace-header-context { display: none; }
     .workspace-shell .workspace-mobile-nav { grid-template-columns: repeat(3, 1fr); height: calc(66px + env(safe-area-inset-bottom)); }

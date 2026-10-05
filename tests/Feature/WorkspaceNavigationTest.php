@@ -125,7 +125,7 @@ class WorkspaceNavigationTest extends TestCase
             ->assertSee('task-workspace-main', false)
             ->assertSee('task-workspace-sidebar', false)
             ->assertDontSee('افزودن جزئیات')
-            ->assertSee('تغییرات این وظیفه هنوز ذخیره نشده‌اند')
+            ->assertDontSee('تغییرات این وظیفه هنوز ذخیره نشده‌اند')
             ->assertDontSee("window.confirm('تغییرات ذخیره نشده‌اند", false)
             ->assertSee("'در ستون «' + column.title + '»'", false)
             ->assertSee("'ایجاد وظیفه جدید در ستون ' + column.title", false);

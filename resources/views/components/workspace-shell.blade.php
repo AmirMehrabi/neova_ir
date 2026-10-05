@@ -9,7 +9,7 @@
     $canManageWorkspace = $workspace->canManageMembers(auth()->user());
 @endphp
 
-<div class="workspace-shell workspace-shell--unified workspace-shell--{{ $active }} {{ $board ? 'workspace-shell--board' : '' }} min-h-screen bg-[#FBFDFF]"
+<div class="workspace-shell workspace-shell--unified workspace-shell--{{ $active }} {{ $board ? 'workspace-shell--board' : '' }} min-h-screen"
      x-data="workspaceShell({ board: {{ $board ? 'true' : 'false' }}, searchUrl: @js(route('workspace.search', $workspace->slug, false)) })"
      style="--shell-sidebar: 236px"
      :style="{ '--shell-sidebar': sidebarCollapsed ? '64px' : '236px' }"
@@ -21,13 +21,13 @@
             <a href="{{ route('today', $workspace->slug) }}" aria-label="خانه نئووا">
                 <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا">
             </a>
-            <button type="button" @click="toggleSidebar()" :aria-expanded="!sidebarCollapsed" aria-label="باز و بسته کردن نوار کناری" title="باز و بسته کردن نوار کناری">☰</button>
+            <button type="button" @click="toggleSidebar()" :aria-expanded="!sidebarCollapsed" aria-label="باز و بسته کردن نوار کناری" title="باز و بسته کردن نوار کناری"><x-workspace-icon name="panel-right-close" x-show="!sidebarCollapsed" /><x-workspace-icon name="panel-right-open" x-show="sidebarCollapsed" x-cloak /></button>
         </div>
 
         <nav class="workspace-nav" aria-label="ناوبری اصلی">
-            <a href="{{ route('today', $workspace->slug) }}" title="امروز" aria-label="امروز" class="workspace-nav__item {{ $active === 'today' ? 'is-active' : '' }}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span><b>امروز</b></a>
-            <a href="{{ route('projects.index', $workspace->slug) }}" title="پروژه‌ها" aria-label="پروژه‌ها" class="workspace-nav__item {{ $active === 'projects' ? 'is-active' : ($active === 'board' ? 'is-parent-active' : '') }}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"/></svg></span><b>پروژه‌ها</b></a>
-            <a href="{{ route('team.index', $workspace->slug) }}" title="تیم" aria-label="تیم" class="workspace-nav__item {{ $active === 'team' ? 'is-active' : '' }}"><span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20m6-8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-1a3 3 0 0 1 3 3v1"/></svg></span><b>تیم</b></a>
+            <a href="{{ route('today', $workspace->slug) }}" title="امروز" aria-label="امروز" class="workspace-nav__item {{ $active === 'today' ? 'is-active' : '' }}"><span><x-workspace-icon name="calendar-days" /></span><b>امروز</b></a>
+            <a href="{{ route('projects.index', $workspace->slug) }}" title="پروژه‌ها" aria-label="پروژه‌ها" class="workspace-nav__item {{ $active === 'projects' ? 'is-active' : ($active === 'board' ? 'is-parent-active' : '') }}"><span><x-workspace-icon name="folders" /></span><b>پروژه‌ها</b></a>
+            <a href="{{ route('team.index', $workspace->slug) }}" title="تیم" aria-label="تیم" class="workspace-nav__item {{ $active === 'team' ? 'is-active' : '' }}"><span><x-workspace-icon name="users-round" /></span><b>تیم</b></a>
         </nav>
 
         <div class="workspace-sidebar__projects">
@@ -74,9 +74,9 @@
     </div>
 
     <nav class="workspace-mobile-nav" aria-label="ناوبری موبایل">
-        <a href="{{ route('today', $workspace->slug) }}" class="{{ $active === 'today' ? 'is-active' : '' }}" aria-label="امروز" title="امروز"><span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></span><b>امروز</b></a>
-        <a href="{{ route('projects.index', $workspace->slug) }}" class="{{ in_array($active, ['projects', 'board']) ? 'is-active' : '' }}" aria-label="پروژه‌ها" title="پروژه‌ها"><span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"/></svg></span><b>پروژه‌ها</b></a>
-        <a href="{{ route('team.index', $workspace->slug) }}" class="{{ $active === 'team' ? 'is-active' : '' }}" aria-label="تیم" title="تیم"><span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20m6-8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-1a3 3 0 0 1 3 3v1"/></svg></span><b>تیم</b></a>
+        <a href="{{ route('today', $workspace->slug) }}" class="{{ $active === 'today' ? 'is-active' : '' }}" aria-label="امروز" title="امروز"><span><x-workspace-icon name="calendar-days" /></span><b>امروز</b></a>
+        <a href="{{ route('projects.index', $workspace->slug) }}" class="{{ in_array($active, ['projects', 'board']) ? 'is-active' : '' }}" aria-label="پروژه‌ها" title="پروژه‌ها"><span><x-workspace-icon name="folders" /></span><b>پروژه‌ها</b></a>
+        <a href="{{ route('team.index', $workspace->slug) }}" class="{{ $active === 'team' ? 'is-active' : '' }}" aria-label="تیم" title="تیم"><span><x-workspace-icon name="users-round" /></span><b>تیم</b></a>
     </nav>
 
     <template x-teleport="body">
