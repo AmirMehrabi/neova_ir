@@ -12,30 +12,6 @@ body.app-page.neova-board.board-direction {
 .board-direction .workspace-shell.workspace-shell--board {
     background: var(--board-paper) !important;
 }
-.board-direction .workspace-shell.workspace-shell--board:not(.workspace-shell--collapsed) { --shell-sidebar: 220px; }
-.board-direction .workspace-shell--board .workspace-sidebar {
-    padding: 20px 16px;
-    background: #FFF;
-    border-inline-start: 1px solid var(--board-line);
-}
-.board-direction .workspace-shell--board .workspace-sidebar__brand { height: 32px; margin-bottom: 28px; }
-.board-direction .workspace-shell--board .workspace-sidebar__brand img { height: 32px; max-width: 150px; object-fit: contain; }
-.board-direction .workspace-shell--board .workspace-switcher__trigger {
-    min-height: 64px;
-    padding: 12px;
-    border: 0;
-    border-radius: 12px;
-    background: #F2F1EC;
-}
-.board-direction .workspace-shell--board .workspace-switcher__mark { background: #17201C; border-radius: 8px; }
-.board-direction .workspace-shell--board .workspace-nav { margin-top: 24px; gap: 4px; }
-.board-direction .workspace-shell--board .workspace-nav__item { min-height: 42px; border-radius: 12px; color: #68726C; }
-.board-direction .workspace-shell--board .workspace-nav__item.is-active { background: #E7EEE9; color: #17201C; }
-.board-direction .workspace-shell--board .workspace-sidebar__projects { margin-top: 28px; border-top: 1px solid #E6E5DF; padding-top: 20px; }
-.board-direction .workspace-shell--board .workspace-sidebar__projects > a.is-active { background: #F4F3EF; border-radius: 8px; }
-.board-direction .workspace-shell--board .workspace-sidebar__account { border-top: 1px solid #E6E5DF; }
-.board-direction .workspace-shell--collapsed .workspace-sidebar { padding-inline: 8px; }
-.board-direction .workspace-shell--collapsed .workspace-sidebar__brand img { max-width: 36px; }
 
 .board-direction .workspace-shell--board .workspace-topbar {
     height: 68px;

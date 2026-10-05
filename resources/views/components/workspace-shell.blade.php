@@ -9,15 +9,17 @@
     $canManageWorkspace = $workspace->canManageMembers(auth()->user());
 @endphp
 
-<div class="workspace-shell workspace-shell--{{ $active }} {{ $board ? 'workspace-shell--board' : '' }} min-h-screen bg-[#FBFDFF]"
+<div class="workspace-shell workspace-shell--unified workspace-shell--{{ $active }} {{ $board ? 'workspace-shell--board' : '' }} min-h-screen bg-[#FBFDFF]"
      x-data="workspaceShell({ board: {{ $board ? 'true' : 'false' }}, searchUrl: @js(route('workspace.search', $workspace->slug, false)) })"
+     style="--shell-sidebar: 236px"
+     :style="{ '--shell-sidebar': sidebarCollapsed ? '64px' : '236px' }"
      :class="{ 'workspace-shell--collapsed': sidebarCollapsed }"
      @keydown.slash.window="openSearch($event)"
      @keydown.window="openSearchShortcut($event)">
     <aside class="workspace-sidebar" :class="{ 'is-collapsed': sidebarCollapsed }">
         <div class="workspace-sidebar__brand">
             <a href="{{ route('today', $workspace->slug) }}" aria-label="خانه نئووا">
-                <img src="{{ asset($board ? 'assets/logo/horizental-logo-black-transparent.png' : 'assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا">
+                <img src="{{ asset('assets/logo/horizental-logo-black-transparent.png') }}" alt="نئووا">
             </a>
             <button type="button" @click="toggleSidebar()" :aria-expanded="!sidebarCollapsed" aria-label="باز و بسته کردن نوار کناری" title="باز و بسته کردن نوار کناری">☰</button>
         </div>
@@ -39,39 +41,11 @@
         </div>
 
         <div class="workspace-sidebar__footer">
-            <div class="workspace-switcher" @click.away="workspaceOpen = false" @keydown="handleFooterMenuKey($event, 'workspace')" @focusout="if (!$el.contains($event.relatedTarget)) workspaceOpen = false">
-                <button type="button" class="workspace-switcher__trigger" x-ref="workspaceTrigger" @click="toggleFooterMenu('workspace')" @keydown.arrow-down.prevent="openFooterMenu('workspace')" :aria-expanded="workspaceOpen" aria-controls="sidebar-workspace-menu" aria-label="تغییر فضای کاری" title="{{ $workspace->name }} — تغییر فضای کاری">
-                    <span class="workspace-switcher__mark">{{ mb_substr($workspace->name, 0, 1) }}</span>
-                    <span class="workspace-switcher__copy"><strong>{{ $workspace->name }}</strong><small>تغییر فضای کاری</small></span>
-                    <span class="workspace-switcher__chevron">⌃</span>
-                </button>
-                <div id="sidebar-workspace-menu" x-ref="workspaceMenu" x-show="workspaceOpen" x-cloak x-transition class="workspace-switcher__menu">
-                    <p>فضاهای کاری</p>
-                    @foreach ($shellWorkspaces as $shellWorkspace)
-                        <a href="{{ route('today', $shellWorkspace->slug) }}" class="{{ $shellWorkspace->id === $workspace->id ? 'is-current' : '' }}">
-                            <span>{{ mb_substr($shellWorkspace->name, 0, 1) }}</span><strong>{{ $shellWorkspace->name }}</strong>
-                            @if ($shellWorkspace->id === $workspace->id)<i>✓</i>@endif
-                        </a>
-                    @endforeach
-                    <button type="button" @click="workspaceCreating = true; workspaceOpen = false">+ فضای کاری جدید</button>
-                    @if ($canManageWorkspace)
-                        <a href="{{ route('workspaces.settings', $workspace->slug) }}" class="workspace-switcher__manage">تنظیمات فضای کاری</a>
-                    @endif
-                </div>
-            </div>
-
-            <div class="workspace-sidebar__profile" @click.away="profileOpen = false" @keydown="handleFooterMenuKey($event, 'profile')" @focusout="if (!$el.contains($event.relatedTarget)) profileOpen = false">
-                <button type="button" class="workspace-sidebar__profile-trigger" x-ref="profileTrigger" @click="toggleFooterMenu('profile')" @keydown.arrow-down.prevent="openFooterMenu('profile')" :aria-expanded="profileOpen" aria-controls="sidebar-profile-menu" aria-label="حساب کاربری" title="{{ auth()->user()->full_name }} — حساب کاربری">
-                    @if(auth()->user()->avatar)<img src="{{ asset('storage/avatars/'.auth()->user()->avatar) }}" alt="">@else<span class="workspace-sidebar__avatar">{{ auth()->user()->initials }}</span>@endif
-                    <b>{{ auth()->user()->full_name }}</b><span class="workspace-sidebar__profile-chevron" aria-hidden="true">⌃</span>
-                </button>
-                <div id="sidebar-profile-menu" x-ref="profileMenu" x-show="profileOpen" x-cloak x-transition class="workspace-sidebar__profile-menu">
-                    <p><strong>{{ auth()->user()->full_name }}</strong><small>{{ auth()->user()->phone }}</small></p>
-                    <a href="{{ route('profile') }}">پروفایل و تنظیمات</a>
-                    <a href="{{ route('profile') }}#notification-preferences">تنظیمات اعلان‌ها</a>
-                    <form method="POST" action="{{ route('auth.logout') }}">@csrf<button type="submit">خروج</button></form>
-                </div>
-            </div>
+            <button type="button" class="workspace-context-trigger" data-workspace-context @click="toggleContextMenu($el)" @keydown.arrow-down.prevent="openContextMenu($el)" :aria-expanded="contextOpen" aria-controls="workspace-context-menu" aria-label="فضای کاری و حساب کاربری" title="{{ $workspace->name }} · {{ auth()->user()->full_name }}">
+                @if(auth()->user()->avatar)<img class="workspace-context-avatar" src="{{ asset('storage/avatars/'.auth()->user()->avatar) }}" alt="">@else<span class="workspace-context-avatar">{{ auth()->user()->initials }}</span>@endif
+                <span class="workspace-context-copy"><strong>{{ $workspace->name }}</strong><small>{{ auth()->user()->full_name }}</small></span>
+                <span class="workspace-context-chevron" aria-hidden="true">⌃</span>
+            </button>
         </div>
     </aside>
 
@@ -79,11 +53,7 @@
         <header class="workspace-topbar">
             <div class="workspace-mobile-brand">
                 <img src="{{ asset('assets/logo/png/symbol-primary-color.png') }}" alt="نئووا">
-                <button type="button" @click="mobileWorkspaceOpen = !mobileWorkspaceOpen"><strong>{{ $workspace->name }}</strong><span>⌄</span></button>
-                <div x-show="mobileWorkspaceOpen" x-cloak @click.away="mobileWorkspaceOpen=false" class="workspace-mobile-switcher">
-                    @foreach ($shellWorkspaces as $shellWorkspace)<a href="{{ route('today', $shellWorkspace->slug) }}">{{ $shellWorkspace->name }}</a>@endforeach
-                    <button type="button" @click="workspaceCreating=true; mobileWorkspaceOpen=false">+ فضای کاری جدید</button>
-                </div>
+                <button type="button" data-workspace-context @click="toggleContextMenu($el)" @keydown.arrow-down.prevent="openContextMenu($el)" :aria-expanded="contextOpen" aria-controls="workspace-context-menu" aria-label="فضای کاری و حساب کاربری" title="{{ $workspace->name }} · {{ auth()->user()->full_name }}"><strong>{{ $workspace->name }}</strong><span aria-hidden="true">⌄</span></button>
             </div>
             @if($board)
                 {{ $context ?? '' }}
@@ -97,17 +67,6 @@
             <div class="workspace-topbar__actions">
                 {{ $toolbar ?? '' }}
                 <x-notification-menu />
-                <div class="workspace-account-menu workspace-account-menu--mobile" @click.away="accountOpen=false">
-                    <button type="button" class="workspace-profile-link" @click="accountOpen=!accountOpen" :aria-expanded="accountOpen" aria-label="حساب کاربری">
-                        @if (auth()->user()->avatar)<img src="{{ asset('storage/avatars/'.auth()->user()->avatar) }}" alt="">@else<span>{{ auth()->user()->initials }}</span>@endif
-                    </button>
-                    <div x-show="accountOpen" x-cloak x-transition>
-                        <p><strong>{{ auth()->user()->full_name }}</strong><small>{{ auth()->user()->phone }}</small></p>
-                        <a href="{{ route('profile') }}">پروفایل و تنظیمات</a>
-                        <a href="{{ route('notifications.index') }}">اعلان‌ها</a>
-                        <form method="POST" action="{{ route('auth.logout') }}">@csrf<button>خروج</button></form>
-                    </div>
-                </div>
             </div>
         </header>
 
@@ -119,6 +78,33 @@
         <a href="{{ route('projects.index', $workspace->slug) }}" class="{{ in_array($active, ['projects', 'board']) ? 'is-active' : '' }}" aria-label="پروژه‌ها" title="پروژه‌ها"><span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6Z"/></svg></span><b>پروژه‌ها</b></a>
         <a href="{{ route('team.index', $workspace->slug) }}" class="{{ $active === 'team' ? 'is-active' : '' }}" aria-label="تیم" title="تیم"><span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 18.5V20m6-8a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm7-1a3 3 0 0 1 3 3v1"/></svg></span><b>تیم</b></a>
     </nav>
+
+    <template x-teleport="body">
+        <section id="workspace-context-menu" x-ref="contextMenu" x-show="contextOpen" x-cloak x-transition.opacity class="workspace-context-menu" data-workspace-context :style="contextMenuStyle()" aria-label="فضای کاری و حساب کاربری" @keydown="handleContextMenuKey($event)" @keydown.escape.window="if (contextOpen) { $event.preventDefault(); $event.stopPropagation(); closeContextMenu(true) }" @pointerdown.window="if (contextOpen && !$event.target.closest('[data-workspace-context]')) closeContextMenu()" @focusout="if ($event.relatedTarget && !$el.contains($event.relatedTarget) && !$event.relatedTarget.closest('[data-workspace-context]')) closeContextMenu()" @resize.window="closeContextMenu()">
+            <header class="workspace-context-menu__identity">
+                @if(auth()->user()->avatar)<img class="workspace-context-avatar" src="{{ asset('storage/avatars/'.auth()->user()->avatar) }}" alt="">@else<span class="workspace-context-avatar">{{ auth()->user()->initials }}</span>@endif
+                <div><strong>{{ auth()->user()->full_name }}</strong><small>{{ auth()->user()->phone }}</small></div>
+            </header>
+            <p class="workspace-context-menu__label" id="workspace-context-workspaces">فضاهای کاری</p>
+            <nav class="workspace-context-menu__workspaces" aria-labelledby="workspace-context-workspaces">
+                @foreach ($shellWorkspaces as $shellWorkspace)
+                    <a href="{{ route('today', $shellWorkspace->slug) }}" class="workspace-context-menu__workspace {{ $shellWorkspace->id === $workspace->id ? 'is-current' : '' }}" @if ($shellWorkspace->id === $workspace->id) aria-current="true" @endif>
+                        <span class="workspace-context-menu__mark">{{ mb_substr($shellWorkspace->name, 0, 1) }}</span><strong>{{ $shellWorkspace->name }}</strong>
+                        @if ($shellWorkspace->id === $workspace->id)<span aria-label="فضای کاری فعلی">✓</span>@endif
+                    </a>
+                @endforeach
+            </nav>
+            <div class="workspace-context-menu__group">
+                @if ($canManageWorkspace)<a href="{{ route('workspaces.settings', $workspace->slug) }}">تنظیمات فضای کاری</a>@endif
+                <button type="button" @click="closeContextMenu(); workspaceCreating = true">+ فضای کاری جدید</button>
+            </div>
+            <div class="workspace-context-menu__group">
+                <a href="{{ route('profile') }}">پروفایل و تنظیمات</a>
+                <a href="{{ route('profile') }}#notification-preferences">تنظیمات اعلان‌ها</a>
+            </div>
+            <form class="workspace-context-menu__group" method="POST" action="{{ route('auth.logout') }}">@csrf<button type="submit" class="workspace-context-menu__logout">خروج</button></form>
+        </section>
+    </template>
 
     <div x-show="searchOpen" x-cloak class="workspace-command" @keydown.escape.window="searchOpen=false">
         <button class="workspace-command__backdrop" @click="searchOpen=false" aria-label="بستن"></button>
@@ -151,32 +137,40 @@
 function workspaceShell(config) {
     return {
         sidebarCollapsed: localStorage.getItem('neova_board_sidebar') === 'collapsed',
-        workspaceOpen: false, profileOpen: false, mobileWorkspaceOpen: false, workspaceCreating: false, accountOpen: false,
+        contextOpen: false, contextAnchor: null, workspaceCreating: false,
         searchOpen: false, searchQuery: '', searchResults: [], searchLoading: false,
         toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; localStorage.setItem('neova_board_sidebar', this.sidebarCollapsed ? 'collapsed' : 'expanded'); },
-        toggleFooterMenu(name) {
-            const key = name === 'workspace' ? 'workspaceOpen' : 'profileOpen';
-            const open = !this[key];
-            this.workspaceOpen = false;
-            this.profileOpen = false;
-            this[key] = open;
+        toggleContextMenu(anchor) {
+            if (this.contextOpen && this.contextAnchor === anchor) { this.closeContextMenu(); return; }
+            this.contextAnchor = anchor;
+            this.contextOpen = true;
         },
-        openFooterMenu(name) {
-            this.workspaceOpen = name === 'workspace';
-            this.profileOpen = name === 'profile';
-            this.$nextTick(() => this.$refs[name + 'Menu'].querySelector('a, button')?.focus());
+        openContextMenu(anchor) {
+            this.contextAnchor = anchor;
+            this.contextOpen = true;
+            this.$nextTick(() => this.$refs.contextMenu.querySelector('a, button')?.focus());
         },
-        handleFooterMenuKey(event, name) {
-            const key = name === 'workspace' ? 'workspaceOpen' : 'profileOpen';
-            if (!this[key]) return;
-            if (event.key === 'Escape') {
-                event.preventDefault(); event.stopPropagation(); this[key] = false;
-                this.$refs[name + 'Trigger'].focus();
-                return;
-            }
-            if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key) || !this.$refs[name + 'Menu'].contains(event.target)) return;
+        closeContextMenu(restoreFocus = false) {
+            this.contextOpen = false;
+            if (restoreFocus) this.contextAnchor?.focus();
+        },
+        contextMenuStyle() {
+            if (!this.contextAnchor) return {};
+            const rect = this.contextAnchor.getBoundingClientRect();
+            const width = Math.min(280, window.innerWidth - 24);
+            const right = Math.max(12, Math.min(window.innerWidth - rect.right, window.innerWidth - width - 12));
+            const mobile = window.innerWidth < 768;
+            return {
+                width: width + 'px', right: right + 'px',
+                top: mobile ? (rect.bottom + 8) + 'px' : 'auto',
+                bottom: mobile ? 'auto' : (window.innerHeight - rect.top + 8) + 'px',
+                maxHeight: Math.max(120, mobile ? window.innerHeight - rect.bottom - 90 : rect.top - 24) + 'px',
+            };
+        },
+        handleContextMenuKey(event) {
+            if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
             event.preventDefault();
-            const items = Array.from(this.$refs[name + 'Menu'].querySelectorAll('a, button'));
+            const items = Array.from(this.$refs.contextMenu.querySelectorAll('a, button'));
             const index = items.indexOf(document.activeElement);
             const next = event.key === 'Home' ? 0 : event.key === 'End' ? items.length - 1 : (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
             items[next]?.focus();
