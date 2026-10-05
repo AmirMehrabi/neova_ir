@@ -1217,10 +1217,6 @@
                         </div>
                     </aside>
                     <main class="task-workspace-main" @scroll="floatingMenuRevision++">
-                    <div x-show="showUnsavedWarning" x-cloak class="task-unsaved-warning" role="alert">
-                        <p>تغییرات این وظیفه هنوز ذخیره نشده‌اند.</p>
-                        <div><button type="button" @click="saveTask()">ذخیره</button><button type="button" @click="discardTaskChanges()">کنار گذاشتن</button><button type="button" @click="showUnsavedWarning = false">ادامه ویرایش</button></div>
-                    </div>
                     {{-- Description --}}
                     <section class="task-modal-section task-modal-section--description" aria-labelledby="task-description-title">
                         <div class="task-modal-section__heading">
@@ -1606,7 +1602,6 @@
                 realtimeDragActive: false,
                 pendingRealtimeSnapshot: null,
                 showModal: false,
-                showUnsavedWarning: false,
                 extraTaskDetailsOpen: false,
                 quickComposerColumnId: null,
                 quickTaskTitle: '',
@@ -3320,7 +3315,6 @@
                     this.taskError = '';
                     this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
-                    this.showUnsavedWarning = false;
                     this.extraTaskDetailsOpen = false;
                     this.showModal = true;
                     this.$nextTick(() => {
@@ -3357,7 +3351,6 @@
                     this.taskError = '';
                     if (!this.showModal) this.modalLastFocused = document.activeElement;
                     this.modalSnapshot = null;
-                    this.showUnsavedWarning = false;
                     this.extraTaskDetailsOpen = false;
                     this.showModal = true;
                     this.$nextTick(() => {
@@ -3368,7 +3361,6 @@
 
                 closeModal() {
                     this.showModal = false;
-                    this.showUnsavedWarning = false;
                     this.closeJalaliDatePicker();
                     this.taskError = '';
                     this.modalSnapshot = null;
@@ -3382,17 +3374,6 @@
 
                 requestCloseModal() {
                     if (this.taskSaving) return;
-                    const dirty = (this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot) || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length;
-                    if (dirty) {
-                        this.showUnsavedWarning = true;
-                        return;
-                    }
-                    this.closeModal();
-                },
-
-                discardTaskChanges() {
-                    this.modalSnapshot = null;
-                    this.showUnsavedWarning = false;
                     this.closeModal();
                 },
 
@@ -3820,10 +3801,6 @@
 
                 archiveEditingTask() {
                     if (!this.canEditTask || this.taskSaving || this.archiveBusy) return;
-                    if (this.formFingerprint() !== this.modalSnapshot || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length) {
-                        this.showUnsavedWarning = true;
-                        return;
-                    }
                     this.setTaskArchived(this.editingTask, true);
                 },
 
