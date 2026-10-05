@@ -91,3 +91,9 @@ body:has(.projects-dialog[open]) { overflow:hidden; }
  .projects-empty { padding-block:40px; }
  .projects-dialog { padding:22px; }
 }
+
+/* Inputs and empty states remain distinct on the white workspace surface. */
+.workspace-shell--unified :is(.projects-search, .projects-sort select, .projects-empty) {
+    background: var(--shell-card);
+    border-color: var(--shell-card-line);
+}

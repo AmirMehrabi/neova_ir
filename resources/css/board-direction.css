@@ -3,7 +3,7 @@ body.app-page.neova-board.board-direction {
     --board-paper: #F7F5EF;
     --board-ink: #17201C;
     --board-muted: #8B938E;
-    --board-line: #D9D7D0;
+    --board-line: #E2E2DE;
     --board-card-shadow: 0 4px 16px rgba(23, 32, 28, .05);
     background: var(--board-paper) !important;
     color: var(--board-ink);
@@ -98,11 +98,11 @@ body.app-page.neova-board.board-direction {
 .board-direction .workspace-shell--board .mobile-task-list .task-card {
     min-height: 120px;
     padding: 16px 12px !important;
-    border: 0 !important;
+    border: 1px solid var(--board-line) !important;
     border-inline-start: 4px solid var(--column-accent) !important;
     border-radius: 12px;
     background: #FFF !important;
-    box-shadow: 0 4px 16px rgba(23, 32, 28, .05) !important;
+    box-shadow: 0 2px 8px rgba(23, 32, 28, .04) !important;
     transition: box-shadow .15s ease, transform .15s ease;
 }
 .board-direction .workspace-shell--board .task-card:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(23, 32, 28, .09) !important; }

@@ -268,3 +268,20 @@
 @media (max-width: 767px) {
     .workspace-mobile-brand > img { width: 36px; height: 36px; filter: brightness(0); }
 }
+
+/* Quiet card surfaces retain their hierarchy against the white content area. */
+.workspace-shell--unified :is(.today-capture, .today-row, .today-secondary-section, .team-member, .project-list__row) {
+    background: var(--shell-card);
+    border: 1px solid var(--shell-card-line);
+    box-shadow: none;
+}
+.workspace-shell--unified :is(.today-row, .project-list__row):hover {
+    background: #F0F0ED;
+    border-color: #D5D8D2;
+}
+.workspace-shell--unified .today-team-group {
+    border: 1px solid var(--shell-card-line);
+}
+.workspace-shell--unified .today-capture select {
+    background: var(--shell-content) !important;
+}
