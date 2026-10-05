@@ -961,7 +961,7 @@
                 </header>
                 <div x-show="form.isBlocked" x-cloak class="task-blocked-banner" role="status"><strong>این وظیفه مسدود است</strong><span x-text="form.blockedReason"></span></div>
                 <div class="task-modal-body task-workspace-body" @scroll="floatingMenuRevision++">
-                    <aside class="task-workspace-sidebar" aria-label="مشخصات و اقدامات وظیفه">
+                    <aside class="task-workspace-sidebar" @scroll="floatingMenuRevision++" aria-label="مشخصات و اقدامات وظیفه">
                         <button type="button" class="task-mobile-properties" @click="taskPropertiesOpen = !taskPropertiesOpen" :aria-expanded="taskPropertiesOpen" aria-controls="task-properties-content">
                             <span><strong x-text="columns.find(col => col.id === form.columnId)?.title || 'انتخاب ستون'"></strong><small x-text="(form.assignees.length ? form.assignees.join('، ') : 'بدون مسئول') + ' · ' + (form.dueDate ? formatDateInput(form.dueDate) : 'بدون سررسید')"></small></span>
                             <span x-text="taskPropertiesOpen ? 'بستن مشخصات −' : 'ویرایش مشخصات +' "></span>
@@ -987,7 +987,7 @@
                             @endif
                         </div>
                     {{-- Assignees --}}
-                        <div x-data="{ assigneeOpen: false, assigneeSearch: '' }" @click.away="assigneeOpen = false" class="relative">
+                        <div x-data="{ assigneeOpen: false, assigneeSearch: '' }" data-task-assignees @pointerdown.window="if (!$event.target.closest('[data-task-assignees]')) assigneeOpen = false" class="relative">
                             <label class="board-field-label">مسئولین</label>
                             <div
                                 x-ref="assigneeTrigger"
@@ -1027,7 +1027,7 @@
                                         <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                         <input
                                             x-model="assigneeSearch"
-                                            @keydown.escape="assigneeOpen = false"
+                                            @keydown.escape.stop.prevent="assigneeOpen = false"
                                             type="text"
                                             class="w-full text-xs border border-[#E2E8F0] rounded-lg pr-7 pl-2 py-1.5 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
                                             placeholder="جستجو..."
@@ -1072,11 +1072,12 @@
                         <div class="relative">
                             <label class="board-field-label">سررسید</label>
                             <div class="relative">
-                                <input :value="formatDateInput(form.dueDate)" x-ref="dueDateInput" @click="if (canEdit) openJalaliDatePicker()" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ">
+                                <input :value="formatDateInput(form.dueDate)" id="task-due-date" data-task-picker="date" x-ref="dueDateInput" @click="if (canEdit) { jalaliDatePicker.open ? closeJalaliDatePicker() : openJalaliDatePicker() }" :aria-expanded="jalaliDatePicker.open" aria-controls="task-date-picker" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ">
                                 <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
                             </div>
-                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker task-floating-menu absolute right-0 top-full mt-2 w-[min(290px,calc(100vw-3rem))] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg">
+                            <template x-teleport="body">
+                            <div id="task-date-picker" data-task-picker="date" x-show="showModal && jalaliDatePicker.open" x-cloak @click.stop @pointerdown.window="if (!$event.target.closest('[data-task-picker=date]')) closeJalaliDatePicker()" @keydown.escape.stop.prevent="closeJalaliDatePicker()" class="jalali-picker task-picker-popover rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg" :style="taskPickerStyle(document.getElementById('task-due-date'), 300, 340)" role="dialog" aria-label="انتخاب سررسید">
                                 <div class="flex items-center justify-between mb-3">
                                     <button type="button" @click="changeJalaliMonth(1)" class="jalali-picker__nav" aria-label="ماه بعد">‹</button>
                                     <span class="text-xs font-black text-[#18212B]" x-text="jalaliMonthLabel()"></span>
@@ -1092,10 +1093,22 @@
                                 </div>
                                 <button type="button" @click="selectTodayJalaliDate()" class="w-full mt-3 pt-2 border-t border-[#F1F5F9] text-[10px] font-bold text-[#64748B] hover:text-[#18212B]">امروز</button>
                             </div>
+                            </template>
                             <div x-show="form.dueDate" class="task-due-time">
                                 <label for="task-due-time">ساعت (اختیاری)</label>
-                                <input id="task-due-time" type="time" x-model="form.dueTime" :disabled="!canEdit || !form.dueDate" aria-label="ساعت سررسید">
-                                <button type="button" x-show="form.dueTime && canEdit" @click="form.dueTime = ''">بدون ساعت</button>
+                                <button id="task-due-time" data-task-picker="time" type="button" @click="timePickerOpen ? closeTaskTimePicker() : openTaskTimePicker()" :disabled="!canEdit || !form.dueDate" :aria-expanded="timePickerOpen" aria-controls="task-time-picker" class="task-time-trigger" x-text="form.dueTime ? toPersianDigits(form.dueTime) : 'انتخاب ساعت'"></button>
+                                <template x-teleport="body">
+                                    <div id="task-time-picker" data-task-picker="time" x-show="showModal && timePickerOpen" x-cloak @click.stop @pointerdown.window="if (!$event.target.closest('[data-task-picker=time]')) closeTaskTimePicker()" @keydown.escape.stop.prevent="closeTaskTimePicker()" class="task-picker-popover task-time-picker" :style="taskPickerStyle(document.getElementById('task-due-time'), 260, 190)" role="dialog" aria-label="انتخاب ساعت سررسید">
+                                        <p>ساعت سررسید</p>
+                                        <div class="task-time-fields" dir="ltr">
+                                            <label>ساعت<select x-model="timePickerHour" @change="updateTaskTime()"><template x-for="hour in 24" :key="hour"><option :value="String(hour - 1).padStart(2, '0')" x-text="toPersianDigits(String(hour - 1).padStart(2, '0'))"></option></template></select></label>
+                                            <span>:</span>
+                                            <label>دقیقه<select x-model="timePickerMinute" @change="updateTaskTime()"><template x-for="minute in 60" :key="minute"><option :value="String(minute - 1).padStart(2, '0')" x-text="toPersianDigits(String(minute - 1).padStart(2, '0'))"></option></template></select></label>
+                                        </div>
+                                        <button type="button" @click="updateTaskTime(); closeTaskTimePicker()">تأیید ساعت</button>
+                                    </div>
+                                </template>
+                                <button type="button" x-show="form.dueTime && canEdit" @click="form.dueTime = ''; closeTaskTimePicker()">بدون ساعت</button>
                             </div>
                             <p x-show="form.dueDate" class="task-due-timezone">به وقت {{ $workspace->timezone ?: 'Asia/Tehran' }}</p>
                             <p x-show="form.dueDate && isOverdue(form.dueDate, form.dueTime)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
@@ -1116,7 +1129,7 @@
                         </div>
 
                         {{-- Tags --}}
-                        <div x-data="{ labelsOpen: false, tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }">
+                        <div x-data="{ labelsOpen: false, tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }" data-task-labels @pointerdown.window="if (!$event.target.closest('[data-task-labels]')) { labelsOpen = false; tagManagerOpen = false }" @keydown.escape.stop.prevent="labelsOpen = false; tagManagerOpen = false">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="board-field-label mb-0">برچسب‌ها</label>
                                 @if ($canEdit)
@@ -1166,7 +1179,7 @@
 
                         @if ($canEdit)
                         <div x-show="editingTask" class="task-sidebar-actions">
-                            <div x-data="{ actionsOpen: false }" @click.outside="actionsOpen = false" class="task-secondary-actions">
+                            <div x-data="{ actionsOpen: false }" @pointerdown.window="if (!$event.target.closest('[data-task-actions]')) actionsOpen = false" @keydown.escape.stop.prevent="actionsOpen = false" data-task-actions class="task-secondary-actions">
                                 <button type="button" @click="actionsOpen = !actionsOpen" :aria-expanded="actionsOpen" class="task-more-action">سایر اقدامات ···</button>
                                 <div x-show="actionsOpen" x-cloak class="task-actions-menu">
                                     <button type="button" @click="actionsOpen = false; stateTask(form.isBlocked ? 'unblock' : 'block')" :disabled="taskSaving" x-text="form.isBlocked ? 'رفع انسداد' : 'مسدود کردن'"></button>
@@ -1189,12 +1202,8 @@
                                 <h4 id="task-description-title" class="task-modal-section__title">توضیحات</h4>
 
                             </div>
-                            <button x-show="canEdit && form.description && !editingDescription" type="button" @click="editTaskDescription()" class="task-section-action">ویرایش</button>
                         </div>
-                        <p x-show="form.description && !editingDescription" class="task-description-preview" x-html="formatMentionText(form.description)"></p>
-                        <button x-show="canEdit && !form.description && !editingDescription" type="button" @click="editTaskDescription()" class="task-empty-action">＋ افزودن توضیحات</button>
                         <textarea
-                            x-show="editingDescription" x-cloak
                             id="task-description-input" x-ref="descriptionMentionTrigger"
                             x-model="form.description"
                             rows="5"
@@ -1217,8 +1226,7 @@
                                     </button>
                                 </template>
                         </div>
-                        <p x-show="editingDescription" class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
-                        <button x-show="editingDescription" type="button" @click="editingDescription = false; closeMentionMenu()" class="task-section-action task-description-finish">پایان ویرایش</button>
+                        <p x-show="canEdit" class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                     </section>
                     {{-- Checklist stays visible independently of advanced details. --}}
                     <section x-show="canEdit || form.checklist.length" class="task-modal-section task-checklist-section" aria-labelledby="task-checklist-title">
@@ -1614,8 +1622,10 @@
                 cycleLength: @json($project->cycle_length_weeks ?? ''),
                 activeCycle: @json($activeCycle),
                 editingTask: null,
-                editingDescription: false,
                 taskPropertiesOpen: false,
+                timePickerOpen: false,
+                timePickerHour: '09',
+                timePickerMinute: '00',
                 descriptionBeforeEdit: '',
                 deleteTarget: { columnId: null, taskId: null },
                 columnDeleteTarget: { id: null, title: '', taskCount: 0 },
@@ -1922,6 +1932,22 @@
                         bottom: openAbove ? `${Math.max(gutter, viewportHeight - rect.top + gap)}px` : 'auto',
                         visibility: 'visible',
                     };
+                },
+
+                taskPickerStyle(trigger, width, height) {
+                    const style = this.floatingMenuStyle(trigger, width, height);
+                    const sidebar = trigger?.closest('.task-workspace-sidebar');
+                    if (!trigger) return style;
+                    if (!sidebar || window.innerWidth < 768) {
+                        const rect = trigger.getBoundingClientRect();
+                        const top = Math.max(12, Math.min(rect.bottom + 6, window.innerHeight - height - 12));
+                        return { ...style, top: top + 'px', bottom: 'auto', maxHeight: Math.min(height, window.innerHeight - 24) + 'px' };
+                    }
+                    const sidebarRect = sidebar.getBoundingClientRect();
+                    const rect = trigger.getBoundingClientRect();
+                    const left = sidebarRect.right + 8;
+                    if (left + width > window.innerWidth - 12) return style;
+                    return { ...style, left: left + 'px', top: Math.max(12, Math.min(rect.top, window.innerHeight - height - 12)) + 'px', bottom: 'auto', maxHeight: height + 'px' };
                 },
 
                 checklistTotal(task) {
@@ -2295,14 +2321,36 @@
                 },
 
                 openJalaliDatePicker() {
+                    if (!this.canEdit || this.taskSaving) return;
+                    this.closeTaskTimePicker();
                     const current = this.jalaliDateParts(this.form.dueDate);
                     this.jalaliDatePicker.year = current.year;
                     this.jalaliDatePicker.month = current.month;
+                    this.floatingMenuRevision++;
                     this.jalaliDatePicker.open = true;
                 },
 
                 closeJalaliDatePicker() {
                     this.jalaliDatePicker.open = false;
+                },
+
+                openTaskTimePicker() {
+                    if (!this.canEdit || this.taskSaving || !this.form.dueDate) return;
+                    this.closeJalaliDatePicker();
+                    const [hour, minute] = (this.form.dueTime || '09:00').split(':');
+                    this.timePickerHour = hour;
+                    this.timePickerMinute = minute;
+                    this.floatingMenuRevision++;
+                    this.timePickerOpen = true;
+                },
+
+                closeTaskTimePicker() {
+                    this.timePickerOpen = false;
+                },
+
+                updateTaskTime() {
+                    if (!this.canEdit || this.taskSaving || !this.form.dueDate) return;
+                    this.form.dueTime = this.timePickerHour + ':' + this.timePickerMinute;
                 },
 
                 changeJalaliMonth(step) {
@@ -2322,6 +2370,7 @@
                 clearJalaliDate() {
                     this.form.dueDate = '';
                     this.form.dueTime = '';
+                    this.closeTaskTimePicker();
                     this.closeJalaliDatePicker();
                 },
 
@@ -2884,12 +2933,6 @@
                     return this.assignees.filter(n => n.toLowerCase().includes(s));
                 },
 
-                editTaskDescription() {
-                    if (!this.canEdit || this.taskSaving) return;
-                    this.editingDescription = true;
-                    this.$nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('task-description-input')?.focus())));
-                },
-
                 checklistProgress() {
                     const total = this.form.checklist.length;
                     if (total === 0) return '';
@@ -3290,7 +3333,6 @@
                 openAddModal(columnId, initialTitle = '') {
                     if (!this.canEdit) return;
                     this.editingTask = null;
-                    this.editingDescription = false;
                     this.taskPropertiesOpen = false;
                     this.form = { id: '', title: initialTitle, description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', dueTime: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' };
                     this.newCheckItem = '';
@@ -3321,7 +3363,6 @@
                         columnId = currentColumn.id;
                     }
                     this.editingTask = task.dbId;
-                    this.editingDescription = false;
                     this.taskPropertiesOpen = false;
                     const taskAssignees = task.assignees || (task.assignee ? [task.assignee] : []);
                     this.form = {
@@ -3355,7 +3396,7 @@
                     this.showModal = false;
                     this.showUnsavedWarning = false;
                     this.closeJalaliDatePicker();
-                    this.editingDescription = false;
+                    this.closeTaskTimePicker();
                     this.taskError = '';
                     this.modalSnapshot = null;
                     this.clearPendingFiles('description');
@@ -3436,6 +3477,12 @@
                         event.preventDefault();
                         event.stopImmediatePropagation();
                         this.closeAttachmentPreview();
+                        return;
+                    }
+                    if (this.jalaliDatePicker.open || this.timePickerOpen) {
+                        event.preventDefault();
+                        this.closeJalaliDatePicker();
+                        this.closeTaskTimePicker();
                         return;
                     }
                     this.requestCloseModal();

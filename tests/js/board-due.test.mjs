@@ -29,3 +29,32 @@ test('due filters use the task time and workspace date', () => {
     assert.equal(state.matchesDueFilter({ dueDate: '2026-09-29', dueTime: '14:00' }), true);
     assert.equal(state.matchesDueFilter({ dueDate: '2026-09-29', dueTime: '' }), false);
 });
+
+function pickerState(dueTime = '') {
+    const state = { canEdit: true, taskSaving: false, form: { dueDate: '2026-10-07', dueTime },
+        jalaliDatePicker: { open: true }, timePickerOpen: false, floatingMenuRevision: 0 };
+    for (const name of ['openTaskTimePicker', 'closeTaskTimePicker', 'closeJalaliDatePicker', 'updateTaskTime', 'clearJalaliDate']) state[name] = method(name);
+    return state;
+}
+
+test('opening and dismissing a time picker preserves a date-only deadline', () => {
+    const state = pickerState();
+    state.openTaskTimePicker();
+    assert.equal(state.jalaliDatePicker.open, false);
+    assert.equal(state.timePickerOpen, true);
+    state.closeTaskTimePicker();
+    assert.equal(state.form.dueTime, '');
+});
+
+test('changing deadline minutes preserves its existing hour and clearing the date closes both pickers', () => {
+    const state = pickerState('14:35');
+    state.openTaskTimePicker();
+    state.timePickerMinute = '45';
+    state.updateTaskTime();
+    assert.equal(state.form.dueTime, '14:45');
+    state.clearJalaliDate();
+    assert.equal(state.form.dueDate, '');
+    assert.equal(state.form.dueTime, '');
+    assert.equal(state.timePickerOpen, false);
+    assert.equal(state.jalaliDatePicker.open, false);
+});
