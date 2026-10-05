@@ -31,7 +31,7 @@ class Task extends Model
     protected $fillable = [
         'column_id', 'task_number', 'title', 'description', 'priority',
         'due_date', 'due_time', 'is_blocked', 'blocked_reason', 'completed_at',
-        'assignees', 'tags', 'checklist', 'comments', 'position',
+        'assignees', 'tags', 'checklist', 'comments', 'position', 'archived_at',
     ];
 
     protected function casts(): array
@@ -44,7 +44,13 @@ class Task extends Model
             'due_date' => 'date',
             'is_blocked' => 'boolean',
             'completed_at' => 'datetime',
+            'archived_at' => 'datetime',
         ];
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->whereNull('tasks.archived_at');
     }
 
     public function getDisplayIdAttribute(): string

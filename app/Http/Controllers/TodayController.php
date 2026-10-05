@@ -37,6 +37,7 @@ class TodayController extends Controller
         $plans = TaskPlan::query()
             ->where('user_id', $user->id)
             ->whereDate('planned_for', $date->toDateString())
+            ->whereHas('task', fn ($query) => $query->active())
             ->whereHas('task.column', fn ($query) => $query->whereIn('project_id', $projectIds))
             ->with(['task.column.project.workspace', 'task.assignedUsers'])
             ->orderBy('bucket')->orderBy('position')->get();
@@ -46,7 +47,7 @@ class TodayController extends Controller
         $done = $items->filter(fn (array $item) => $item['column']['role'] === 'done')->values();
         $active = $items->reject(fn (array $item) => $item['isBlocked'] || $item['column']['role'] === 'done');
 
-        $overdue = Task::query()
+        $overdue = Task::query()->active()
             ->whereHas('assignedUsers', fn ($query) => $query->whereKey($user->id))
             ->whereHas('column', fn ($query) => $query->whereIn('project_id', $projectIds)->where('workflow_role', '!=', 'done'))
             ->whereDate('due_date', '<', $date->toDateString())
@@ -60,7 +61,7 @@ class TodayController extends Controller
             $project->id => $project->eligibleAssignees()->pluck('id')->map(fn ($id) => (int) $id)->all(),
         ]);
 
-        $availableTasks = Task::query()
+        $availableTasks = Task::query()->active()
             ->whereHas('column', fn ($query) => $query->whereIn('project_id', $projectIds)->where('workflow_role', '!=', 'done'))
             ->with(['column.project.workspace', 'assignedUsers'])
             ->orderByDesc('updated_at')->limit(100)->get()
@@ -74,6 +75,7 @@ class TodayController extends Controller
         $teamPlans = TaskPlan::query()
             ->whereIn('user_id', $workspacePeople->pluck('id'))
             ->whereDate('planned_for', $date->toDateString())
+            ->whereHas('task', fn ($query) => $query->active())
             ->whereHas('task.column', fn ($query) => $query->whereIn('project_id', $projectIds))
             ->with(['task.column.project.workspace', 'task.assignedUsers'])
             ->orderBy('position')
@@ -270,7 +272,7 @@ class TodayController extends Controller
             ->where('user_id', $target->id)
             ->whereDate('planned_for', $date)
             ->whereIn('task_id', $ids)
-            ->whereHas('task', fn ($query) => $query->where('is_blocked', false))
+            ->whereHas('task', fn ($query) => $query->active()->where('is_blocked', false))
             ->whereHas('task.column', fn ($query) => $query->where('workflow_role', '!=', 'done'))
             ->whereHas('task.column.project', fn ($query) => $query->where('workspace_id', $workspaceModel->id))
             ->get()
@@ -310,6 +312,7 @@ class TodayController extends Controller
 
     private function ensureTask(Request $request, Task $task): void
     {
+        abort_if($task->archived_at, 422, 'پیش از ویرایش، وظیفه را از بایگانی بازگردانید.');
         $task->loadMissing('column');
         abort_unless($task->column->project_id === $request->attributes->get('project')->id, 404);
     }

@@ -17,7 +17,7 @@ class TeamController extends Controller
         $startUtc = $date->utc();
         $endUtc = $date->endOfDay()->utc();
 
-        $tasks = Task::query()
+        $tasks = Task::query()->active()
             ->whereHas('column', fn ($query) => $query->whereIn('project_id', $projectIds))
             ->where(function ($query) use ($date, $startUtc, $endUtc) {
                 $query->whereHas('plans', fn ($plans) => $plans->whereDate('planned_for', $date->toDateString()))

@@ -173,3 +173,27 @@ test('drag sorting stays disabled under filters after a pending mutation finishe
     method('setSortablesDisabled').call({ canEdit: true, activeFilterCount: () => 1, boardSearchQuery: '', sortableInstances: [{ instance: { option(_, value) { disabled = value; } } }] }, false);
     assert.equal(disabled, true);
 });
+
+test('archived task stays readable and realtime restore returns it to the board', () => {
+    const state = board();
+    state.formFingerprint = () => 'original';
+    const archived = { ...snapshot(2).columns[0].tasks[0], columnId: '1', archivedAt: '2026-10-06T10:00:00Z' };
+    state.applyRealtimeSnapshot({ ...snapshot(2), columns: [{ id: '1', tasks: [] }], archivedTasks: [archived] });
+    assert.equal(state.showModal, true);
+    assert.equal(state.form.archivedAt, archived.archivedAt);
+    assert.equal(state.columns[0].tasks.length, 0);
+    assert.equal(state.archivedTasks.length, 1);
+    state.applyRealtimeSnapshot({ ...snapshot(3), archivedTasks: [] });
+    assert.equal(state.form.archivedAt, undefined);
+    assert.equal(state.archivedTasks.length, 0);
+    assert.equal(state.columns[0].tasks.length, 1);
+});
+
+test('remote archiving disables editing while preserving a dirty local draft', () => {
+    const state = board();
+    const archived = { ...snapshot(2).columns[0].tasks[0], archivedAt: '2026-10-06T10:00:00Z' };
+    state.applyRealtimeSnapshot({ ...snapshot(2), columns: [{ id: '1', tasks: [] }], archivedTasks: [archived] });
+    assert.equal(state.form.title, 'My draft');
+    assert.equal(state.form.archivedAt, archived.archivedAt);
+    assert.equal(state.showModal, true);
+});

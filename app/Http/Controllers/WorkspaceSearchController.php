@@ -23,7 +23,7 @@ class WorkspaceSearchController extends Controller
                 'url' => route('board', [$workspaceModel->slug, $project->slug], false),
             ]);
 
-        $tasks = Task::query()
+        $tasks = Task::query()->active()
             ->whereHas('column', fn ($builder) => $builder->whereIn('project_id', $projects->pluck('id')))
             ->where('title', 'like', "%{$query}%")
             ->with('column.project')

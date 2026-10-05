@@ -68,6 +68,7 @@ class TaskAttachmentController extends Controller
 
     private function ensureTask(Request $request, Task $task): void
     {
+        abort_if(! $request->isMethodSafe() && $task->archived_at, 422, 'پیش از ویرایش، وظیفه را از بایگانی بازگردانید.');
         $task->loadMissing('column');
         abort_unless($task->column->project_id === $request->attributes->get('project')->id, 404);
     }

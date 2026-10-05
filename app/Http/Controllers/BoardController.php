@@ -31,7 +31,7 @@ class BoardController extends Controller
             $request->session()->put("last_project.{$workspace->id}", $project->id);
         }
 
-        $columns = $project->columns()->with('tasks.attachments.uploader')->orderBy('position')->get();
+        $columns = $project->columns()->with(['tasks' => fn ($query) => $query->active(), 'tasks.attachments.uploader'])->orderBy('position')->get();
 
         $members = $project->members()->orderBy('name')->get();
         $workspacePeople = collect([$workspace->owner])
@@ -60,6 +60,43 @@ class BoardController extends Controller
             'انجام شده' => 'bg-[#DCFCE7] text-[#16A34A]',
         ];
 
+        $taskData = function ($t) use ($workspace, $project) {
+            $attachmentData = app(TaskAttachmentData::class);
+            $attachments = $t->attachments->map(fn ($attachment) => $attachmentData->make($attachment, $workspace->slug, $project->slug))->values();
+            $comments = collect($t->comments ?? [])->map(function ($comment) use ($attachments) {
+                $comment['attachments'] = $attachments->where('context', 'comment')->where('commentId', $comment['id'] ?? null)->values()->all();
+
+                return $comment;
+            })->values()->all();
+
+            return [
+                'id' => $t->display_id,
+                'dbId' => $t->id,
+                'title' => $t->title,
+                'description' => $t->description ?? '',
+                'priority' => $t->priority,
+                'assignees' => $t->assignees ?? [],
+                'dueDate' => $t->due_date?->format('Y-m-d') ?? '',
+                'dueTime' => $t->due_time ? substr($t->due_time, 0, 5) : '',
+                'isBlocked' => $t->is_blocked,
+                'blockedReason' => $t->blocked_reason,
+                'completedAt' => $t->completed_at?->toIso8601String(),
+                'archivedAt' => $t->archived_at?->toIso8601String(),
+                'columnId' => (string) $t->column_id,
+                'columnTitle' => $t->column->title,
+                'tags' => $t->tags ?? [],
+                'checklist' => $t->checklist ?? [],
+                'comments' => $comments,
+                'attachments' => $attachments->all(),
+                'updatedAt' => $t->updated_at->toIso8601String(),
+                'version' => (int) $t->edit_version,
+            ];
+        };
+
+        $archivedTasksData = Task::whereIn('column_id', $columns->pluck('id'))
+            ->whereNotNull('archived_at')->with(['column.project', 'attachments.uploader'])
+            ->orderByDesc('archived_at')->orderByDesc('id')->get()->map($taskData)->values()->all();
+
         $columnsData = $columns->map(fn ($c) => [
             'id' => (string) $c->id,
             'title' => $c->title,
@@ -70,35 +107,7 @@ class BoardController extends Controller
                 'ready' => '#7183A3', 'active' => '#4E6B5C', 'done' => '#77A98E', default => '#8B938E',
             }),
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
-            'tasks' => $c->tasks->map(function ($t) use ($workspace, $project) {
-                $attachmentData = app(TaskAttachmentData::class);
-                $attachments = $t->attachments->map(fn ($attachment) => $attachmentData->make($attachment, $workspace->slug, $project->slug))->values();
-                $comments = collect($t->comments ?? [])->map(function ($comment) use ($attachments) {
-                    $comment['attachments'] = $attachments->where('context', 'comment')->where('commentId', $comment['id'] ?? null)->values()->all();
-
-                    return $comment;
-                })->values()->all();
-
-                return [
-                    'id' => $t->display_id,
-                    'dbId' => $t->id,
-                    'title' => $t->title,
-                    'description' => $t->description ?? '',
-                    'priority' => $t->priority,
-                    'assignees' => $t->assignees ?? [],
-                    'dueDate' => $t->due_date?->format('Y-m-d') ?? '',
-                    'dueTime' => $t->due_time ? substr($t->due_time, 0, 5) : '',
-                    'isBlocked' => $t->is_blocked,
-                    'blockedReason' => $t->blocked_reason,
-                    'completedAt' => $t->completed_at?->toIso8601String(),
-                    'tags' => $t->tags ?? [],
-                    'checklist' => $t->checklist ?? [],
-                    'comments' => $comments,
-                    'attachments' => $attachments->all(),
-                    'updatedAt' => $t->updated_at->toIso8601String(),
-                    'version' => (int) $t->edit_version,
-                ];
-            })->toArray(),
+            'tasks' => $c->tasks->map($taskData)->toArray(),
         ])->toArray();
 
         $membersData = $members->map(fn ($member) => [
@@ -124,8 +133,8 @@ class BoardController extends Controller
             'number' => $activeCycleModel->number,
             'startsOn' => $activeCycleModel->starts_on->format('Y-m-d'),
             'endsOn' => $activeCycleModel->ends_on->format('Y-m-d'),
-            'taskIds' => $activeCycleModel->tasks->pluck('id')->values()->all(),
-            'openTaskIds' => $activeCycleModel->tasks->reject(fn ($task) => $task->column->workflow_role === 'done')->pluck('id')->values()->all(),
+            'taskIds' => $activeCycleModel->tasks->whereNull('archived_at')->pluck('id')->values()->all(),
+            'openTaskIds' => $activeCycleModel->tasks->reject(fn ($task) => $task->archived_at || $task->column->workflow_role === 'done')->pluck('id')->values()->all(),
         ] : null;
 
         return view('board', compact(
@@ -134,6 +143,7 @@ class BoardController extends Controller
             'columns',
             'members',
             'columnsData',
+            'archivedTasksData',
             'membersData',
             'workspacePeopleData',
             'canEdit',
@@ -154,6 +164,7 @@ class BoardController extends Controller
 
             return response()->json([
                 'columns' => $data['columnsData'],
+                'archivedTasks' => $data['archivedTasksData'],
                 'members' => $data['membersData'],
                 'workspacePeople' => $data['workspacePeopleData'],
                 'project' => [
@@ -304,13 +315,13 @@ class BoardController extends Controller
         $validated = $request->validate([
             'task_ids' => ['required', 'array', 'min:1', 'max:100'],
             'task_ids.*' => ['integer', 'distinct'],
-            'action' => ['required', Rule::in(['priority', 'assignee', 'tag', 'due_date', 'column'])],
+            'action' => ['required', Rule::in(['priority', 'assignee', 'tag', 'due_date', 'column', 'archive'])],
             'value' => ['nullable'],
         ]);
 
         $projectModel = $request->attributes->get('project');
         $tasks = Task::query()
-            ->whereIn('id', $validated['task_ids'])
+            ->active()->whereIn('id', $validated['task_ids'])
             ->whereIn('column_id', $projectModel->columns()->pluck('id'))
             ->with('column')
             ->get();
@@ -329,6 +340,16 @@ class BoardController extends Controller
         if ($action === 'assignee') {
             $allowed = $projectModel->eligibleAssignees()->map(fn ($member) => $member->full_name)->all();
             abort_unless($value === null || in_array($value, $allowed, true), 422, 'مسئول انتخاب‌شده عضو تیم پروژه نیست.');
+        }
+
+        if ($action === 'archive') {
+            DB::transaction(function () use ($tasks, $request, $activityLogger) {
+                foreach ($tasks as $task) {
+                    $this->setTaskArchived($task, true, $request, $activityLogger);
+                }
+            });
+
+            return response()->json(['success' => true, 'task_ids' => $tasks->pluck('id')->values()]);
         }
 
         foreach ($tasks as $task) {
@@ -358,6 +379,37 @@ class BoardController extends Controller
             'updated' => $tasks->count(),
             'task_ids' => $tasks->pluck('id')->values(),
         ]);
+    }
+
+    public function archiveTask(Request $request, string $workspace, string $project, string $task, ProjectActivityLogger $activityLogger)
+    {
+        $validated = $request->validate(['archived' => ['required', 'boolean']]);
+        $task = Task::findOrFail($task);
+        $this->ensureTaskInCurrentProject($request, $task);
+        DB::transaction(function () use ($task, $validated, $request, $activityLogger) {
+            $this->setTaskArchived($task, $validated['archived'], $request, $activityLogger);
+        });
+
+        return response()->json(['success' => true]);
+    }
+
+    private function setTaskArchived(Task $task, bool $archived, Request $request, ProjectActivityLogger $activityLogger): void
+    {
+        // Serialize archive/restore operations with column ordering and retain completion state.
+        $task->column()->lockForUpdate()->firstOrFail();
+        $task = Task::whereKey($task->id)->lockForUpdate()->firstOrFail();
+        if ((bool) $task->archived_at === $archived) {
+            return;
+        }
+        $changes = ['archived_at' => $archived ? now() : null];
+        if (! $archived) {
+            $changes['position'] = (Task::active()->where('column_id', $task->column_id)->max('position') ?? 0) + 1;
+        }
+        $task->update($changes);
+        $task->load('column.project');
+        $kind = $archived ? 'task_archived' : 'task_restored';
+        $verb = $archived ? 'بایگانی کرد' : 'به تخته بازگرداند';
+        $activityLogger->log($task->column->project, $request->user(), $kind, "{$request->user()->full_name} وظیفه «{$task->title}» را {$verb}.", $task, $task->column);
     }
 
     public function destroyTask(Request $request, string $workspace, string $project, string $task, ProjectActivityLogger $activityLogger)
@@ -681,6 +733,7 @@ class BoardController extends Controller
     {
         $task = Task::query()->findOrFail($taskId);
         $this->ensureTaskInCurrentProject($request, $task);
+        abort_if($task->archived_at, 422, 'پیش از ویرایش، وظیفه را از بایگانی بازگردانید.');
 
         return $task;
     }

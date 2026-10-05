@@ -7,6 +7,27 @@
     <link rel="icon" type="image/png" href="{{ asset('assets/logo/png/app-icon.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+
+        .board-archive-layer { position: fixed; inset: 0; z-index: 65; }
+        .board-archive-confirm { z-index: 75; }
+        .board-archive-backdrop { position: absolute; inset: 0; background: rgba(7,27,51,.4); }
+        .board-archive-drawer { position: absolute; inset-block: 0; inset-inline-end: 0; width: min(460px, 100%); background: white; display: flex; flex-direction: column; box-shadow: 0 12px 40px #18212b22; }
+        .board-archive-header { padding: 20px; border-bottom: 1px solid #E2E8F0; }
+        .board-archive-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .board-archive-heading h2 { font-size: 16px; font-weight: 900; }
+        .board-archive-heading button, .board-archive-restore { min-height: 44px; padding: 8px 12px; font-size: 12px; font-weight: 700; }
+        .board-archive-header p { font-size: 12px; color: #64748B; line-height: 1.8; margin-block: 8px 16px; }
+        .board-archive-search { width: 100%; min-height: 44px; border: 1px solid #D8D8D3; border-radius: 10px; padding: 10px 12px; font-size: 13px; }
+        .board-archive-list { overflow-y: auto; flex: 1; padding: 12px 20px; }
+        .board-archive-row { display: flex; gap: 12px; align-items: center; padding-block: 14px; border-bottom: 1px solid #E2E8F0; }
+        .board-archive-task { text-align: start; min-width: 0; flex: 1; }
+        .board-archive-task strong { display: block; font-size: 13px; overflow-wrap: anywhere; }
+        .board-archive-task small { display: block; font-size: 11px; color: #64748B; margin-top: 5px; line-height: 1.8; }
+        .board-archive-restore { border: 1px solid #D8D8D3; border-radius: 8px; flex-shrink: 0; }
+        .board-archive-restore:disabled { opacity: .5; cursor: wait; }
+        .board-archive-empty { text-align: center; padding: 40px 0; font-size: 13px; color: #64748B; }
+        .task-archived-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 24px; background: #F0F0ED; border-bottom: 1px solid #D8D8D3; font-size: 12px; }
+        @media (max-width: 767px) { .board-archive-drawer { width: 100%; } }
         [x-cloak] { display: none !important; }
         body.modal-open { overflow: hidden !important; }
         .sortable-ghost { opacity: 0.4; background: #F0F0ED !important; border: 2px dashed #111111 !important; box-shadow: none !important; }
@@ -154,6 +175,10 @@
                     </div>
                 </div>
             </div>
+            <button type="button" @click="openArchiveDrawer()" x-ref="archiveTrigger" class="board-nav-control" :aria-expanded="archiveOpen" aria-controls="board-archive-drawer" title="وظیفه‌های بایگانی‌شده" aria-label="بایگانی وظیفه‌ها">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h16v12H4zM3 3h18v5H3zM9 12h6"/></svg>
+                <span class="board-topbar-action-label">بایگانی</span>
+            </button>
             @if ($canManageProject)
                 <button type="button" class="board-nav-control board-topbar-manage" @click="openProjectDrawer()" aria-label="مدیریت پروژه" title="مدیریت پروژه">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 3h4l.5 2.5 2 .9 2.2-1.3 2 3.5-1.8 1.7V13l1.8 1.7-2 3.5-2.2-1.3-2 .9L14 21h-4l-.5-2.5-2-.9-2.2 1.3-2-3.5L5 13v-2.7L3.2 8.6l2-3.5L7.4 6.4l2-.9L10 3Z"/><circle cx="12" cy="12" r="3"/></svg>
@@ -196,7 +221,7 @@
         <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 px-3 sm:px-6 py-2.5">
             <strong class="text-[11px] text-[#111111]" x-text="toPersianDigits(selectedTaskIds.length) + ' وظیفه انتخاب شده' "></strong>
             <select x-model="bulkAction" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px] font-bold text-[#475569]">
-                <option value="">عملیات گروهی</option><option value="priority">تغییر اولویت</option><option value="assignee">تعیین مسئول</option><option value="tag">افزودن برچسب</option><option value="column">انتقال به ستون</option><option value="due_date">پاک کردن سررسید</option>
+                <option value="">عملیات گروهی</option><option value="priority">تغییر اولویت</option><option value="assignee">تعیین مسئول</option><option value="tag">افزودن برچسب</option><option value="column">انتقال به ستون</option><option value="due_date">پاک کردن سررسید</option><option value="archive">بایگانی وظیفه‌ها</option>
             </select>
             <select x-show="bulkAction === 'priority'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><option value="بالا">بالا</option><option value="متوسط">متوسط</option><option value="پایین">پایین</option></select>
             <select x-show="bulkAction === 'assignee'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><option value="">بدون مسئول</option><template x-for="member in projectMembers" :key="'bulk-' + member.id"><option :value="member.name" x-text="member.name"></option></template></select>
@@ -922,6 +947,37 @@
         </aside>
     </div>
 
+    {{-- Archived tasks --}}
+    <div x-show="archiveOpen" x-cloak class="board-archive-layer" @keydown.escape.window="if (archiveOpen && !showModal) closeArchiveDrawer()">
+        <div class="board-archive-backdrop" @click="closeArchiveDrawer()"></div>
+        <section id="board-archive-drawer" class="board-archive-drawer" role="dialog" aria-modal="true" aria-labelledby="board-archive-title" @keydown="trapModalFocus($event)">
+            <header class="board-archive-header">
+                <div class="board-archive-heading"><h2 id="board-archive-title">بایگانی وظیفه‌ها <span x-text="'(' + toPersianDigits(archivedTasks.length) + ')' "></span></h2><button type="button" @click="closeArchiveDrawer()" aria-label="بستن بایگانی">بستن ×</button></div>
+                <p>وظیفه‌های بایگانی‌شده و همه جزئیات آن‌ها نگه داشته می‌شوند و قابل بازگرداندن هستند.</p>
+                <input x-ref="archiveSearch" x-model="archiveQuery" class="board-archive-search" type="search" placeholder="جستجو در عنوان یا شناسه وظیفه…" aria-label="جستجو در بایگانی">
+            </header>
+            <div class="board-archive-list">
+                <template x-for="task in filteredArchivedTasks()" :key="'archive-' + task.dbId">
+                    <article class="board-archive-row">
+                        <button type="button" class="board-archive-task" @click="openEditModal(task, task.columnId)"><strong x-text="task.title"></strong><small><span x-text="task.id"></span> · <span x-text="task.columnTitle"></span><br>بایگانی در <span x-text="formatDate(task.archivedAt.slice(0, 10))"></span></small></button>
+                        <button x-show="canEdit" type="button" class="board-archive-restore" @click="setTaskArchived(task.dbId, false)" :disabled="archiveBusy" x-text="archiveBusyId === task.dbId ? 'در حال بازگرداندن…' : 'بازگرداندن'"></button>
+                    </article>
+                </template>
+                <p x-show="!archivedTasks.length" class="board-archive-empty">هنوز وظیفه‌ای بایگانی نشده است.</p>
+                <p x-show="archivedTasks.length && !filteredArchivedTasks().length" class="board-archive-empty">وظیفه‌ای با این جستجو پیدا نشد.</p>
+            </div>
+        </section>
+    </div>
+
+    <div x-show="archiveBulkConfirm" x-cloak class="board-archive-confirm fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="archiveBulkConfirm = false">
+        <div class="absolute inset-0 bg-[#071B33]/40" @click="archiveBulkConfirm = false"></div>
+        <div class="board-confirm-modal relative bg-white w-full max-w-sm rounded-xl p-6 shadow-lg" role="dialog" aria-modal="true" aria-labelledby="archive-bulk-title" @keydown="trapModalFocus($event)">
+            <h2 id="archive-bulk-title" class="text-sm font-bold" x-text="'بایگانی ' + toPersianDigits(selectedTaskIds.length) + ' وظیفه؟'"></h2>
+            <p class="text-xs leading-6 text-[#64748B] my-4">وظیفه‌ها از تخته کنار گذاشته می‌شوند. جزئیات آن‌ها حفظ می‌شود و از بایگانی قابل بازگرداندن هستند.</p>
+            <div class="flex gap-2"><button x-ref="archiveBulkCancel" type="button" @click="archiveBulkConfirm = false" class="board-archive-restore">انصراف</button><button type="button" @click="archiveBulkConfirm = false; applyBulkAction(true)" class="board-nav-control board-nav-control--primary">بایگانی وظیفه‌ها</button></div>
+        </div>
+    </div>
+
     {{-- Task modal --}}
     <div
         x-show="showModal"
@@ -936,7 +992,7 @@
         @click="requestCloseModal()"
         @keydown.escape.window="handleTaskEscape($event)"
         @resize.window="floatingMenuRevision++"
-        x-effect="if (showModal) { document.body.classList.add('modal-open') } else { document.body.classList.remove('modal-open') }"
+        x-effect="if (showModal || archiveOpen || archiveBulkConfirm) { document.body.classList.add('modal-open') } else { document.body.classList.remove('modal-open') }"
     >
         <div class="h-full min-h-0 flex items-stretch justify-start p-0">
             <div
@@ -955,11 +1011,12 @@
                 <header class="task-modal-header task-workspace-header shrink-0">
                     <div class="task-workspace-identity">
                         <label id="task-modal-title" for="task-title" class="sr-only">عنوان وظیفه</label>
-                        <textarea id="task-title" x-ref="taskTitle" x-model="form.title" rows="1" x-effect="form.title; showModal; $nextTick(() => { $el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 100) + 'px' })" :disabled="!canEdit || taskSaving" class="task-workspace-title" placeholder="عنوان وظیفه را بنویسید…" aria-required="true"></textarea>
+                        <textarea id="task-title" x-ref="taskTitle" x-model="form.title" rows="1" x-effect="form.title; showModal; $nextTick(() => { $el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 100) + 'px' })" :disabled="!canEditTask || taskSaving" class="task-workspace-title" placeholder="عنوان وظیفه را بنویسید…" aria-required="true"></textarea>
                         <p class="task-workspace-context"><span>{{ $project->name }}</span><span x-show="editingTask" x-text="form.id"></span><span x-show="!editingTask">وظیفه جدید</span></p>
                     </div>
                     <button type="button" x-ref="taskDrawerClose" @click="requestCloseModal()" class="task-workspace-close" aria-label="بستن پنجره"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
                 </header>
+                <div x-show="form.archivedAt" x-cloak class="task-archived-banner" role="status"><span>این وظیفه بایگانی شده است. برای ویرایش، آن را بازگردانید.</span><button x-show="canEdit" type="button" class="board-archive-restore" @click="setTaskArchived(editingTask, false)" :disabled="archiveBusy">بازگرداندن به تخته</button></div>
                 <div x-show="form.isBlocked" x-cloak class="task-blocked-banner" role="status"><strong>این وظیفه مسدود است</strong><span x-text="form.blockedReason"></span></div>
                 <div class="task-modal-body task-workspace-body" @scroll="floatingMenuRevision++">
                     <aside class="task-workspace-sidebar" @scroll="floatingMenuRevision++" aria-label="مشخصات و اقدامات وظیفه">
@@ -978,13 +1035,13 @@
                         {{-- Column --}}
                         <div>
                             <label for="task-column" class="board-field-label">ستون / وضعیت</label>
-                            <select id="task-column" x-model="form.columnId" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
+                            <select id="task-column" x-model="form.columnId" :disabled="!canEditTask" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
                                 <template x-for="col in columns" :key="col.id">
                                     <option :value="col.id" x-text="col.title"></option>
                                 </template>
                             </select>
                             @if ($canEdit)
-                            <button x-show="editingTask" type="button" @click="stateTask(form.workflowRole === 'done' ? 'reopen' : 'complete')" :disabled="taskSaving" class="task-complete-action" x-text="form.workflowRole === 'done' ? 'باز کردن دوباره' : '✓ انجام شد'"></button>
+                            <button x-show="editingTask && canEditTask" type="button" @click="stateTask(form.workflowRole === 'done' ? 'reopen' : 'complete')" :disabled="!canEditTask || taskSaving" class="task-complete-action" x-text="form.workflowRole === 'done' ? 'باز کردن دوباره' : '✓ انجام شد'"></button>
                             @endif
                         </div>
                     {{-- Assignees --}}
@@ -993,11 +1050,11 @@
                             <div
                                 x-ref="assigneeTrigger"
                                 role="button" tabindex="0" :aria-expanded="assigneeOpen" aria-label="انتخاب مسئول"
-                                @keydown.enter.prevent="if (canEdit) assigneeOpen = !assigneeOpen"
-                                @keydown.space.prevent="if (canEdit) assigneeOpen = !assigneeOpen"
-                                @click="if (canEdit) assigneeOpen = !assigneeOpen"
+                                @keydown.enter.prevent="if (canEditTask) assigneeOpen = !assigneeOpen"
+                                @keydown.space.prevent="if (canEditTask) assigneeOpen = !assigneeOpen"
+                                @click="if (canEditTask) assigneeOpen = !assigneeOpen"
                                 class="w-full min-h-[36px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-1.5 transition-colors bg-white flex flex-wrap items-center gap-1"
-                                :class="canEdit ? 'cursor-pointer hover:border-[#CBD5E1]' : 'cursor-default bg-[#F1F5F9]'"
+                                :class="canEditTask ? 'cursor-pointer hover:border-[#CBD5E1]' : 'cursor-default bg-[#F1F5F9]'"
                             >
                                 <template x-for="name in form.assignees" :key="name">
                                     <span class="inline-flex items-center gap-1 bg-[#F1F3F2] text-[#000000] text-[10px] font-bold px-2 py-0.5 rounded-md">
@@ -1073,9 +1130,9 @@
                         <div class="relative">
                             <label class="board-field-label">سررسید</label>
                             <div class="relative">
-                                <input :value="formatDateInput(form.dueDate)" id="task-due-date" data-task-picker="date" x-ref="dueDateInput" @click="if (canEdit) { jalaliDatePicker.open ? closeJalaliDatePicker() : openJalaliDatePicker() }" :aria-expanded="jalaliDatePicker.open" aria-controls="task-date-picker" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ">
+                                <input :value="formatDateInput(form.dueDate)" id="task-due-date" data-task-picker="date" x-ref="dueDateInput" @click="if (canEditTask) { jalaliDatePicker.open ? closeJalaliDatePicker() : openJalaliDatePicker() }" :aria-expanded="jalaliDatePicker.open" aria-controls="task-date-picker" type="text" :disabled="!canEditTask" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ">
                                 <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
+                                <button x-show="form.dueDate && canEditTask" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
                             </div>
                             <template x-teleport="body">
                             <div id="task-date-picker" data-task-picker="date" x-show="showModal && jalaliDatePicker.open" x-cloak @click.stop @pointerdown.window="if (!$event.target.closest('[data-task-picker=date]')) closeJalaliDatePicker()" @keydown.escape.stop.prevent="closeJalaliDatePicker()" class="jalali-picker task-picker-popover rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg" :style="taskPickerStyle(document.getElementById('task-due-date'), 300, 340)" role="dialog" aria-label="انتخاب سررسید">
@@ -1097,7 +1154,7 @@
                             </template>
                             <div x-show="form.dueDate" class="task-due-time">
                                 <label for="task-due-time">ساعت (اختیاری)</label>
-                                <button id="task-due-time" data-task-picker="time" type="button" @click="timePickerOpen ? closeTaskTimePicker() : openTaskTimePicker()" :disabled="!canEdit || !form.dueDate" :aria-expanded="timePickerOpen" aria-controls="task-time-picker" class="task-time-trigger" x-text="form.dueTime ? toPersianDigits(form.dueTime) : 'انتخاب ساعت'"></button>
+                                <button id="task-due-time" data-task-picker="time" type="button" @click="timePickerOpen ? closeTaskTimePicker() : openTaskTimePicker()" :disabled="!canEditTask || !form.dueDate" :aria-expanded="timePickerOpen" aria-controls="task-time-picker" class="task-time-trigger" x-text="form.dueTime ? toPersianDigits(form.dueTime) : 'انتخاب ساعت'"></button>
                                 <template x-teleport="body">
                                     <div id="task-time-picker" data-task-picker="time" x-show="showModal && timePickerOpen" x-cloak @click.stop @pointerdown.window="if (!$event.target.closest('[data-task-picker=time]')) closeTaskTimePicker()" @keydown.escape.stop.prevent="closeTaskTimePicker()" class="task-picker-popover task-time-picker" :style="taskPickerStyle(document.getElementById('task-due-time'), 260, 190)" role="dialog" aria-label="انتخاب ساعت سررسید">
                                         <p>ساعت سررسید</p>
@@ -1109,7 +1166,7 @@
                                         <button type="button" @click="updateTaskTime(); closeTaskTimePicker()">تأیید ساعت</button>
                                     </div>
                                 </template>
-                                <button type="button" x-show="form.dueTime && canEdit" @click="form.dueTime = ''; closeTaskTimePicker()">بدون ساعت</button>
+                                <button type="button" x-show="form.dueTime && canEditTask" @click="form.dueTime = ''; closeTaskTimePicker()">بدون ساعت</button>
                             </div>
                             <p x-show="form.dueDate" class="task-due-timezone">به وقت {{ $workspace->timezone ?: 'Asia/Tehran' }}</p>
                             <p x-show="form.dueDate && isOverdue(form.dueDate, form.dueTime)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
@@ -1121,7 +1178,7 @@
                             <div class="flex flex-wrap gap-1">
                                 <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-violet-500'}, {name:'پایین', color:'bg-slate-400'}]" :key="p.name">
                                     <label class="flex items-center gap-1.5 text-[10px] cursor-pointer px-2 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#18212B] bg-[#F1F3F2]' : 'border-transparent hover:bg-white'">
-                                        <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEdit" class="hidden">
+                                        <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEditTask" class="hidden">
                                         <span class="w-2 h-2 rounded-full" :class="p.color"></span>
                                         <span class="font-semibold" :class="form.priority === p.name ? 'text-[#000000]' : 'text-[#64748B]'" x-text="p.name"></span>
                                     </label>
@@ -1134,7 +1191,7 @@
                             <div class="flex items-center justify-between mb-2">
                                 <label class="board-field-label mb-0">برچسب‌ها</label>
                                 @if ($canEdit)
-                                    <button type="button" @click="tagManagerOpen = !tagManagerOpen" class="text-[10px] font-bold text-[#64748B] hover:text-[#18212B] transition-colors" x-text="tagManagerOpen ? 'بستن' : 'مدیریت'"></button>
+                                    <button x-show="canEditTask" type="button" @click="tagManagerOpen = !tagManagerOpen" class="text-[10px] font-bold text-[#64748B] hover:text-[#18212B] transition-colors" x-text="tagManagerOpen ? 'بستن' : 'مدیریت'"></button>
                                 @endif
                             </div>
                             <div class="task-selected-labels">
@@ -1142,16 +1199,16 @@
                                 <span x-show="!form.tags.length" class="task-no-labels">بدون برچسب</span>
                             </div>
                             @if ($canEdit)
-                            <button type="button" @click="labelsOpen = !labelsOpen" :aria-expanded="labelsOpen" class="task-label-picker-toggle" x-text="labelsOpen ? 'بستن انتخاب برچسب' : 'انتخاب برچسب +'"></button>
+                            <button x-show="canEditTask" type="button" @click="labelsOpen = !labelsOpen" :aria-expanded="labelsOpen" class="task-label-picker-toggle" x-text="labelsOpen ? 'بستن انتخاب برچسب' : 'انتخاب برچسب +'"></button>
                             @endif
                             <div x-show="labelsOpen" x-cloak class="flex flex-wrap gap-1 task-label-options">
 
                                 <template x-for="tag in allTags" :key="tag.name">
-                                    <button type="button" @click="if (canEdit) toggleTag(tag.name)" :disabled="!canEdit" class="text-[9px] font-bold px-2 py-1 rounded-md border transition-all duration-150" :class="form.tags.includes(tag.name) ? tag.activeClass : tag.inactiveClass" x-text="tag.name"></button>
+                                    <button type="button" @click="if (canEditTask) toggleTag(tag.name)" :disabled="!canEditTask" class="text-[9px] font-bold px-2 py-1 rounded-md border transition-all duration-150" :class="form.tags.includes(tag.name) ? tag.activeClass : tag.inactiveClass" x-text="tag.name"></button>
                                 </template>
                             </div>
                             {{-- Tag Manager --}}
-                            <div x-show="tagManagerOpen" x-transition class="mt-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-3">
+                            <div x-show="tagManagerOpen && canEditTask" x-transition class="mt-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-3">
                                 <template x-for="(tag, idx) in allTags" :key="'mgr-' + tag.name">
                                     <div class="flex items-center justify-between">
                                         <span class="text-[11px] font-bold text-[#475569]" x-text="tag.name"></span>
@@ -1179,12 +1236,13 @@
                     </section>
 
                         @if ($canEdit)
-                        <div x-show="editingTask" class="task-sidebar-actions">
+                        <div x-show="editingTask && canEditTask" class="task-sidebar-actions">
                             <div x-data="{ actionsOpen: false }" @pointerdown.window="if (!$event.target.closest('[data-task-actions]')) actionsOpen = false" @keydown.escape.stop.prevent="actionsOpen = false" data-task-actions class="task-secondary-actions">
                                 <button type="button" @click="actionsOpen = !actionsOpen" :aria-expanded="actionsOpen" class="task-more-action">سایر اقدامات ···</button>
                                 <div x-show="actionsOpen" x-cloak class="task-actions-menu">
-                                    <button type="button" @click="actionsOpen = false; stateTask(form.isBlocked ? 'unblock' : 'block')" :disabled="taskSaving" x-text="form.isBlocked ? 'رفع انسداد' : 'مسدود کردن'"></button>
-                                    <button type="button" @click="actionsOpen = false; requestDeleteFromTaskModal()" :disabled="taskSaving" class="task-delete-action">حذف وظیفه</button>
+                                    <button type="button" @click="actionsOpen = false; stateTask(form.isBlocked ? 'unblock' : 'block')" :disabled="!canEditTask || taskSaving" x-text="form.isBlocked ? 'رفع انسداد' : 'مسدود کردن'"></button>
+                                    <button type="button" @click="actionsOpen = false; archiveEditingTask()" :disabled="taskSaving || archiveBusy">بایگانی وظیفه</button>
+                                    <button type="button" @click="actionsOpen = false; requestDeleteFromTaskModal()" :disabled="!canEditTask || taskSaving" class="task-delete-action">حذف وظیفه</button>
                                 </div>
                             </div>
                         </div>
@@ -1209,7 +1267,7 @@
                             x-model="form.description"
                             rows="5"
                             aria-label="توضیحات وظیفه"
-                            :disabled="!canEdit"
+                            :disabled="!canEditTask"
                             class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#111111] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
                             placeholder="توضیحات کارت را بنویسید..."
                             @input="handleMentionInput('description', $event)"
@@ -1227,10 +1285,10 @@
                                     </button>
                                 </template>
                         </div>
-                        <p x-show="canEdit" class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                        <p x-show="canEditTask" class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                     </section>
                     {{-- Checklist stays visible independently of advanced details. --}}
-                    <section x-show="canEdit || form.checklist.length" class="task-modal-section task-checklist-section" aria-labelledby="task-checklist-title">
+                    <section x-show="canEditTask || form.checklist.length" class="task-modal-section task-checklist-section" aria-labelledby="task-checklist-title">
                         <div class="task-checklist-heading">
                             <h4 id="task-checklist-title">چک‌لیست</h4>
                             <span x-show="form.checklist.length" x-text="checklistProgress()" aria-live="polite"></span>
@@ -1241,11 +1299,11 @@
                         <div class="task-checklist-items">
                             <template x-for="(item, idx) in form.checklist" :key="idx">
                                 <div class="task-checklist-item" :class="{ 'is-done': item.done }">
-                                    <input type="checkbox" x-model="item.done" :disabled="!canEdit || taskSaving" :aria-label="'انجام شد: ' + item.text" class="task-checklist-checkbox">
+                                    <input type="checkbox" x-model="item.done" :disabled="!canEditTask || taskSaving" :aria-label="'انجام شد: ' + item.text" class="task-checklist-checkbox">
                                     @if ($canEdit)
-                                        <button x-show="editingCheckItemIndex !== idx" type="button" @click="startCheckItemEdit(idx)" :disabled="taskSaving" class="task-checklist-text" :aria-label="'ویرایش مورد: ' + item.text" x-text="item.text"></button>
-                                        <input x-show="editingCheckItemIndex === idx" x-cloak :id="'checklist-edit-' + idx" x-model="checkItemDraft" @keydown.enter.prevent="if (!$event.isComposing) finishCheckItemEdit()" @keydown.escape.stop.prevent="cancelCheckItemEdit()" @blur="if ($event.relatedTarget) finishCheckItemEdit(idx)" :disabled="taskSaving" class="task-checklist-edit" aria-label="متن مورد چک‌لیست">
-                                        <button type="button" @click="removeCheckItem(idx)" :disabled="taskSaving" class="task-checklist-delete" :aria-label="'حذف مورد: ' + item.text" title="حذف مورد">
+                                        <button x-show="editingCheckItemIndex !== idx" type="button" @click="startCheckItemEdit(idx)" :disabled="!canEditTask || taskSaving" class="task-checklist-text" :aria-label="'ویرایش مورد: ' + item.text" x-text="item.text"></button>
+                                        <input x-show="editingCheckItemIndex === idx" x-cloak :id="'checklist-edit-' + idx" x-model="checkItemDraft" @keydown.enter.prevent="if (!$event.isComposing) finishCheckItemEdit()" @keydown.escape.stop.prevent="cancelCheckItemEdit()" @blur="if ($event.relatedTarget) finishCheckItemEdit(idx)" :disabled="!canEditTask || taskSaving" class="task-checklist-edit" aria-label="متن مورد چک‌لیست">
+                                        <button type="button" @click="removeCheckItem(idx)" :disabled="!canEditTask || taskSaving" class="task-checklist-delete" :aria-label="'حذف مورد: ' + item.text" title="حذف مورد">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 7h12M10 4h4M8 7l1 13h6l1-13M10 10v7m4-7v7"/></svg>
                                         </button>
                                     @else
@@ -1255,14 +1313,14 @@
                             </template>
                         </div>
                         @if ($canEdit)
-                            <button x-show="!checklistComposerOpen && !form.checklist.length" type="button" @click="openChecklistComposer()" :disabled="taskSaving" class="task-checklist-start" aria-controls="checklist-composer" :aria-expanded="checklistComposerOpen">
+                            <button x-show="!checklistComposerOpen && !form.checklist.length" type="button" @click="openChecklistComposer()" :disabled="!canEditTask || taskSaving" class="task-checklist-start" aria-controls="checklist-composer" :aria-expanded="checklistComposerOpen">
                                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
                                 افزودن چک‌لیست
                             </button>
-                            <div x-show="checklistComposerOpen || form.checklist.length" id="checklist-composer" class="task-checklist-composer">
+                            <div x-show="canEditTask && (checklistComposerOpen || form.checklist.length)" id="checklist-composer" class="task-checklist-composer">
                                 <label class="sr-only" for="checklist-new-item">مورد جدید چک‌لیست</label>
                                 <div>
-                                    <input id="checklist-new-item" x-model="newCheckItem" @keydown.enter.prevent="if (!$event.isComposing) addCheckItem()" :disabled="taskSaving" type="text" placeholder="مثلاً بررسی نسخه موبایل" autocomplete="off">
+                                    <input id="checklist-new-item" x-model="newCheckItem" @keydown.enter.prevent="if (!$event.isComposing) addCheckItem()" :disabled="!canEditTask || taskSaving" type="text" placeholder="مثلاً بررسی نسخه موبایل" autocomplete="off">
                                     <button type="button" @click="addCheckItem()" :disabled="!newCheckItem.trim() || taskSaving">افزودن</button>
                                 </div>
                                 <p>برای افزودن مورد بعدی، Enter بزنید.</p>
@@ -1277,7 +1335,7 @@
                             <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(descriptionAttachments().length) + ' فایل'"></span>
                         </div>
                         @if ($canEdit)
-                        <div
+                        <div x-show="canEditTask"
                             class="mt-3 rounded-xl border-2 border-dashed px-3 py-3 transition-colors"
                             :class="attachmentDragTarget === 'description' ? 'border-[#0069D9] bg-[#F0F8FF]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
                             @dragover.prevent="attachmentDragTarget = 'description'"
@@ -1320,7 +1378,7 @@
                                         <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
                                         <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
                                     </button>
-                                    <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="mt-0.5 text-[8px] text-[#94A3B8]"><span x-text="attachment.context === 'comment' ? 'گفتگو' : 'توضیحات'"></span> · <span x-text="formatFileSize(attachment.size)"></span></p><div class="mt-1 flex gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[8px] font-bold text-[#0069D9]">پیش‌نمایش</button><a :href="attachment.downloadUrl" class="text-[8px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[8px] font-bold text-red-500">حذف</button>@endif</div></div>
+                                    <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="mt-0.5 text-[8px] text-[#94A3B8]"><span x-text="attachment.context === 'comment' ? 'گفتگو' : 'توضیحات'"></span> · <span x-text="formatFileSize(attachment.size)"></span></p><div class="mt-1 flex gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[8px] font-bold text-[#0069D9]">پیش‌نمایش</button><a :href="attachment.downloadUrl" class="text-[8px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" x-show="canEditTask" @click="deleteAttachment(attachment)" class="text-[8px] font-bold text-red-500">حذف</button>@endif</div></div>
                                 </div>
                             </template>
                             <p x-show="descriptionAttachments().length === 0" class="text-[11px] text-[#94A3B8]">فایلی پیوست نشده است.</p>
@@ -1334,7 +1392,7 @@
                             <span x-show="form.comments.length" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.comments.length) + ' پیام'"></span>
                         </div>
                         @if ($canEdit)
-                        <div class="mt-3 flex gap-2.5">
+                        <div x-show="canEditTask" class="mt-3 flex gap-2.5">
                             <div class="w-7 h-7 rounded-full bg-[#18212B] flex items-center justify-center shrink-0 shadow-sm">
                                 <span class="text-[9px] text-white font-bold">ش</span>
                             </div>
@@ -1414,11 +1472,12 @@
 
                 {{-- Footer --}}
                 <div class="task-modal-footer sticky bottom-0 bg-white border-t border-[#E2E8F0] px-4 md:px-6 py-3 flex items-center justify-between">
+                    <button x-show="form.archivedAt" type="button" @click="requestCloseModal()" class="board-archive-restore">بستن</button>
                     @if ($canEdit)
-                        <div class="task-save-actions flex items-center gap-2">
+                        <div x-show="!form.archivedAt" class="task-save-actions flex items-center gap-2">
                             <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
                             <button type="button" @click="requestCloseModal()" :disabled="taskSaving" class="task-modal-cancel text-[11px] font-bold text-[#64748B] border-2 border-[#E2E8F0] hover:bg-[#F8FCFF] disabled:opacity-60 px-5 py-2.5 rounded-xl transition-colors">انصراف</button>
-                            <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="task-modal-primary text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-sm transition-colors">
+                            <button type="button" @click="saveTask()" :disabled="!canEditTask || taskSaving" :aria-busy="taskSaving" class="task-modal-primary text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-sm transition-colors">
                                 <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد وظیفه')"></span>
                             </button>
                         </div>
@@ -1524,7 +1583,7 @@
     >
         <div class="flex items-center gap-2 bg-[#1A1D21] text-white text-xs font-medium px-4 py-2.5 rounded-xl shadow-lg shadow-black/20">
             <svg x-show="toast.type === 'success'" aria-hidden="true" class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <span x-show="toast.type === 'error'" class="text-red-300" aria-hidden="true">!</span><span x-text="toast.message"></span><button type="button" @click="toast.show = false" aria-label="بستن پیام" class="min-w-11 min-h-11">×</button>
+            <span x-show="toast.type === 'error'" class="text-red-300" aria-hidden="true">!</span><span x-text="toast.message"></span><button x-show="toast.undoTaskIds?.length && canEdit" type="button" @click="undoArchive()" :disabled="archiveBusy" class="min-w-11 min-h-11 underline">بازگردانی</button><button type="button" @click="toast.show = false" aria-label="بستن پیام" class="min-w-11 min-h-11">×</button>
         </div>
     </div>
 
@@ -1538,6 +1597,14 @@
 
             return {
                 canEdit: @json($canEdit),
+                get canEditTask() { return this.canEdit && !this.form.archivedAt; },
+                archivedTasks: @json($archivedTasksData),
+                archiveOpen: false,
+                archiveQuery: '',
+                archiveBusy: false,
+                archiveBusyId: null,
+                archiveBulkConfirm: false,
+                archiveLastFocused: null,
                 canManageProject: @json($canManageProject),
                 projectId: @json($project->id),
                 projectBoardStyleDefault: @json($boardStyle ?? 'simple'),
@@ -1634,7 +1701,7 @@
                 columnFormColor: '#8B938E',
                 columnFormWipLimit: '',
                 columnEditingId: null,
-                toast: { show: false, message: '', type: 'success' },
+                toast: { show: false, message: '', type: 'success', undoTaskIds: [] },
                 newCheckItem: '',
                 checklistComposerOpen: false,
                 editingCheckItemIndex: null,
@@ -1826,8 +1893,13 @@
                     this.bulkValue = '';
                 },
 
-                async applyBulkAction() {
+                async applyBulkAction(confirmed = false) {
                     if (!this.bulkAction || !this.selectedTaskIds.length || this.bulkLoading) return;
+                    if (this.bulkAction === 'archive' && !confirmed) {
+                        this.archiveBulkConfirm = true;
+                        this.$nextTick(() => this.$refs.archiveBulkCancel?.focus());
+                        return;
+                    }
                     if (this.bulkAction === 'tag' && !this.bulkValue.trim()) return;
                     this.bulkLoading = true;
                     try {
@@ -1859,7 +1931,9 @@
                             });
                             if (target) target.tasks = target.tasks.concat(moved);
                         }
-                        this.showToast('تغییرات گروهی ذخیره شد');
+                        if (this.bulkAction === 'archive') {
+                            this.showToast('وظیفه‌های انتخاب‌شده بایگانی شدند', 'success', Array.from(selected));
+                        } else this.showToast('تغییرات گروهی ذخیره شد');
                         this.clearSelection();
                     } catch (error) {
                         this.showToast(error.message || 'ذخیره تغییرات گروهی انجام نشد', 'error');
@@ -2034,7 +2108,7 @@
                         task_priority_changed: 'اولویت', task_due_date_changed: 'سررسید', task_assignees_added: 'افزودن مسئول', task_assignees_removed: 'حذف مسئول',
                         task_tags_added: 'افزودن برچسب', task_tags_removed: 'حذف برچسب', task_checklist_changed: 'چک‌لیست', task_comment_added: 'گفتگو',
                         task_checklist_item_added: 'افزودن چک‌لیست', task_checklist_item_removed: 'حذف چک‌لیست', task_checklist_item_completed: 'تکمیل چک‌لیست', task_checklist_item_reopened: 'بازکردن چک‌لیست',
-                        task_moved: 'جابجایی وظیفه', task_deleted: 'حذف وظیفه', column_created: 'ایجاد ستون', column_title_changed: 'تغییر ستون',
+                        task_archived: 'بایگانی وظیفه', task_restored: 'بازگرداندن وظیفه', task_moved: 'جابجایی وظیفه', task_deleted: 'حذف وظیفه', column_created: 'ایجاد ستون', column_title_changed: 'تغییر ستون',
                         column_color_changed: 'رنگ ستون', column_order_changed: 'ترتیب ستون‌ها', column_deleted: 'حذف ستون', project_member_added: 'افزودن عضو',
                         project_member_removed: 'حذف عضو', project_name_changed: 'نام پروژه', project_key_changed: 'کلید پروژه', project_description_changed: 'توضیحات پروژه',
                         project_board_style_changed: 'سبک تخته', project_custom_tags_changed: 'برچسب‌های پروژه'
@@ -2043,7 +2117,7 @@
                 },
 
                 boardMutationBusy() {
-                    return this.realtimeDragActive || this.taskMovePending || this.columnMovePending || this.taskSaving || this.quickTaskSaving || this.columnSaving || this.taskDeleting || this.columnDeleting || this.bulkLoading || this.projectSettingsSaving || this.projectMemberSaving || this.commentPosting || this.attachmentUploading;
+                    return this.archiveBusy || this.realtimeDragActive || this.taskMovePending || this.columnMovePending || this.taskSaving || this.quickTaskSaving || this.columnSaving || this.taskDeleting || this.columnDeleting || this.bulkLoading || this.projectSettingsSaving || this.projectMemberSaving || this.commentPosting || this.attachmentUploading;
                 },
 
                 queueMutationSnapshot(payload) {
@@ -2092,11 +2166,12 @@
                     const activeId = this.columns[this.activeColumnIndex]?.id;
                     const collapsed = new Set(this.columns.filter(column => column.collapsed).map(column => String(column.id)));
                     const remoteTask = this.editingTask
-                        ? payload.columns.flatMap(column => column.tasks).find(task => Number(task.dbId) === Number(this.editingTask))
+                        ? payload.columns.flatMap(column => column.tasks).concat(payload.archivedTasks || []).find(task => Number(task.dbId) === Number(this.editingTask))
                         : null;
                     const draftIsDirty = this.showModal && this.modalSnapshot && this.formFingerprint() !== this.modalSnapshot;
                     const attachmentBusy = this.attachmentUploading || this.commentPosting || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length;
                     const remoteChanged = !remoteTask || (remoteTask.version != null && this.form.version != null ? Number(remoteTask.version) !== Number(this.form.version) : remoteTask.updatedAt !== this.form.updatedAt);
+                    this.archivedTasks = payload.archivedTasks || [];
                     this.columns = payload.columns.map(column => ({ ...column, collapsed: collapsed.has(String(column.id)) }));
                     this.activeColumnIndex = Math.max(0, this.columns.findIndex(column => column.id === activeId));
                     const existingIds = new Set(this.columns.flatMap(column => column.tasks.map(task => Number(task.dbId))));
@@ -2120,14 +2195,14 @@
                       this.projectBaseline = JSON.stringify(this.projectForm);
                       this.projectBaselineVersion = payload.project.version;
                     }
-                    if (this.showModal && remoteTask) { this.form.updatedAt = remoteTask.updatedAt; this.form.version = remoteTask.version; }
+                    if (this.showModal && remoteTask) { this.form.archivedAt = remoteTask.archivedAt || null; this.form.updatedAt = remoteTask.updatedAt; this.form.version = remoteTask.version; }
                     if (this.showModal && remoteTask) {
                         this.form.comments = JSON.parse(JSON.stringify(remoteTask.comments || []));
                         this.form.attachments = JSON.parse(JSON.stringify(remoteTask.attachments || []));
                     }
                     if (this.showModal && this.editingTask && !draftIsDirty && !attachmentBusy && remoteTask && remoteChanged) {
                         const column = this.columns.find(item => item.tasks.some(task => Number(task.dbId) === Number(this.editingTask)));
-                        this.openEditModal(remoteTask, column.id, { preserveFocus: true });
+                        this.openEditModal(remoteTask, column?.id || remoteTask.columnId, { preserveFocus: true });
                     }
                     if (this.showModal && this.editingTask && !remoteTask && !draftIsDirty && !attachmentBusy) this.closeModal();
                     this.destroySortables();
@@ -2235,6 +2310,10 @@
                             for (const column of this.columns) {
                                 const task = column.tasks.find(item => Number(item.dbId) === requestedTask);
                                 if (task) { this.openEditModal(task, column.id); break; }
+                            }
+                            if (!this.showModal) {
+                                const archived = this.archivedTasks.find(task => Number(task.dbId) === requestedTask);
+                                if (archived) this.openEditModal(archived, archived.columnId);
                             }
                         }
                     });
@@ -3325,7 +3404,7 @@
                 },
 
                 formFingerprint() {
-                    const { id, workflowRole, comments, attachments, updatedAt, version, ...fields } = this.form;
+                    const { id, workflowRole, comments, attachments, updatedAt, version, archivedAt, ...fields } = this.form;
                     const checklist = (fields.checklist || []).map((item, idx) => idx === this.editingCheckItemIndex && this.checkItemDraft.trim()
                         ? { ...item, text: this.checkItemDraft.trim() } : item);
                     return JSON.stringify({ ...fields, checklist, pendingCheckItem: (this.newCheckItem || '').trim() });
@@ -3371,7 +3450,7 @@
                         assignees: Array.from(taskAssignees), columnId: columnId, dueDate: task.dueDate || '', dueTime: task.dueTime || '',
                         tags: Array.from(task.tags || []), checklist: JSON.parse(JSON.stringify(task.checklist || [])),
                         comments: JSON.parse(JSON.stringify(task.comments || [])), attachments: JSON.parse(JSON.stringify(task.attachments || [])), isBlocked: !!task.isBlocked,
-                        blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || '', updatedAt: task.updatedAt || null, version: task.version || null
+                        archivedAt: task.archivedAt || null, blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || '', updatedAt: task.updatedAt || null, version: task.version || null
                     };
                     this.newCheckItem = '';
                     this.checklistComposerOpen = this.form.checklist.length > 0;
@@ -3500,7 +3579,7 @@
                 trapModalFocus(event) {
                     if (event.key !== 'Tab') return;
                     const dialog = event.currentTarget;
-                    const focusable = Array.from(dialog.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
+                    const focusable = Array.from(dialog.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'))
                         .filter(element => element.getClientRects().length > 0);
                     if (!focusable.length) return;
                     const first = focusable[0];
@@ -3515,7 +3594,7 @@
                 },
 
                 async saveTask() {
-                    if (!this.canEdit || this.taskSaving) return;
+                    if (!this.canEdit || this.form.archivedAt || this.taskSaving) return;
                     this.flushMutationSnapshot();
                     if (!this.form.title.trim()) {
                         this.taskError = 'عنوان وظیفه را وارد کنید.';
@@ -3829,6 +3908,69 @@
                     this.showDeleteModal = true;
                 },
 
+                filteredArchivedTasks() {
+                    const normalize = value => String(value || '').replace(/ي/g, 'ی').replace(/ك/g, 'ک').toLocaleLowerCase();
+                    const query = normalize(this.archiveQuery.trim());
+                    return this.archivedTasks.filter(task => normalize(task.title + ' ' + task.id + ' ' + this.toPersianDigits(task.id)).includes(query));
+                },
+
+                openArchiveDrawer() {
+                    this.archiveLastFocused = document.activeElement;
+                    this.archiveOpen = true;
+                    this.filterPanelOpen = false;
+                    this.$nextTick(() => this.$refs.archiveSearch?.focus());
+                },
+
+                closeArchiveDrawer() {
+                    this.archiveOpen = false;
+                    this.$nextTick(() => this.archiveLastFocused?.focus?.());
+                },
+
+                archiveEditingTask() {
+                    if (!this.canEditTask || this.taskSaving || this.archiveBusy) return;
+                    if (this.formFingerprint() !== this.modalSnapshot || this.pendingDescriptionFiles.length || this.pendingCommentFiles.length) {
+                        this.showUnsavedWarning = true;
+                        return;
+                    }
+                    this.setTaskArchived(this.editingTask, true);
+                },
+
+                async setTaskArchived(taskId, archived, { quiet = false } = {}) {
+                    if (!this.canEdit || this.archiveBusy) return false;
+                    this.archiveBusy = true;
+                    this.archiveBusyId = taskId;
+                    try {
+                        const response = await window.neovaFetch('{{ route("board.task.archive", [$workspace->slug, $project->slug, "__TASK__"], false) }}'.replace('__TASK__', taskId), {
+                            method: 'PATCH',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                            body: JSON.stringify({ archived }),
+                        });
+                        const data = await response.json().catch(() => ({}));
+                        if (!response.ok) throw new Error(data.message || 'تغییر بایگانی انجام نشد.');
+                        if (archived && Number(this.editingTask) === Number(taskId) && this.showModal) this.closeModal();
+                        if (!quiet) this.showToast(archived ? 'وظیفه بایگانی شد' : 'وظیفه به تخته بازگردانده شد', 'success', archived ? [taskId] : []);
+                        return true;
+                    } catch (error) {
+                        this.showToast(error.message || 'تغییر بایگانی انجام نشد.', 'error');
+                        return false;
+                    } finally {
+                        this.archiveBusy = false;
+                        this.archiveBusyId = null;
+                        this.flushMutationSnapshot();
+                        this.$nextTick(() => {
+                            if (!this.showModal) (this.archiveOpen ? this.$refs.archiveSearch : this.$refs.archiveTrigger)?.focus();
+                        });
+                    }
+                },
+
+                async undoArchive() {
+                    const ids = [...(this.toast.undoTaskIds || [])];
+                    for (const id of ids) {
+                        if (!await this.setTaskArchived(id, false, { quiet: true })) return;
+                    }
+                    this.showToast('وظیفه‌ها به تخته بازگردانده شدند');
+                },
+
                 async deleteTask() {
                     if (!this.canEdit || this.taskDeleting) return;
                     this.taskDeleting = true;
@@ -3851,10 +3993,10 @@
                     }
                 },
 
-                showToast(message, type = 'success') {
+                showToast(message, type = 'success', undoTaskIds = []) {
                     clearTimeout(this.toastTimer);
-                    this.toast = { show: true, message, type };
-                    if (type === 'success') this.toastTimer = setTimeout(() => { this.toast.show = false; }, 4000);
+                    this.toast = { show: true, message, type, undoTaskIds };
+                    if (type === 'success') this.toastTimer = setTimeout(() => { this.toast.show = false; }, undoTaskIds.length ? 10000 : 4000);
                 }
             };
         }

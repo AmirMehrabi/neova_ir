@@ -107,6 +107,7 @@ Route::middleware('auth')->group(function () {
                     Route::patch('/{workspace}/{project}/task/{task}/state', [TodayController::class, 'state'])->name('today.task.state');
                     Route::post('/{workspace}/{project}/task', [BoardController::class, 'storeTask'])->name('board.task.store');
                     Route::patch('/{workspace}/{project}/tasks/bulk', [BoardController::class, 'bulkUpdateTasks'])->name('board.tasks.bulk');
+                    Route::patch('/{workspace}/{project}/task/{task}/archive', [BoardController::class, 'archiveTask'])->name('board.task.archive');
                     Route::put('/{workspace}/{project}/task/{task}', [BoardController::class, 'updateTask'])->name('board.task.update');
                     Route::post('/{workspace}/{project}/task/{task}/comments', [BoardController::class, 'addComment'])->name('board.task.comments.store');
                     Route::delete('/{workspace}/{project}/task/{task}', [BoardController::class, 'destroyTask'])->name('board.task.destroy');

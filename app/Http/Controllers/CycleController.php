@@ -29,7 +29,7 @@ class CycleController extends Controller
         abort_if($projectModel->cycles()->where('status', 'active')->exists(), 422, 'این پروژه یک چرخه فعال دارد.');
         $validated = $request->validate(['task_ids' => ['nullable', 'array'], 'task_ids.*' => ['integer', 'distinct']]);
         $taskIds = collect($validated['task_ids'] ?? [])->map(fn ($id) => (int) $id)->values();
-        $validIds = Task::whereIn('id', $taskIds)->whereHas('column', fn ($query) => $query->where('project_id', $projectModel->id))->pluck('id');
+        $validIds = Task::active()->whereIn('id', $taskIds)->whereHas('column', fn ($query) => $query->where('project_id', $projectModel->id))->pluck('id');
         abort_unless($validIds->count() === $taskIds->count(), 422, 'یک یا چند وظیفه به این پروژه تعلق ندارد.');
 
         $cycle = DB::transaction(function () use ($projectModel, $workspaceModel, $taskIds) {
@@ -63,7 +63,7 @@ class CycleController extends Controller
 
         $result = DB::transaction(function () use ($cycle, $projectModel, $workspaceModel, $carry, $removed, $request) {
             $cycle->load('tasks.column');
-            $open = $cycle->tasks->reject(fn (Task $task) => $task->column->workflow_role === 'done')->pluck('id');
+            $open = $cycle->tasks->reject(fn (Task $task) => $task->archived_at || $task->column->workflow_role === 'done')->pluck('id');
             abort_unless($carry->merge($removed)->unique()->sort()->values()->all() === $open->sort()->values()->all(), 422, 'برای همه وظیفه‌های باز، انتقال یا حذف را مشخص کنید.');
             foreach ($cycle->tasks as $task) {
                 $outcome = $task->column->workflow_role === 'done' ? 'completed' : ($carry->contains($task->id) ? 'carried' : 'removed');

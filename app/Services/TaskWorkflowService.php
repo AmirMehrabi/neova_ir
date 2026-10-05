@@ -26,7 +26,7 @@ class TaskWorkflowService
         DB::transaction(function () use ($task, $target, $position, $wasDone, $willBeDone) {
             $oldColumnId = (int) $task->column_id;
             $newColumnId = (int) $target->id;
-            $columns = Task::whereIn('column_id', [$oldColumnId, $newColumnId])
+            $columns = Task::active()->whereIn('column_id', [$oldColumnId, $newColumnId])
                 ->orderBy('position')->orderBy('id')->lockForUpdate()->get()->groupBy('column_id');
 
             $sourceTasks = $columns->get($oldColumnId, collect())->reject(fn (Task $item) => $item->id === $task->id)->values()->all();

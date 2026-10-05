@@ -10,7 +10,7 @@ class ProjectsController extends Controller
     {
         $workspaceModel = $request->attributes->get('workspace');
         $archived = $request->boolean('archived');
-        $projects = $workspaceModel->projects()->where('is_active', ! $archived)->with(['columns' => fn ($query) => $query->withCount('tasks')])->orderBy('name')->get()
+        $projects = $workspaceModel->projects()->where('is_active', ! $archived)->with(['columns' => fn ($query) => $query->withCount(['tasks' => fn ($query) => $query->active()])])->orderBy('name')->get()
             ->filter(fn ($project) => $project->canUserView($request->user(), $workspaceModel))->values();
 
         foreach ($projects as $project) {
