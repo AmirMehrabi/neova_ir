@@ -118,7 +118,7 @@ body.app-page.neova-board.board-direction {
 .board-direction .workspace-shell--board .board-column-well,
 .board-direction .workspace-shell--board .mobile-task-list { background: transparent !important; border: 0 !important; border-radius: 0; }
 .board-direction .workspace-shell--board .board-task-list,
-.board-direction .workspace-shell--board .mobile-task-scroll { gap: 8px; padding: 0 0 8px; scrollbar-width: thin; }
+.board-direction .workspace-shell--board .mobile-task-scroll { gap: 8px; padding: 0 0 8px; padding-inline-end: 10px; scrollbar-width: thin; scrollbar-gutter: stable; }
 .board-direction .workspace-shell--board .task-card,
 .board-direction .workspace-shell--board .mobile-task-list .task-card {
     min-height: 120px;
