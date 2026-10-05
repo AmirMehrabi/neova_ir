@@ -126,14 +126,14 @@
       "fingerprints": {
         ".superdesign/design-system.md": "eae787084b9037e4ee674bcf52bafd1483e9aa28be429e7dcdb1ff986a137564",
         ".superdesign/init/theme.md": "342de9b2c43e2300de348eff4070efa4fb726e518b312412a62968d0bb999c9b",
-        "resources/views/board.blade.php": "67e9184ba6d604904650a417081200c387676741eb51213173277dbcad8b7f56",
+        "resources/views/board.blade.php": "893a84cbd08e703070e322f9d9ab8775c2a4ae3aa3a559897fd7f92487698d77",
         "resources/views/components/workspace-shell.blade.php": "01eb94b981510c6b73224fd9e87249f4e841ea1a0f1bb82e2d013e049d11ccb5",
         "resources/views/components/navbar.blade.php": "eb5f1e2553678394201199b6c1f53c9d774d96ec6a7e510459924245f6854632",
         "resources/views/components/notification-menu.blade.php": "b85859db139b8ed891db5898b63995078c266d6a21f2ce6b76bf6376047f8887",
         "resources/css/app.css": "9051e2287244be44c7e5b37e972c78489a375655d2cbeab2661428844dda4a5f",
         "resources/css/today.css": "5301cb9470852185487348776daa9e9b9a8a5ad4124f80fb8218fc3ffb75484e",
         "resources/css/board.css": "1818a8cfaad0b06eaa52dd0ebc2fcd1b7bd30d12b28aa7174ae45495f15f849d",
-        "resources/css/board-direction.css": "a695fb2f817c0e6d35fc340c13008a9bd8b2dc0071d26d201d7253cedde663c8"
+        "resources/css/board-direction.css": "dfdff61f0bc526998751972d6510b0811d280e0d71afcd8ac23c3bd3b87190d7"
       },
       "components": [],
       "drafts": {
@@ -161,7 +161,7 @@
           "parentDraftId": "c51ea5e0-b0c9-4ac0-95b4-d67d690f4b3c"
         }
       },
-      "updatedAt": "2026-10-05T19:49:20.436482+00:00",
+      "updatedAt": "2026-10-05T20:39:33.489597+00:00",
       "approvalStatus": "implemented",
       "reviewDraftIds": [
         "0010ce4b-fb1f-4869-92c6-b215f7ec2c49",

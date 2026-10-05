@@ -1255,40 +1255,44 @@
                         <svg class="w-4 h-4" :class="extraTaskDetailsOpen ? 'rotate-45' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M12 5v14M5 12h14"/></svg>
                     </button>
 
-                    {{-- Checklist --}}
-                    <section x-show="extraTaskDetailsOpen" x-cloak class="task-modal-section task-advanced-section" aria-labelledby="task-checklist-title">
-                        <div class="task-modal-section__heading">
-                            <div class="task-modal-section__title" id="task-checklist-title">چک‌لیست</div>
-                            <span class="text-[12px] font-bold text-[#64748B]" x-text="checklistProgress()"></span>
+                    {{-- Checklist stays visible independently of advanced details. --}}
+                    <section x-show="canEdit || form.checklist.length" class="task-modal-section task-checklist-section" aria-labelledby="task-checklist-title">
+                        <div class="task-checklist-heading">
+                            <h4 id="task-checklist-title">چک‌لیست</h4>
+                            <span x-show="form.checklist.length" x-text="checklistProgress()" aria-live="polite"></span>
                         </div>
-                        <div class="checklist-bar mb-3">
-                            <div class="checklist-bar-fill" :style="'width:' + checklistPercent() + '%'"></div>
+                        <div x-show="form.checklist.length" class="task-checklist-progress" role="progressbar" :aria-valuenow="checklistPercent()" aria-valuemin="0" aria-valuemax="100" aria-label="پیشرفت چک‌لیست">
+                            <span :style="'width:' + checklistPercent() + '%'"></span>
                         </div>
-                        <div class="space-y-1.5">
+                        <div class="task-checklist-items">
                             <template x-for="(item, idx) in form.checklist" :key="idx">
-                                <div class="check-item flex items-center gap-2.5 py-1.5 px-2 rounded-lg hover:bg-[#F8FAFC] group/item transition-colors">
-                                    <label class="flex items-center gap-2.5 cursor-pointer flex-1">
-                                        <input type="checkbox" x-model="item.done" :disabled="!canEdit" class="w-4 h-4 rounded border-2 border-[#CBD5E1] text-[#18212B] focus:ring-[#18212B]/20 cursor-pointer accent-[#18212B] disabled:cursor-default">
-                                        <span class="text-sm text-[#1A1D21] transition-all" x-text="item.text"></span>
-                                    </label>
+                                <div class="task-checklist-item" :class="{ 'is-done': item.done }">
+                                    <input type="checkbox" x-model="item.done" :disabled="!canEdit || taskSaving" :aria-label="'انجام شد: ' + item.text" class="task-checklist-checkbox">
                                     @if ($canEdit)
-                                        <button @click="removeCheckItem(idx)" class="opacity-0 group-hover/item:opacity-100 text-[#94A3B8] hover:text-red-500 transition-all">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        <button x-show="editingCheckItemIndex !== idx" type="button" @click="startCheckItemEdit(idx)" :disabled="taskSaving" class="task-checklist-text" :aria-label="'ویرایش مورد: ' + item.text" x-text="item.text"></button>
+                                        <input x-show="editingCheckItemIndex === idx" x-cloak :id="'checklist-edit-' + idx" x-model="checkItemDraft" @keydown.enter.prevent="if (!$event.isComposing) finishCheckItemEdit()" @keydown.escape.stop.prevent="cancelCheckItemEdit()" @blur="finishCheckItemEdit(idx)" :disabled="taskSaving" class="task-checklist-edit" aria-label="متن مورد چک‌لیست">
+                                        <button type="button" @click="removeCheckItem(idx)" :disabled="taskSaving" class="task-checklist-delete" :aria-label="'حذف مورد: ' + item.text" title="حذف مورد">
+                                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 7h12M10 4h4M8 7l1 13h6l1-13M10 10v7m4-7v7"/></svg>
                                         </button>
+                                    @else
+                                        <span class="task-checklist-text" x-text="item.text"></span>
                                     @endif
                                 </div>
                             </template>
                         </div>
                         @if ($canEdit)
-                        <div class="mt-2">
-                            <input
-                                x-model="newCheckItem"
-                                @keydown.enter="addCheckItem()"
-                                type="text"
-                                class="w-full text-sm border border-[#E2E8F0] rounded-lg px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
-                                placeholder="افزودن آیتم..."
-                            >
-                        </div>
+                            <button x-show="!checklistComposerOpen && !form.checklist.length" type="button" @click="openChecklistComposer()" :disabled="taskSaving" class="task-checklist-start" aria-controls="checklist-composer" :aria-expanded="checklistComposerOpen">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+                                افزودن چک‌لیست
+                            </button>
+                            <div x-show="checklistComposerOpen || form.checklist.length" id="checklist-composer" class="task-checklist-composer">
+                                <label class="sr-only" for="checklist-new-item">مورد جدید چک‌لیست</label>
+                                <div>
+                                    <input id="checklist-new-item" x-model="newCheckItem" @keydown.enter.prevent="if (!$event.isComposing) addCheckItem()" :disabled="taskSaving" type="text" placeholder="مثلاً بررسی نسخه موبایل" autocomplete="off">
+                                    <button type="button" @click="addCheckItem()" :disabled="!newCheckItem.trim() || taskSaving">افزودن</button>
+                                </div>
+                                <p>برای افزودن مورد بعدی، Enter بزنید.</p>
+                            </div>
                         @endif
                     </section>
 
@@ -1626,6 +1630,9 @@
                 columnEditingId: null,
                 toast: { show: false, message: '', type: 'success' },
                 newCheckItem: '',
+                checklistComposerOpen: false,
+                editingCheckItemIndex: null,
+                checkItemDraft: '',
                 newComment: '',
                 commentPosting: false,
                 attachmentUploading: false,
@@ -2884,9 +2891,9 @@
 
                 checklistProgress() {
                     const total = this.form.checklist.length;
-                    if (total === 0) return this.toPersianDigits(0) + '/' + this.toPersianDigits(0);
+                    if (total === 0) return '';
                     const done = this.form.checklist.filter(i => i.done).length;
-                    return this.toPersianDigits(done) + '/' + this.toPersianDigits(total);
+                    return this.toPersianDigits(done) + ' از ' + this.toPersianDigits(total) + ' مورد انجام شده';
                 },
 
                 checklistPercent() {
@@ -2895,13 +2902,48 @@
                     return Math.round((this.form.checklist.filter(i => i.done).length / total) * 100);
                 },
 
-                addCheckItem() {
-                    if (!this.newCheckItem.trim()) return;
+                openChecklistComposer() {
+                    if (!this.canEdit || this.taskSaving) return;
+                    this.checklistComposerOpen = true;
+                    this.$nextTick(() => requestAnimationFrame(() => document.getElementById('checklist-new-item')?.focus()));
+                },
+
+                addCheckItem({ focus = true } = {}) {
+                    if (!this.canEdit || this.taskSaving || !this.newCheckItem.trim()) return;
                     this.form.checklist.push({ text: this.newCheckItem.trim(), done: false });
                     this.newCheckItem = '';
+                    this.checklistComposerOpen = true;
+                    if (focus) this.$nextTick(() => requestAnimationFrame(() => document.getElementById('checklist-new-item')?.focus()));
+                },
+
+                startCheckItemEdit(idx) {
+                    if (!this.canEdit || this.taskSaving || !this.form.checklist[idx]) return;
+                    this.finishCheckItemEdit();
+                    this.editingCheckItemIndex = idx;
+                    this.checkItemDraft = this.form.checklist[idx].text;
+                    this.$nextTick(() => requestAnimationFrame(() => {
+                        const input = document.getElementById('checklist-edit-' + idx);
+                        input?.focus();
+                        input?.select();
+                    }));
+                },
+
+                finishCheckItemEdit(idx = this.editingCheckItemIndex) {
+                    if (idx !== this.editingCheckItemIndex) return;
+                    const item = this.form.checklist[this.editingCheckItemIndex];
+                    if (this.canEdit && !this.taskSaving && item && this.checkItemDraft.trim()) item.text = this.checkItemDraft.trim();
+                    this.editingCheckItemIndex = null;
+                    this.checkItemDraft = '';
+                },
+
+                cancelCheckItemEdit() {
+                    this.editingCheckItemIndex = null;
+                    this.checkItemDraft = '';
                 },
 
                 removeCheckItem(idx) {
+                    if (!this.canEdit || this.taskSaving) return;
+                    this.finishCheckItemEdit();
                     this.form.checklist.splice(idx, 1);
                 },
 
@@ -3239,7 +3281,9 @@
 
                 formFingerprint() {
                     const { id, workflowRole, comments, attachments, updatedAt, version, ...fields } = this.form;
-                    return JSON.stringify(fields);
+                    const checklist = (fields.checklist || []).map((item, idx) => idx === this.editingCheckItemIndex && this.checkItemDraft.trim()
+                        ? { ...item, text: this.checkItemDraft.trim() } : item);
+                    return JSON.stringify({ ...fields, checklist, pendingCheckItem: (this.newCheckItem || '').trim() });
                 },
 
                 openAddModal(columnId, initialTitle = '') {
@@ -3248,6 +3292,9 @@
                     this.editingDescription = false;
                     this.form = { id: '', title: initialTitle, description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', dueTime: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' };
                     this.newCheckItem = '';
+                    this.checklistComposerOpen = this.form.checklist.length > 0;
+                    this.editingCheckItemIndex = null;
+                    this.checkItemDraft = '';
                     this.newComment = '';
                     this.clearPendingFiles('description');
                     this.clearPendingFiles('comment');
@@ -3282,6 +3329,9 @@
                         blockedReason: task.blockedReason || '', workflowRole: this.columns.find(c => c.id === columnId)?.workflowRole || '', updatedAt: task.updatedAt || null, version: task.version || null
                     };
                     this.newCheckItem = '';
+                    this.checklistComposerOpen = this.form.checklist.length > 0;
+                    this.editingCheckItemIndex = null;
+                    this.checkItemDraft = '';
                     this.newComment = '';
                     this.clearPendingFiles('description');
                     this.clearPendingFiles('comment');
@@ -3421,6 +3471,8 @@
                         this.$nextTick(() => this.$refs.taskTitle?.focus());
                         return;
                     }
+                    this.finishCheckItemEdit();
+                    this.addCheckItem({ focus: false });
                     this.taskSaving = true;
                     this.taskError = '';
                     const token = '{{ csrf_token() }}';
