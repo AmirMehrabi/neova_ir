@@ -162,8 +162,9 @@ class TeamAttachmentCycleTest extends TestCase
         extract($this->context());
 
         $this->actingAs($owner)->get(route('board', [$workspace->slug, $project->slug]))
-            ->assertOk()->assertSee('فایل‌های توضیحات')->assertSee('فایل‌های بارگذاری‌شده')
-            ->assertSee('کتابخانه فایل‌های وظیفه')->assertSee('افزودن فایل')
+            ->assertOk()->assertSee('پیوست‌ها')->assertSee('افزودن فایل')
+            ->assertSee('task-files-section', false)
+            ->assertDontSee('کتابخانه فایل‌های وظیفه')
             ->assertSee('handleTaskEscape($event)', false);
     }
 

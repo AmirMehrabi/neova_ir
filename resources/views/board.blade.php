@@ -951,107 +951,49 @@
                 aria-labelledby="task-modal-title"
                 @keydown="trapModalFocus($event)"
             >
-                {{-- Header --}}
-                <div class="task-modal-header shrink-0">
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-3">
-                            <h3 id="task-modal-title" class="text-[#18212B] font-black text-base" x-text="editingTask ? 'ویرایش کارت' : 'وظیفه جدید'"></h3>
-                            <span x-show="editingTask" class="text-[#64748B] text-[11px] font-bold bg-[#F8FAFC] border border-[#E8EBE9] px-2 py-0.5 rounded-md" x-text="form.id"></span>
-                        </div>
-                        <p class="task-modal-header__subtitle" x-text="editingTask ? 'جزئیات کارت و روند انجام کار را مدیریت کنید.' : 'یک وظیفه جدید در ستون انتخاب‌شده ایجاد کنید.'"></p>
+                <header class="task-modal-header task-workspace-header shrink-0">
+                    <div class="task-workspace-identity">
+                        <label id="task-modal-title" for="task-title" class="sr-only">عنوان وظیفه</label>
+                        <textarea id="task-title" x-ref="taskTitle" x-model="form.title" rows="1" x-effect="form.title; showModal; $nextTick(() => { $el.style.height = 'auto'; $el.style.height = Math.min($el.scrollHeight, 100) + 'px' })" :disabled="!canEdit || taskSaving" class="task-workspace-title" placeholder="عنوان وظیفه را بنویسید…" aria-required="true"></textarea>
+                        <p class="task-workspace-context"><span>{{ $project->name }}</span><span x-show="editingTask" x-text="form.id"></span><span x-show="!editingTask">وظیفه جدید</span></p>
                     </div>
-                    <button x-ref="taskDrawerClose" @click="requestCloseModal()" class="text-[#64748B] hover:text-[#18212B] transition-colors w-9 h-9 flex items-center justify-center rounded-lg hover:bg-[#F8FAFC]" aria-label="بستن پنجره">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                    </button>
-                </div>
-
-                {{-- Task details --}}
-                <div class="task-modal-body p-4 md:p-6 space-y-4" :class="editingTask ? 'task-modal-body--editing' : 'task-modal-body--create'" style="direction: rtl;" @scroll="floatingMenuRevision++">
-                    <div x-show="showUnsavedWarning" x-cloak class="task-unsaved-warning" role="alert">
-                        <p>تغییرات این وظیفه هنوز ذخیره نشده‌اند.</p>
-                        <div><button type="button" @click="saveTask()">ذخیره</button><button type="button" @click="discardTaskChanges()">کنار گذاشتن</button><button type="button" @click="showUnsavedWarning = false">ادامه ویرایش</button></div>
-                    </div>
-                    <div class="task-modal-title-field">
-                        <label for="task-title">عنوان وظیفه</label>
-                        <input
-                            id="task-title"
-                            x-ref="taskTitle"
-                            x-model="form.title"
-                            type="text"
-                            :disabled="!canEdit"
-                            class="task-modal-title-input w-full text-base font-bold text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 mb-3 focus:outline-none focus:border-[#111111] transition-colors bg-white placeholder:text-[#CBD5E1]"
-                            placeholder="مثلاً طراحی صفحه ورود"
-                        >
-                    </div>
-
+                    <button type="button" x-ref="taskDrawerClose" @click="requestCloseModal()" class="task-workspace-close" aria-label="بستن پنجره"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </header>
+                <div x-show="form.isBlocked" x-cloak class="task-blocked-banner" role="status"><strong>این وظیفه مسدود است</strong><span x-text="form.blockedReason"></span></div>
+                <div class="task-modal-body task-workspace-body" @scroll="floatingMenuRevision++">
+                    <aside class="task-workspace-sidebar" aria-label="مشخصات و اقدامات وظیفه">
+                        <button type="button" class="task-mobile-properties" @click="taskPropertiesOpen = !taskPropertiesOpen" :aria-expanded="taskPropertiesOpen" aria-controls="task-properties-content">
+                            <span><strong x-text="columns.find(col => col.id === form.columnId)?.title || 'انتخاب ستون'"></strong><small x-text="(form.assignees.length ? form.assignees.join('، ') : 'بدون مسئول') + ' · ' + (form.dueDate ? formatDateInput(form.dueDate) : 'بدون سررسید')"></small></span>
+                            <span x-text="taskPropertiesOpen ? 'بستن مشخصات −' : 'ویرایش مشخصات +' "></span>
+                        </button>
+                        <div id="task-properties-content" class="task-properties-content" :class="{ 'is-open': taskPropertiesOpen }">
                     {{-- Optional details --}}
-                    <section class="task-modal-section task-advanced-section" aria-labelledby="task-settings-title">
+                    <section class="task-modal-section task-properties-section" aria-labelledby="task-settings-title">
                         <div class="task-modal-section__heading">
-                            <div class="task-modal-section__title" id="task-settings-title">جزئیات وظیفه</div>
-                            <span class="text-[10px] text-[#94A3B8]">ستون، مسئول و سررسید</span>
+                            <div class="task-modal-section__title" id="task-settings-title">مشخصات وظیفه</div>
+
                         </div>
                     <div class="task-settings-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-start">
-                        {{-- Priority --}}
-                        <div>
-                            <label class="board-field-label mb-2">اولویت</label>
-                            <div class="flex flex-wrap gap-1">
-                                <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-violet-500'}, {name:'پایین', color:'bg-slate-400'}]" :key="p.name">
-                                    <label class="flex items-center gap-1.5 text-[10px] cursor-pointer px-2 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#18212B] bg-[#F1F3F2]' : 'border-transparent hover:bg-white'">
-                                        <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEdit" class="hidden">
-                                        <span class="w-2 h-2 rounded-full" :class="p.color"></span>
-                                        <span class="font-semibold" :class="form.priority === p.name ? 'text-[#000000]' : 'text-[#64748B]'" x-text="p.name"></span>
-                                    </label>
-                                </template>
-                            </div>
-                        </div>
-
-                        {{-- Due Date --}}
-                        <div class="relative">
-                            <label class="board-field-label">سررسید</label>
-                            <div class="relative">
-                                <input :value="formatDateInput(form.dueDate)" x-ref="dueDateInput" @click="if (canEdit) openJalaliDatePicker()" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ">
-                                <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
-                            </div>
-                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker task-floating-menu absolute right-0 top-full mt-2 w-[min(290px,calc(100vw-3rem))] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg">
-                                <div class="flex items-center justify-between mb-3">
-                                    <button type="button" @click="changeJalaliMonth(1)" class="jalali-picker__nav" aria-label="ماه بعد">‹</button>
-                                    <span class="text-xs font-black text-[#18212B]" x-text="jalaliMonthLabel()"></span>
-                                    <button type="button" @click="changeJalaliMonth(-1)" class="jalali-picker__nav" aria-label="ماه قبل">›</button>
-                                </div>
-                                <div class="grid grid-cols-7 gap-1 mb-1 text-center">
-                                    <template x-for="day in jalaliWeekdays" :key="day"><span class="text-[10px] font-bold text-[#94A3B8]" x-text="day"></span></template>
-                                </div>
-                                <div class="grid grid-cols-7 gap-1">
-                                    <template x-for="(day, index) in jalaliCalendarDays()" :key="index">
-                                        <button type="button" @click="day && selectJalaliDate(day)" :disabled="!day" class="jalali-picker__day" :class="[!day ? 'invisible' : '', day && isSelectedJalaliDay(day) ? 'jalali-picker__day--selected' : '', day && isTodayJalaliDay(day) ? 'jalali-picker__day--today' : '']" x-text="day ? toPersianDigits(day) : ''"></button>
-                                    </template>
-                                </div>
-                                <button type="button" @click="selectTodayJalaliDate()" class="w-full mt-3 pt-2 border-t border-[#F1F5F9] text-[10px] font-bold text-[#64748B] hover:text-[#18212B]">امروز</button>
-                            </div>
-                            <div class="task-due-time">
-                                <label for="task-due-time">ساعت (اختیاری)</label>
-                                <input id="task-due-time" type="time" x-model="form.dueTime" :disabled="!canEdit || !form.dueDate" aria-label="ساعت سررسید">
-                                <button type="button" x-show="form.dueTime && canEdit" @click="form.dueTime = ''">بدون ساعت</button>
-                            </div>
-                            <p class="task-due-timezone">به وقت {{ $workspace->timezone ?: 'Asia/Tehran' }}</p>
-                            <p x-show="form.dueDate && isOverdue(form.dueDate, form.dueTime)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
-                        </div>
-
                         {{-- Column --}}
                         <div>
-                            <label for="task-column" class="board-field-label">انتقال به ستون</label>
+                            <label for="task-column" class="board-field-label">ستون / وضعیت</label>
                             <select id="task-column" x-model="form.columnId" :disabled="!canEdit" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
                                 <template x-for="col in columns" :key="col.id">
                                     <option :value="col.id" x-text="col.title"></option>
                                 </template>
                             </select>
+                            @if ($canEdit)
+                            <button x-show="editingTask" type="button" @click="stateTask(form.workflowRole === 'done' ? 'reopen' : 'complete')" :disabled="taskSaving" class="task-complete-action" x-text="form.workflowRole === 'done' ? 'باز کردن دوباره' : '✓ انجام شد'"></button>
+                            @endif
                         </div>
                     {{-- Assignees --}}
                         <div x-data="{ assigneeOpen: false, assigneeSearch: '' }" @click.away="assigneeOpen = false" class="relative">
                             <label class="board-field-label">مسئولین</label>
                             <div
                                 x-ref="assigneeTrigger"
+                                role="button" tabindex="0" :aria-expanded="assigneeOpen" aria-label="انتخاب مسئول"
+                                @keydown.enter.prevent="if (canEdit) assigneeOpen = !assigneeOpen"
+                                @keydown.space.prevent="if (canEdit) assigneeOpen = !assigneeOpen"
                                 @click="if (canEdit) assigneeOpen = !assigneeOpen"
                                 class="w-full min-h-[36px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-1.5 transition-colors bg-white flex flex-wrap items-center gap-1"
                                 :class="canEdit ? 'cursor-pointer hover:border-[#CBD5E1]' : 'cursor-default bg-[#F1F5F9]'"
@@ -1066,7 +1008,7 @@
                                         @endif
                                     </span>
                                 </template>
-                                <span x-show="form.assignees.length === 0" class="text-xs text-[#CBD5E1]">انتخاب کنید...</span>
+                                <span x-show="form.assignees.length === 0" class="text-xs text-[#CBD5E1]">انتخاب مسئول</span>
                                 <svg class="w-3.5 h-3.5 text-[#94A3B8] mr-auto shrink-0" :class="assigneeOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </div>
                             <div
@@ -1126,15 +1068,70 @@
                             </div>
                         </div>
 
+                        {{-- Due Date --}}
+                        <div class="relative">
+                            <label class="board-field-label">سررسید</label>
+                            <div class="relative">
+                                <input :value="formatDateInput(form.dueDate)" x-ref="dueDateInput" @click="if (canEdit) openJalaliDatePicker()" type="text" :disabled="!canEdit" readonly class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ">
+                                <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <button x-show="form.dueDate && canEdit" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
+                            </div>
+                            <div x-show="jalaliDatePicker.open" x-cloak @click.outside="closeJalaliDatePicker()" class="jalali-picker task-floating-menu absolute right-0 top-full mt-2 w-[min(290px,calc(100vw-3rem))] rounded-xl border border-[#E2E8F0] bg-white p-3 shadow-lg">
+                                <div class="flex items-center justify-between mb-3">
+                                    <button type="button" @click="changeJalaliMonth(1)" class="jalali-picker__nav" aria-label="ماه بعد">‹</button>
+                                    <span class="text-xs font-black text-[#18212B]" x-text="jalaliMonthLabel()"></span>
+                                    <button type="button" @click="changeJalaliMonth(-1)" class="jalali-picker__nav" aria-label="ماه قبل">›</button>
+                                </div>
+                                <div class="grid grid-cols-7 gap-1 mb-1 text-center">
+                                    <template x-for="day in jalaliWeekdays" :key="day"><span class="text-[10px] font-bold text-[#94A3B8]" x-text="day"></span></template>
+                                </div>
+                                <div class="grid grid-cols-7 gap-1">
+                                    <template x-for="(day, index) in jalaliCalendarDays()" :key="index">
+                                        <button type="button" @click="day && selectJalaliDate(day)" :disabled="!day" class="jalali-picker__day" :class="[!day ? 'invisible' : '', day && isSelectedJalaliDay(day) ? 'jalali-picker__day--selected' : '', day && isTodayJalaliDay(day) ? 'jalali-picker__day--today' : '']" x-text="day ? toPersianDigits(day) : ''"></button>
+                                    </template>
+                                </div>
+                                <button type="button" @click="selectTodayJalaliDate()" class="w-full mt-3 pt-2 border-t border-[#F1F5F9] text-[10px] font-bold text-[#64748B] hover:text-[#18212B]">امروز</button>
+                            </div>
+                            <div x-show="form.dueDate" class="task-due-time">
+                                <label for="task-due-time">ساعت (اختیاری)</label>
+                                <input id="task-due-time" type="time" x-model="form.dueTime" :disabled="!canEdit || !form.dueDate" aria-label="ساعت سررسید">
+                                <button type="button" x-show="form.dueTime && canEdit" @click="form.dueTime = ''">بدون ساعت</button>
+                            </div>
+                            <p x-show="form.dueDate" class="task-due-timezone">به وقت {{ $workspace->timezone ?: 'Asia/Tehran' }}</p>
+                            <p x-show="form.dueDate && isOverdue(form.dueDate, form.dueTime)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
+                        </div>
+
+                        {{-- Priority --}}
+                        <div>
+                            <label class="board-field-label mb-2">اولویت</label>
+                            <div class="flex flex-wrap gap-1">
+                                <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-violet-500'}, {name:'پایین', color:'bg-slate-400'}]" :key="p.name">
+                                    <label class="flex items-center gap-1.5 text-[10px] cursor-pointer px-2 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#18212B] bg-[#F1F3F2]' : 'border-transparent hover:bg-white'">
+                                        <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEdit" class="hidden">
+                                        <span class="w-2 h-2 rounded-full" :class="p.color"></span>
+                                        <span class="font-semibold" :class="form.priority === p.name ? 'text-[#000000]' : 'text-[#64748B]'" x-text="p.name"></span>
+                                    </label>
+                                </template>
+                            </div>
+                        </div>
+
                         {{-- Tags --}}
-                        <div x-data="{ tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }">
+                        <div x-data="{ labelsOpen: false, tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="board-field-label mb-0">برچسب‌ها</label>
                                 @if ($canEdit)
                                     <button type="button" @click="tagManagerOpen = !tagManagerOpen" class="text-[10px] font-bold text-[#64748B] hover:text-[#18212B] transition-colors" x-text="tagManagerOpen ? 'بستن' : 'مدیریت'"></button>
                                 @endif
                             </div>
-                            <div class="flex flex-wrap gap-1">
+                            <div class="task-selected-labels">
+                                <template x-for="name in form.tags" :key="name"><span x-text="name" :class="allTags.find(tag => tag.name === name)?.activeClass || ''"></span></template>
+                                <span x-show="!form.tags.length" class="task-no-labels">بدون برچسب</span>
+                            </div>
+                            @if ($canEdit)
+                            <button type="button" @click="labelsOpen = !labelsOpen" :aria-expanded="labelsOpen" class="task-label-picker-toggle" x-text="labelsOpen ? 'بستن انتخاب برچسب' : 'انتخاب برچسب +'"></button>
+                            @endif
+                            <div x-show="labelsOpen" x-cloak class="flex flex-wrap gap-1 task-label-options">
+
                                 <template x-for="tag in allTags" :key="tag.name">
                                     <button type="button" @click="if (canEdit) toggleTag(tag.name)" :disabled="!canEdit" class="text-[9px] font-bold px-2 py-1 rounded-md border transition-all duration-150" :class="form.tags.includes(tag.name) ? tag.activeClass : tag.inactiveClass" x-text="tag.name"></button>
                                 </template>
@@ -1167,19 +1164,41 @@
                     </div>
                     </section>
 
+                        @if ($canEdit)
+                        <div x-show="editingTask" class="task-sidebar-actions">
+                            <div x-data="{ actionsOpen: false }" @click.outside="actionsOpen = false" class="task-secondary-actions">
+                                <button type="button" @click="actionsOpen = !actionsOpen" :aria-expanded="actionsOpen" class="task-more-action">سایر اقدامات ···</button>
+                                <div x-show="actionsOpen" x-cloak class="task-actions-menu">
+                                    <button type="button" @click="actionsOpen = false; stateTask(form.isBlocked ? 'unblock' : 'block')" :disabled="taskSaving" x-text="form.isBlocked ? 'رفع انسداد' : 'مسدود کردن'"></button>
+                                    <button type="button" @click="actionsOpen = false; requestDeleteFromTaskModal()" :disabled="taskSaving" class="task-delete-action">حذف وظیفه</button>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+                        </div>
+                    </aside>
+                    <main class="task-workspace-main" @scroll="floatingMenuRevision++">
+                    <div x-show="showUnsavedWarning" x-cloak class="task-unsaved-warning" role="alert">
+                        <p>تغییرات این وظیفه هنوز ذخیره نشده‌اند.</p>
+                        <div><button type="button" @click="saveTask()">ذخیره</button><button type="button" @click="discardTaskChanges()">کنار گذاشتن</button><button type="button" @click="showUnsavedWarning = false">ادامه ویرایش</button></div>
+                    </div>
                     {{-- Description --}}
-                    <div class="task-modal-section task-modal-section--description">
+                    <section class="task-modal-section task-modal-section--description" aria-labelledby="task-description-title">
                         <div class="task-modal-section__heading">
                             <div>
-                                <div class="task-modal-section__title">توضیحات</div>
-                                <p class="text-[10px] text-[#94A3B8] mt-1">موضوع کارت و جزئیات انجام آن را مشخص کنید.</p>
+                                <h4 id="task-description-title" class="task-modal-section__title">توضیحات</h4>
+
                             </div>
-                            <span x-show="form.description" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.description.length) + ' نویسه'"></span>
+                            <button x-show="canEdit && form.description && !editingDescription" type="button" @click="editTaskDescription()" class="task-section-action">ویرایش</button>
                         </div>
+                        <p x-show="form.description && !editingDescription" class="task-description-preview" x-html="formatMentionText(form.description)"></p>
+                        <button x-show="canEdit && !form.description && !editingDescription" type="button" @click="editTaskDescription()" class="task-empty-action">＋ افزودن توضیحات</button>
                         <textarea
-                            x-ref="descriptionMentionTrigger"
+                            x-show="editingDescription" x-cloak
+                            id="task-description-input" x-ref="descriptionMentionTrigger"
                             x-model="form.description"
                             rows="5"
+                            aria-label="توضیحات وظیفه"
                             :disabled="!canEdit"
                             class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#111111] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
                             placeholder="توضیحات کارت را بنویسید..."
@@ -1198,63 +1217,9 @@
                                     </button>
                                 </template>
                         </div>
-                        <p class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
-                        @if ($canEdit)
-                        <div
-                            class="mt-3 rounded-xl border-2 border-dashed px-3 py-3 transition-colors"
-                            :class="attachmentDragTarget === 'description' ? 'border-[#0069D9] bg-[#F0F8FF]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
-                            @dragover.prevent="attachmentDragTarget = 'description'"
-                            @dragleave.prevent="attachmentDragTarget = null"
-                            @drop.prevent="attachmentDragTarget = null; queueAttachmentFiles($event.dataTransfer.files, 'description')"
-                        >
-                            <div class="flex flex-wrap items-center justify-between gap-2">
-                                <div>
-                                    <p class="text-[11px] font-bold text-[#334155]">فایل‌های توضیحات</p>
-                                    <p class="mt-0.5 text-[9px] text-[#94A3B8]">فایل‌ها را رها کنید، تصویر را بچسبانید یا تا ۱۰ فایل انتخاب کنید.</p>
-                                </div>
-                                <button type="button" @click="$refs.descriptionFiles.click()" class="rounded-lg border border-[#BFD8EC] bg-white px-3 py-1.5 text-[10px] font-bold text-[#111111]">انتخاب فایل</button>
-                                <input x-ref="descriptionFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'description'); $event.target.value = ''">
-                            </div>
-                            <div x-show="pendingDescriptionFiles.length" x-cloak class="mt-3 grid gap-2 sm:grid-cols-2">
-                                <template x-for="item in pendingDescriptionFiles" :key="item.localId">
-                                    <div class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2">
-                                        <button type="button" @click="openAttachmentPreview(item)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
-                                            <img x-show="item.category === 'image'" :src="item.previewUrl" class="h-full w-full object-cover" alt="">
-                                            <span x-show="item.category !== 'image'" x-text="attachmentLabel(item)"></span>
-                                        </button>
-                                        <div class="min-w-0 flex-1">
-                                            <p class="truncate text-[10px] font-bold text-[#334155]" x-text="item.name"></p>
-                                            <p class="text-[9px] text-[#94A3B8]" x-text="attachmentStatusText(item)"></p>
-                                            <div x-show="item.status === 'uploading'" class="mt-1 h-1 overflow-hidden rounded bg-[#E2E8F0]"><div class="h-full bg-[#0069D9]" :style="`width:${item.progress}%`"></div></div>
-                                        </div>
-                                        <button type="button" @click="removePendingAttachment(item, 'description')" class="shrink-0 text-[9px] font-bold text-red-500" x-text="item.status === 'uploading' ? 'لغو' : 'حذف'"></button>
-                                    </div>
-                                </template>
-                            </div>
-                            <div x-show="descriptionAttachments().length" x-cloak class="mt-3">
-                                <p class="mb-2 flex items-center gap-1.5 text-[9px] font-bold text-emerald-700"><span class="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500"></span>فایل‌های بارگذاری‌شده</p>
-                                <div class="grid gap-2 sm:grid-cols-2">
-                                    <template x-for="attachment in descriptionAttachments()" :key="attachment.id">
-                                        <div class="flex min-w-0 items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50/40 p-2">
-                                            <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white text-[9px] font-black text-[#64748B] shadow-sm">
-                                                <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
-                                                <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
-                                            </button>
-                                            <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="text-[9px] text-emerald-700">بارگذاری موفق · <span x-text="formatFileSize(attachment.size)"></span></p></div>
-                                            <div class="flex shrink-0 items-center gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[9px] font-bold text-[#0069D9]">نمایش</button><a :href="attachment.downloadUrl" class="text-[9px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[9px] text-red-500">حذف</button>@endif</div>
-                                        </div>
-                                    </template>
-                                </div>
-                            </div>
-                        </div>
-                        @endif
-                    </div>
-
-                    <button type="button" class="task-details-toggle" @click="extraTaskDetailsOpen = !extraTaskDetailsOpen" :aria-expanded="extraTaskDetailsOpen">
-                        <span x-text="extraTaskDetailsOpen ? 'بستن جزئیات بیشتر' : 'افزودن جزئیات'"></span>
-                        <svg class="w-4 h-4" :class="extraTaskDetailsOpen ? 'rotate-45' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M12 5v14M5 12h14"/></svg>
-                    </button>
-
+                        <p x-show="editingDescription" class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                        <button x-show="editingDescription" type="button" @click="editingDescription = false; closeMentionMenu()" class="task-section-action task-description-finish">پایان ویرایش</button>
+                    </section>
                     {{-- Checklist stays visible independently of advanced details. --}}
                     <section x-show="canEdit || form.checklist.length" class="task-modal-section task-checklist-section" aria-labelledby="task-checklist-title">
                         <div class="task-checklist-heading">
@@ -1270,7 +1235,7 @@
                                     <input type="checkbox" x-model="item.done" :disabled="!canEdit || taskSaving" :aria-label="'انجام شد: ' + item.text" class="task-checklist-checkbox">
                                     @if ($canEdit)
                                         <button x-show="editingCheckItemIndex !== idx" type="button" @click="startCheckItemEdit(idx)" :disabled="taskSaving" class="task-checklist-text" :aria-label="'ویرایش مورد: ' + item.text" x-text="item.text"></button>
-                                        <input x-show="editingCheckItemIndex === idx" x-cloak :id="'checklist-edit-' + idx" x-model="checkItemDraft" @keydown.enter.prevent="if (!$event.isComposing) finishCheckItemEdit()" @keydown.escape.stop.prevent="cancelCheckItemEdit()" @blur="finishCheckItemEdit(idx)" :disabled="taskSaving" class="task-checklist-edit" aria-label="متن مورد چک‌لیست">
+                                        <input x-show="editingCheckItemIndex === idx" x-cloak :id="'checklist-edit-' + idx" x-model="checkItemDraft" @keydown.enter.prevent="if (!$event.isComposing) finishCheckItemEdit()" @keydown.escape.stop.prevent="cancelCheckItemEdit()" @blur="if ($event.relatedTarget) finishCheckItemEdit(idx)" :disabled="taskSaving" class="task-checklist-edit" aria-label="متن مورد چک‌لیست">
                                         <button type="button" @click="removeCheckItem(idx)" :disabled="taskSaving" class="task-checklist-delete" :aria-label="'حذف مورد: ' + item.text" title="حذف مورد">
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M6 7h12M10 4h4M8 7l1 13h6l1-13M10 10v7m4-7v7"/></svg>
                                         </button>
@@ -1296,39 +1261,68 @@
                         @endif
                     </section>
 
+                    {{-- Task file library --}}
+                    <section class="task-modal-section task-files-section" aria-labelledby="task-attachments-title">
+                        <div class="task-modal-section__heading">
+                            <div><div class="task-modal-section__title" id="task-attachments-title">پیوست‌ها</div></div>
+                            <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(descriptionAttachments().length) + ' فایل'"></span>
+                        </div>
+                        @if ($canEdit)
+                        <div
+                            class="mt-3 rounded-xl border-2 border-dashed px-3 py-3 transition-colors"
+                            :class="attachmentDragTarget === 'description' ? 'border-[#0069D9] bg-[#F0F8FF]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
+                            @dragover.prevent="attachmentDragTarget = 'description'"
+                            @dragleave.prevent="attachmentDragTarget = null"
+                            @drop.prevent="attachmentDragTarget = null; queueAttachmentFiles($event.dataTransfer.files, 'description')"
+                        >
+                            <div class="flex flex-wrap items-center justify-between gap-2">
+                                <div>
+                                    <p class="text-[11px] font-bold text-[#334155]">افزودن فایل</p>
+                                    <p class="mt-0.5 text-[9px] text-[#94A3B8]">فایل‌ها را رها کنید، تصویر را بچسبانید یا تا ۱۰ فایل انتخاب کنید.</p>
+                                </div>
+                                <button type="button" @click="$refs.descriptionFiles.click()" class="rounded-lg border border-[#BFD8EC] bg-white px-3 py-1.5 text-[10px] font-bold text-[#111111]">افزودن فایل</button>
+                                <input x-ref="descriptionFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'description'); $event.target.value = ''">
+                            </div>
+                            <div x-show="pendingDescriptionFiles.length" x-cloak class="mt-3 grid gap-2 sm:grid-cols-2">
+                                <template x-for="item in pendingDescriptionFiles" :key="item.localId">
+                                    <div class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2">
+                                        <button type="button" @click="openAttachmentPreview(item)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
+                                            <img x-show="item.category === 'image'" :src="item.previewUrl" class="h-full w-full object-cover" alt="">
+                                            <span x-show="item.category !== 'image'" x-text="attachmentLabel(item)"></span>
+                                        </button>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="truncate text-[10px] font-bold text-[#334155]" x-text="item.name"></p>
+                                            <p class="text-[9px] text-[#94A3B8]" x-text="attachmentStatusText(item)"></p>
+                                            <div x-show="item.status === 'uploading'" class="mt-1 h-1 overflow-hidden rounded bg-[#E2E8F0]"><div class="h-full bg-[#0069D9]" :style="`width:${item.progress}%`"></div></div>
+                                        </div>
+                                        <button type="button" @click="removePendingAttachment(item, 'description')" class="shrink-0 text-[9px] font-bold text-red-500" x-text="item.status === 'uploading' ? 'لغو' : 'حذف'"></button>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                        @endif
+                        <div x-show="descriptionAttachments().length" class="mb-3 flex flex-wrap gap-1.5">
+                            <template x-for="filter in attachmentFilters" :key="filter.value"><button type="button" @click="attachmentFilter = filter.value" class="rounded-full border px-2.5 py-1 text-[9px] font-bold" :class="attachmentFilter === filter.value ? 'border-[#18212B] bg-[#18212B] text-white' : 'border-[#E2E8F0] bg-white text-[#64748B]'" x-text="filter.label"></button></template>
+                        </div>
+                        <div class="grid gap-2 sm:grid-cols-2">
+                            <template x-for="attachment in filteredAttachments().filter(item => item.context !== 'comment')" :key="attachment.id">
+                                <div class="flex min-w-0 items-center gap-2.5 border border-[#E8EBE9] rounded-xl p-2.5">
+                                    <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
+                                        <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
+                                        <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
+                                    </button>
+                                    <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="mt-0.5 text-[8px] text-[#94A3B8]"><span x-text="attachment.context === 'comment' ? 'گفتگو' : 'توضیحات'"></span> · <span x-text="formatFileSize(attachment.size)"></span></p><div class="mt-1 flex gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[8px] font-bold text-[#0069D9]">پیش‌نمایش</button><a :href="attachment.downloadUrl" class="text-[8px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[8px] font-bold text-red-500">حذف</button>@endif</div></div>
+                                </div>
+                            </template>
+                            <p x-show="descriptionAttachments().length === 0" class="text-[11px] text-[#94A3B8]">فایلی پیوست نشده است.</p>
+                            <p x-show="descriptionAttachments().length && filteredAttachments().filter(item => item.context !== 'comment').length === 0" class="text-[11px] text-[#94A3B8]">فایلی در این دسته وجود ندارد.</p>
+                        </div>
+                    </section>
                     {{-- Comments --}}
                     <section x-show="editingTask" x-cloak class="task-modal-section" aria-labelledby="task-comments-title">
                         <div class="task-modal-section__heading">
                             <div class="task-modal-section__title" id="task-comments-title">گفتگو</div>
                             <span x-show="form.comments.length" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.comments.length) + ' پیام'"></span>
-                        </div>
-                        <div class="space-y-3">
-                            <template x-for="(comment, idx) in form.comments" :key="idx">
-                                <div class="flex gap-3">
-                                    <div class="w-7 h-7 rounded-full bg-[#18212B] flex items-center justify-center shrink-0 shadow-sm">
-                                        <span class="text-[9px] text-white font-bold" x-text="comment.author.charAt(0)"></span>
-                                    </div>
-                                    <div class="flex-1 bg-[#F8FAFC] rounded-xl px-3.5 py-2.5 border border-[#F1F5F9]">
-                                        <div class="flex items-center gap-2 mb-1">
-                                            <span class="text-[11px] font-bold text-[#1A1D21]" x-text="comment.author"></span>
-                                            <span class="text-[9px] text-[#94A3B8]" x-text="comment.time"></span>
-                                        </div>
-                                        <p class="text-[12px] text-[#475569] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
-                                        <p x-show="!comment.text && !(comment.attachments || []).length" class="text-[10px] text-[#94A3B8]">پیوست حذف شده است.</p>
-                                        <div x-show="(comment.attachments || []).length" class="mt-2 grid gap-2 sm:grid-cols-2">
-                                            <template x-for="attachment in (comment.attachments || [])" :key="attachment.id">
-                                                <button type="button" @click="openAttachmentPreview(attachment)" class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2 text-right">
-                                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F1F5F9] text-[8px] font-black text-[#64748B]">
-                                                        <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
-                                                        <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
-                                                    </span>
-                                                    <span class="min-w-0"><span class="block truncate text-[9px] font-bold text-[#334155]" x-text="attachment.name"></span><span class="text-[8px] text-[#94A3B8]" x-text="formatFileSize(attachment.size)"></span></span>
-                                                </button>
-                                            </template>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
                         </div>
                         @if ($canEdit)
                         <div class="mt-3 flex gap-2.5">
@@ -1376,43 +1370,43 @@
                             </div>
                         </div>
                         @endif
-                    </section>
-
-                    {{-- Task file library --}}
-                    <section x-show="editingTask && extraTaskDetailsOpen" x-cloak class="task-modal-section task-advanced-section" aria-labelledby="task-attachments-title">
-                        <div class="task-modal-section__heading">
-                            <div><div class="task-modal-section__title" id="task-attachments-title">کتابخانه فایل‌های وظیفه</div><p class="mt-1 text-[9px] text-[#94A3B8]">همه فایل‌های توضیحات و گفتگو در یک‌جا</p></div>
-                            <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.attachments.length) + ' فایل'"></span>
-                        </div>
-                        <div class="mb-3 flex flex-wrap gap-1.5">
-                            <template x-for="filter in attachmentFilters" :key="filter.value"><button type="button" @click="attachmentFilter = filter.value" class="rounded-full border px-2.5 py-1 text-[9px] font-bold" :class="attachmentFilter === filter.value ? 'border-[#18212B] bg-[#18212B] text-white' : 'border-[#E2E8F0] bg-white text-[#64748B]'" x-text="filter.label"></button></template>
-                        </div>
-                        <div class="grid gap-2 sm:grid-cols-2">
-                            <template x-for="attachment in filteredAttachments()" :key="attachment.id">
-                                <div class="flex min-w-0 items-center gap-2.5 border border-[#E8EBE9] rounded-xl p-2.5">
-                                    <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
-                                        <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
-                                        <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
-                                    </button>
-                                    <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="mt-0.5 text-[8px] text-[#94A3B8]"><span x-text="attachment.context === 'comment' ? 'گفتگو' : 'توضیحات'"></span> · <span x-text="formatFileSize(attachment.size)"></span></p><div class="mt-1 flex gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[8px] font-bold text-[#0069D9]">پیش‌نمایش</button><a :href="attachment.downloadUrl" class="text-[8px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" @click="deleteAttachment(attachment)" class="text-[8px] font-bold text-red-500">حذف</button>@endif</div></div>
+                        <div class="task-comment-history space-y-3">
+                            <template x-for="(comment, idx) in form.comments" :key="idx">
+                                <div class="flex gap-3">
+                                    <div class="w-7 h-7 rounded-full bg-[#18212B] flex items-center justify-center shrink-0 shadow-sm">
+                                        <span class="text-[9px] text-white font-bold" x-text="comment.author.charAt(0)"></span>
+                                    </div>
+                                    <div class="flex-1 bg-[#F8FAFC] rounded-xl px-3.5 py-2.5 border border-[#F1F5F9]">
+                                        <div class="flex items-center gap-2 mb-1">
+                                            <span class="text-[11px] font-bold text-[#1A1D21]" x-text="comment.author"></span>
+                                            <span class="text-[9px] text-[#94A3B8]" x-text="comment.time"></span>
+                                        </div>
+                                        <p class="text-[12px] text-[#475569] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
+                                        <p x-show="!comment.text && !(comment.attachments || []).length" class="text-[10px] text-[#94A3B8]">پیوست حذف شده است.</p>
+                                        <div x-show="(comment.attachments || []).length" class="mt-2 grid gap-2 sm:grid-cols-2">
+                                            <template x-for="attachment in (comment.attachments || [])" :key="attachment.id">
+                                                <button type="button" @click="openAttachmentPreview(attachment)" class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2 text-right">
+                                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F1F5F9] text-[8px] font-black text-[#64748B]">
+                                                        <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
+                                                        <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
+                                                    </span>
+                                                    <span class="min-w-0"><span class="block truncate text-[9px] font-bold text-[#334155]" x-text="attachment.name"></span><span class="text-[8px] text-[#94A3B8]" x-text="formatFileSize(attachment.size)"></span></span>
+                                                </button>
+                                            </template>
+                                        </div>
+                                    </div>
                                 </div>
                             </template>
-                            <p x-show="form.attachments.length === 0" class="text-[11px] text-[#94A3B8]">فایلی پیوست نشده است.</p>
-                            <p x-show="form.attachments.length && filteredAttachments().length === 0" class="text-[11px] text-[#94A3B8]">فایلی در این دسته وجود ندارد.</p>
                         </div>
                     </section>
+
+                    </main>
                 </div>
 
                 {{-- Footer --}}
                 <div class="task-modal-footer sticky bottom-0 bg-white border-t border-[#E2E8F0] px-4 md:px-6 py-3 flex items-center justify-between">
                     @if ($canEdit)
-                        <div x-show="editingTask" class="flex items-center gap-2">
-                            <button type="button" @click="stateTask(form.workflowRole === 'done' ? 'reopen' : 'complete')" class="text-[10px] font-bold text-[#111111] border border-[#BFD8EC] rounded-lg px-3 py-2" x-text="form.workflowRole === 'done' ? 'باز کردن دوباره' : 'انجام شد'"></button>
-                            <button type="button" @click="stateTask(form.isBlocked ? 'unblock' : 'block')" class="text-[10px] font-bold rounded-lg px-3 py-2 border" :class="form.isBlocked ? 'text-emerald-700 border-emerald-200' : 'text-amber-700 border-amber-200'" x-text="form.isBlocked ? 'رفع انسداد' : 'مسدود کردن'"></button>
-                            <button type="button" @click="requestDeleteFromTaskModal()" :disabled="taskSaving" class="text-[10px] font-semibold text-[#94A3B8] hover:text-red-500 px-2 py-2">حذف</button>
-                        </div>
-                        <div x-show="!editingTask"></div>
-                        <div class="flex items-center gap-2">
+                        <div class="task-save-actions flex items-center gap-2">
                             <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
                             <button type="button" @click="requestCloseModal()" :disabled="taskSaving" class="task-modal-cancel text-[11px] font-bold text-[#64748B] border-2 border-[#E2E8F0] hover:bg-[#F8FCFF] disabled:opacity-60 px-5 py-2.5 rounded-xl transition-colors">انصراف</button>
                             <button type="button" @click="saveTask()" :disabled="taskSaving" :aria-busy="taskSaving" class="task-modal-primary text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-sm transition-colors">
@@ -1621,6 +1615,7 @@
                 activeCycle: @json($activeCycle),
                 editingTask: null,
                 editingDescription: false,
+                taskPropertiesOpen: false,
                 descriptionBeforeEdit: '',
                 deleteTarget: { columnId: null, taskId: null },
                 columnDeleteTarget: { id: null, title: '', taskCount: 0 },
@@ -2889,6 +2884,12 @@
                     return this.assignees.filter(n => n.toLowerCase().includes(s));
                 },
 
+                editTaskDescription() {
+                    if (!this.canEdit || this.taskSaving) return;
+                    this.editingDescription = true;
+                    this.$nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => document.getElementById('task-description-input')?.focus())));
+                },
+
                 checklistProgress() {
                     const total = this.form.checklist.length;
                     if (total === 0) return '';
@@ -2921,11 +2922,11 @@
                     this.finishCheckItemEdit();
                     this.editingCheckItemIndex = idx;
                     this.checkItemDraft = this.form.checklist[idx].text;
-                    this.$nextTick(() => requestAnimationFrame(() => {
+                    this.$nextTick(() => requestAnimationFrame(() => requestAnimationFrame(() => {
                         const input = document.getElementById('checklist-edit-' + idx);
                         input?.focus();
                         input?.select();
-                    }));
+                    })));
                 },
 
                 finishCheckItemEdit(idx = this.editingCheckItemIndex) {
@@ -3290,6 +3291,7 @@
                     if (!this.canEdit) return;
                     this.editingTask = null;
                     this.editingDescription = false;
+                    this.taskPropertiesOpen = false;
                     this.form = { id: '', title: initialTitle, description: '', priority: 'متوسط', assignees: [], columnId: columnId || this.columns[0]?.id, dueDate: '', dueTime: '', tags: [], checklist: [], comments: [], attachments: [], isBlocked: false, blockedReason: '', workflowRole: '' };
                     this.newCheckItem = '';
                     this.checklistComposerOpen = this.form.checklist.length > 0;
@@ -3307,7 +3309,7 @@
                     this.showModal = true;
                     this.$nextTick(() => {
                         this.modalSnapshot = this.formFingerprint();
-                        this.$refs.taskTitle?.focus();
+                        document.getElementById('task-title')?.focus();
                     });
                 },
 
@@ -3320,6 +3322,7 @@
                     }
                     this.editingTask = task.dbId;
                     this.editingDescription = false;
+                    this.taskPropertiesOpen = false;
                     const taskAssignees = task.assignees || (task.assignee ? [task.assignee] : []);
                     this.form = {
                         id: task.id, title: task.title, description: task.description || '', priority: task.priority,
@@ -3344,7 +3347,7 @@
                     this.showModal = true;
                     this.$nextTick(() => {
                         this.modalSnapshot = this.formFingerprint();
-                        if (!preserveFocus) this.$refs.taskDrawerClose?.focus();
+                        if (!preserveFocus) document.querySelector('.task-workspace-close')?.focus();
                     });
                 },
 
@@ -3468,7 +3471,7 @@
                     this.flushMutationSnapshot();
                     if (!this.form.title.trim()) {
                         this.taskError = 'عنوان وظیفه را وارد کنید.';
-                        this.$nextTick(() => this.$refs.taskTitle?.focus());
+                        this.$nextTick(() => document.getElementById('task-title')?.focus());
                         return;
                     }
                     this.finishCheckItemEdit();
