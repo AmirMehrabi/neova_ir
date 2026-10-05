@@ -83,8 +83,9 @@
     </style>
 </head>
 <body
-    class="app-page neova-board neova-product board-style-editorial min-h-screen overflow-x-hidden"
+    class="app-page neova-board neova-product board-style-editorial board-direction min-h-screen overflow-x-hidden"
     x-data="board()"
+    :class="{ 'board-is-compact': boardCompact }"
     x-cloak
 >
     <x-workspace-shell :workspace="$workspace" active="board" board :active-project="$project->slug">
@@ -96,10 +97,11 @@
                 <strong :title="projectState.name" x-text="projectState.name"></strong><span x-show="!projectState.isActive" class="text-xs">بایگانی شده</span>
                 @if ($project->visibility === 'private')<span class="board-topbar-context__private" title="پروژه خصوصی">خصوصی</span>@endif
             </div>
+            <small class="board-topbar-context__workspace">فضای کاری {{ $workspace->name }}</small>
             @if ($canManageProject)
                 <button type="button" class="board-topbar-context__manage" @click="openProjectDrawer()" aria-label="مدیریت پروژه" title="مدیریت پروژه">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v2m0 15v2M2.5 12h2m15 0h2M5.3 5.3l1.5 1.5m10.4 10.4 1.5 1.5m0-13.4-1.5 1.5M6.8 17.2l-1.5 1.5"/></svg>
-                    <span>تنظیمات پروژه</span>
+                    <span class="sr-only">تنظیمات پروژه</span>
                 </button>
             @endif
         </div>
@@ -168,11 +170,26 @@
         </div>
     @endslot
 
-    <div class="board-utility-bar">
-            <label class="board-local-search"><span class="sr-only">جستجو در این تخته</span><input type="search" x-model.debounce.200ms="boardSearchQuery" placeholder="جستجو در این تخته" aria-label="جستجو در این تخته"></label>
-            <span class="board-sync-status" role="status" aria-live="polite" x-text="syncStatusText()"></span>
-            <button x-show="snapshotState !== 'current'" type="button" @click="realtimeRefresher.refreshNow()" class="board-nav-control">تلاش دوباره</button>
-    </div>
+    <section class="board-overview" aria-labelledby="board-page-title">
+        <div class="board-overview__identity">
+            <p class="board-overview__eyebrow" x-text="activeCycle ? 'چرخه ' + toPersianDigits(activeCycle.number) + ' · ' + toPersianDigits(cycleDaysRemaining()) + ' روز باقی مانده' : 'جریان کار تیم شما'"></p>
+            <h1 id="board-page-title">تخته پروژه</h1>
+            <div class="board-overview__meta">
+                <span x-text="toPersianDigits(totalTasks()) + ' وظیفه · ' + toPersianDigits(projectMembers.length) + ' نفر'"></span>
+                <span aria-hidden="true">·</span>
+                <span class="board-sync-status" role="status" aria-live="polite" x-text="syncStatusText()"></span>
+                <button x-show="snapshotState !== 'current'" type="button" @click="realtimeRefresher.refreshNow()" class="board-overview__retry">تلاش دوباره</button>
+            </div>
+        </div>
+        <div class="board-overview__controls">
+            <div class="board-overview__progress">
+                <div><strong x-text="toPersianDigits(boardProgress()) + '٪'"></strong><small x-text="activeCycle ? 'پیشرفت چرخه' : 'پیشرفت پروژه'"></small></div>
+                <div class="board-overview__progress-track" role="progressbar" :aria-valuenow="boardProgress()" aria-valuemin="0" aria-valuemax="100" :aria-label="activeCycle ? 'پیشرفت چرخه' : 'پیشرفت پروژه'"><span :style="'width:' + boardProgress() + '%'"></span></div>
+                <button type="button" @click="boardCompact = !boardCompact" :aria-pressed="boardCompact" class="board-density-toggle" x-text="boardCompact ? 'نمای کامل' : 'نمای فشرده'"></button>
+            </div>
+            <label class="board-local-search"><span class="sr-only">جستجو در این تخته</span><input type="search" x-model.debounce.200ms="boardSearchQuery" placeholder="جستجو در این تخته…" aria-label="جستجو در این تخته"></label>
+        </div>
+    </section>
 
     <div x-show="selectedTaskIds.length > 0" x-cloak class="board-bulk-bar">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 px-3 sm:px-6 py-2.5">
@@ -266,7 +283,7 @@
     </div>
 
     {{-- Board --}}
-    <main class="w-full max-w-7xl mx-auto">
+    <div class="board-canvas w-full">
 
         {{-- Desktop board --}}
         <div id="desktop-column-track" class="hidden md:flex gap-3 items-start overflow-x-auto px-3 sm:px-6 pt-4 md:pt-5 pb-4" style="direction: rtl;" x-init="$nextTick(() => initColumnSortable('desktop'))">
@@ -274,9 +291,9 @@
                 <div
                     class="board-column board-column-shell flex flex-col shrink-0"
                     :data-column-id="column.id"
-                    :style="'--column-accent:' + (column.dotHex || '#94A3B8')"
+                    :style="columnStyle(column)"
                     @click="if (column.collapsed) column.collapsed = false"
-                    :class="column.collapsed ? '!w-14 cursor-pointer' : ''"
+                    :class="[column.collapsed ? '!w-14 cursor-pointer' : '', column.workflowRole === 'active' ? 'is-active-column' : '', column.workflowRole === 'done' ? 'is-done-column' : '']"
                     :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''"
                 >
                     <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
@@ -290,7 +307,7 @@
                         <div class="board-column-header__identity">
                             <span class="board-column-header-accent" aria-hidden="true"></span>
                             <h2 class="board-column-header__title" x-text="column.title"></h2>
-                            <span class="board-column-header__count" x-text="toPersianDigits(column.tasks.length) + ' وظیفه'"></span>
+                            <span class="board-column-header__count" x-text="toPersianDigits(column.tasks.length) + (column.wipLimit ? ' / ' + toPersianDigits(column.wipLimit) : '')"></span>
                             <span x-show="column.wipLimit" class="board-column-header__wip" :class="column.wipLimit && column.tasks.length > column.wipLimit ? 'is-over' : ''" x-text="column.wipLimit ? 'ظرفیت ' + toPersianDigits(column.wipLimit) : ''"></span>
                         </div>
                         <div class="board-column-header__utilities">
@@ -306,7 +323,7 @@
                                 <div class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
                                     <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="board-column-header__button" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
                                     <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-44 rounded-xl border border-[#E8EBE9] bg-white py-1 shadow-xl z-20" @click.stop>
-                                        <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش</button>
+                                        <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش نام و رنگ</button>
                                         <div class="my-1 border-t border-[#F1F5F9]"></div>
                                         <button @click="openColumnMenuId = null; moveColumnByStep(column.id, -1)" :disabled="columnMovePending || colIdx === 0" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به قبل</button>
                                         <button @click="openColumnMenuId = null; moveColumnByStep(column.id, 1)" :disabled="columnMovePending || colIdx === columns.length - 1" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به بعد</button>
@@ -346,18 +363,21 @@
                                         </div>
                                         <div class="flex flex-wrap gap-1 justify-end">
                                             <span
-                                                class="task-card__priority-badge"
+                                                class="task-card__priority-badge" x-show="task.priority === 'بالا'"
                                                 :class="priorityBadgeClass(task.priority)"
                                                 x-text="task.priority"
                                             ></span>
                                             <span x-show="task.isBlocked" class="task-card__blocked">مسدود</span>
+
+                                        </div>
+                                    </div>
+                                    <button type="button" class="task-card__title text-right w-full" @click.stop="if (canOpenTaskFromCard()) openEditModal(task, column.id)" :aria-label="'باز کردن وظیفه: ' + task.title" x-html="highlightText(task.title, boardSearchQuery)"></button>
+                                    <div class="task-card__tags" x-show="(task.tags || []).length">
                                             <template x-for="tag in visibleTags(task)" :key="tag">
                                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
                                             </template>
                                             <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
-                                        </div>
                                     </div>
-                                    <button type="button" class="task-card__title text-right w-full" @click.stop="if (canOpenTaskFromCard()) openEditModal(task, column.id)" :aria-label="'باز کردن وظیفه: ' + task.title" x-html="highlightText(task.title, boardSearchQuery)"></button>
                                     <p x-show="task.description" class="task-card__desc" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="task-card__checklist-bar" x-show="checklistTotal(task) > 0">
                                         <span :style="'width:' + checklistPercentFor(task) + '%'"></span>
@@ -421,13 +441,13 @@
                 </div>
             </template>
             @if ($canEdit)
-                <button @click="openColumnModal()" class="mt-14 min-w-[72px] w-[72px] min-h-[240px] rounded-2xl border-2 border-dashed border-[#D7D1C5] hover:border-[#18212B] hover:bg-[#F1F3F2] text-[#64748B] hover:text-[#18212B] flex items-center justify-center transition-colors" title="افزودن ستون"><span class="[writing-mode:vertical-rl] text-xs font-black" x-text="'+ ستون جدید'"></span></button>
+                <button @click="openColumnModal()" class="board-add-column mt-14 min-w-[72px] w-[72px] min-h-[240px] rounded-2xl border-2 border-dashed border-[#D7D1C5] hover:border-[#18212B] hover:bg-[#F1F3F2] text-[#64748B] hover:text-[#18212B] flex items-center justify-center transition-colors" title="افزودن ستون"><span class="[writing-mode:vertical-rl] text-xs font-black" x-text="'+ ستون جدید'"></span></button>
             @endif
         </div>
 
         {{-- Mobile column navigator --}}
-        <section class="md:hidden bg-white border-b border-[#DCE4EE] shadow-[0_5px_18px_rgba(7,27,51,0.05)] sticky top-[var(--board-header-height,58px)] z-20">
-            <div x-ref="mobileColumnTabs" class="mobile-column-tabs flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2" role="tablist" aria-label="ستون‌های تخته">
+        <section class="board-mobile-navigator md:hidden bg-white border-b border-[#DCE4EE] shadow-[0_5px_18px_rgba(7,27,51,0.05)] sticky top-[var(--board-header-height,58px)] z-20">
+            <div id="mobile-column-tabs" x-ref="mobileColumnTabs" class="mobile-column-tabs flex gap-1.5 overflow-x-auto px-3 pt-2.5 pb-2" role="tablist" aria-label="ستون‌های تخته">
                 <template x-for="(column, index) in columns" :key="'tab-' + column.id">
                     <button
                         @click="scrollToColumn(index)"
@@ -450,12 +470,13 @@
                 <button type="button" @click="scrollToColumn(activeColumnIndex + 1)" :disabled="activeColumnIndex === columns.length - 1" class="mobile-column-nav" aria-label="ستون بعدی">‹</button>
             </div>
             @if ($canEdit)
-                <div class="px-3 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی دقیق ستون، جایگاه آن را انتخاب کنید.</div>
+                <div class="board-column-order-help px-3 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی دقیق ستون، جایگاه آن را انتخاب کنید.</div>
             @endif
         </section>
 
         {{-- Mobile one-column swipe board --}}
         <div
+            id="mobile-column-track"
             x-ref="mobileBoardTrack"
             @scroll.passive="handleMobileBoardScroll()"
             class="mobile-board-track md:hidden flex gap-3 overflow-x-auto snap-x snap-mandatory px-3 pt-4 pb-8"
@@ -466,16 +487,17 @@
             <template x-for="(column, colIdx) in columns" :key="'mobile-' + column.id">
                 <section
                     class="mobile-board-column flex flex-col flex-none w-[calc(100%_-_24px)] min-w-[calc(100%_-_24px)]"
+                    :class="{ 'is-active-column': column.workflowRole === 'active', 'is-done-column': column.workflowRole === 'done' }"
                     :data-column-index="colIdx"
                     :data-column-id="column.id"
                     :aria-label="column.title"
-                    :style="'--column-accent:' + (column.dotHex || '#94A3B8')"
+                    :style="columnStyle(column)"
                 >
                     <div class="board-column-mobile-header">
                         <div class="board-column-header__identity">
                             <span class="board-column-header-accent" aria-hidden="true"></span>
                             <h2 class="board-column-header__title" x-text="column.title"></h2>
-                            <span class="board-column-header__count" x-text="toPersianDigits(column.tasks.length) + ' وظیفه'"></span>
+                            <span class="board-column-header__count" x-text="toPersianDigits(column.tasks.length) + (column.wipLimit ? ' / ' + toPersianDigits(column.wipLimit) : '')"></span>
                         </div>
                         <div class="board-column-header__utilities">
                             @if ($canEdit)
@@ -516,12 +538,9 @@
                                     <div class="flex items-start justify-between gap-2 mb-2.5">
                                         <div class="flex flex-wrap gap-1">
                                             <input type="checkbox" :checked="isTaskSelected(task.dbId)" @click.stop="toggleTaskSelection(task.dbId)" class="board-task-select" aria-label="انتخاب وظیفه">
-                                            <span class="task-card__priority-badge" :class="priorityBadgeClass(task.priority)" x-text="task.priority"></span>
+                                            <span class="task-card__priority-badge" x-show="task.priority === 'بالا'" :class="priorityBadgeClass(task.priority)" x-text="task.priority"></span>
                                             <span x-show="task.isBlocked" class="task-card__blocked">مسدود</span>
-                                            <template x-for="tag in visibleTags(task)" :key="tag">
-                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
-                                            </template>
-                                            <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
+
                                         </div>
                                         @if ($canEdit)
                                             <button @click.stop class="task-drag-handle w-11 h-11 -mt-2.5 -ml-2.5 rounded-xl text-[#94A3B8] flex items-center justify-center active:bg-[#F1F5F9] cursor-grab" aria-label="جابجایی وظیفه">
@@ -531,6 +550,12 @@
                                     </div>
                                     <span class="task-card__id block text-[11px] font-bold text-[#94A3B8] mb-1.5" x-text="task.id"></span>
                                     <button type="button" class="task-card__title text-right w-full" @click.stop="if (canOpenTaskFromCard()) openEditModal(task, column.id)" :aria-label="'باز کردن وظیفه: ' + task.title" x-html="highlightText(task.title, boardSearchQuery)"></button>
+                                    <div class="task-card__tags" x-show="(task.tags || []).length">
+                                            <template x-for="tag in visibleTags(task)" :key="tag">
+                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
+                                            </template>
+                                            <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
+                                    </div>
                                     <p x-show="task.description" class="task-card__desc" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="task-card__checklist-bar" x-show="checklistTotal(task) > 0">
                                         <span :style="'width:' + checklistPercentFor(task) + '%'"></span>
@@ -615,7 +640,7 @@
             </button>
         </div>
         <p class="sr-only" aria-live="polite" x-text="'ستون ' + (columns[activeColumnIndex]?.title || '')"></p>
-    </main>
+    </div>
 
     <template x-if="mobileDragActive">
         <div class="md:hidden">
@@ -1419,11 +1444,21 @@
 
     {{-- Add Column Modal --}}
     <div x-show="showColumnModal" x-cloak x-transition:enter="transition-opacity ease-out duration-100" x-transition:leave="transition-opacity ease-in duration-75" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="closeColumnModal()">
-        <div class="absolute inset-0 bg-[#18212B]/45" @click="closeColumnModal()"></div>
+        <div class="column-modal-backdrop absolute inset-0" @click="closeColumnModal()"></div>
         <form @submit.prevent="addColumn()" class="board-form-modal relative bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-labelledby="column-modal-title" @keydown="trapModalFocus($event)">
-            <div class="p-6 border-b border-[#F1EFEA]"><h4 id="column-modal-title" class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام ستون را برای نمایش بهتر جریان کار تغییر دهید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
+            <div class="p-6 border-b border-[#F1EFEA]"><h4 id="column-modal-title" class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام، رنگ و ظرفیت این مرحله را تنظیم کنید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
             <button type="button" @click="closeColumnModal()" class="modal-close-button absolute left-4 top-4" aria-label="بستن پنجره"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18"/></svg></button>
-            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">ظرفیت کار هم‌زمان <span class="font-normal text-[#94A3B8]">(اختیاری)</span></label><input x-model="columnFormWipLimit" type="number" min="1" max="999" class="w-full h-11 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً ۵"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">رنگ نشان ستون</label><div class="flex flex-wrap gap-2"><template x-for="color in columnColors" :key="color.hex"><button type="button" @click="columnFormColor = color.hex" class="group inline-flex items-center gap-2 rounded-xl border px-2.5 py-2 text-[10px] font-bold transition-all" :class="columnFormColor === color.hex ? 'border-[#18212B] bg-[#FBFAF7] text-[#18212B] ring-2 ring-[#18212B]/10' : 'border-[#E8EBE9] text-[#64748B] hover:bg-[#FBFAF7]'"><span class="h-4 w-4 rounded-full shadow-sm" :style="'background-color:' + color.hex"></span><span x-text="color.name"></span></button></template></div></div><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p></div>
+            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">ظرفیت کار هم‌زمان <span class="font-normal text-[#94A3B8]">(اختیاری)</span></label><input x-model="columnFormWipLimit" type="number" min="1" max="999" class="w-full h-11 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً ۵"></div><fieldset class="column-color-picker">
+                    <legend>رنگ ستون</legend>
+                    <p>این رنگ برای پس‌زمینه ستون و نشان کارت‌ها استفاده می‌شود.</p>
+                    <div class="column-color-picker__presets">
+                        <template x-for="color in columnColors" :key="color.hex">
+                            <button type="button" @click="columnFormColor = color.hex" :aria-label="color.name" :title="color.name" :aria-pressed="columnFormColor.toLowerCase() === color.hex.toLowerCase()" :class="{ 'is-selected': columnFormColor.toLowerCase() === color.hex.toLowerCase() }" :style="'--swatch-color:' + color.hex"><svg x-show="columnFormColor.toLowerCase() === color.hex.toLowerCase()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="m5 12 4 4L19 6"/></svg></button>
+                        </template>
+                    </div>
+                    <label class="column-color-picker__custom" for="column-custom-color"><span>رنگ دلخواه</span><input id="column-custom-color" type="color" x-model="columnFormColor"><code x-text="columnFormColor.toUpperCase()"></code></label>
+                    <div class="column-color-preview" :style="columnStyle({ dotHex: columnFormColor })" aria-label="پیش‌نمایش رنگ ستون"><div><i></i><strong x-text="columnFormTitle || 'ستون جدید'"></strong><small>۲</small></div><span>پیش‌نمایش یک وظیفه در این ستون</span></div>
+                </fieldset><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p></div>
             <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" :disabled="columnSaving" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button type="submit" :disabled="columnSaving" :aria-busy="columnSaving" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait" x-text="columnSaving ? 'در حال ذخیره…' : (columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون')"></button></div>
         </form>
     </div>
@@ -1586,7 +1621,7 @@
                 deleteTarget: { columnId: null, taskId: null },
                 columnDeleteTarget: { id: null, title: '', taskCount: 0 },
                 columnFormTitle: '',
-                columnFormColor: '#94A3B8',
+                columnFormColor: '#8B938E',
                 columnFormWipLimit: '',
                 columnEditingId: null,
                 toast: { show: false, message: '', type: 'success' },
@@ -1641,15 +1676,41 @@
 
                 customTags: @json($customTags ?? []),
 
+                boardCompact: false,
                 columnColors: [
-                    { name: 'خاکستری', hex: '#94A3B8' },
-                    { name: 'ذغالی', hex: '#18212B' },
-                    { name: 'کهربایی', hex: '#F59E0B' },
-                    { name: 'سبز', hex: '#22C55E' },
-                    { name: 'بنفش', hex: '#8B5CF6' },
-                    { name: 'قرمز', hex: '#EF4444' },
-                    { name: 'فیروزه‌ای', hex: '#14B8A6' },
+                    { name: 'خاکستری گرم', hex: '#8B938E', surface: '#ECEBE6' },
+                    { name: 'آبی آرام', hex: '#7183A3', surface: '#E7EAF0' },
+                    { name: 'سبز جنگلی', hex: '#4E6B5C', surface: '#E7EEE9' },
+                    { name: 'سبز مریم‌گلی', hex: '#77A98E', surface: '#EDF1EC' },
+                    { name: 'شنی', hex: '#AB8D64', surface: '#EEE8DF' },
+                    { name: 'بنفش ملایم', hex: '#9581A5', surface: '#EDE8F1' },
+                    { name: 'آجری', hex: '#9A4A3A', surface: '#F5ECE8' },
+                    { name: 'فیروزه‌ای', hex: '#588D91', surface: '#E6EFF0' },
                 ],
+
+                columnStyle(column) {
+                    const candidate = column.dotHex || '#8B938E';
+                    const accent = /^#[0-9a-f]{6}$/i.test(candidate) ? candidate.toUpperCase() : '#8B938E';
+                    const preset = this.columnColors.find(color => color.hex === accent);
+                    const paper = [247, 245, 239];
+                    const surface = preset?.surface || '#' + paper.map((channel, index) => {
+                        const color = parseInt(accent.slice(1 + index * 2, 3 + index * 2), 16);
+                        return Math.round(channel * 0.86 + color * 0.14).toString(16).padStart(2, '0');
+                    }).join('');
+                    return `--column-accent:${accent};--column-surface:${surface};`;
+                },
+
+                boardProgress() {
+                    const cycleIds = this.activeCycle ? new Set(this.activeCycle.taskIds.map(Number)) : null;
+                    const tasks = this.columns.flatMap(column => column.tasks.map(task => ({ task, done: column.workflowRole === 'done' })));
+                    const included = cycleIds ? tasks.filter(item => cycleIds.has(Number(item.task.dbId))) : tasks;
+                    return included.length ? Math.round(included.filter(item => item.done).length / included.length * 100) : 0;
+                },
+
+                cycleDaysRemaining() {
+                    if (!this.activeCycle) return 0;
+                    return Math.max(0, Math.ceil((Date.parse(this.activeCycle.endsOn) - Date.parse(this.workspaceNowParts().date)) / 86400000));
+                },
 
                 columns: serverColumns.map(column => Object.assign({}, column, { collapsed: false })),
                 sortableInstances: [],
@@ -2168,7 +2229,7 @@
                 },
 
                 updateColumnHeight() {
-                    const tracks = [document.getElementById('desktop-column-track'), this.$refs.mobileBoardTrack];
+                    const tracks = [document.getElementById('desktop-column-track'), document.getElementById('mobile-column-track')];
                     for (const track of tracks) {
                         if (!track || !track.getClientRects().length) continue;
                         const offset = Math.ceil(track.getBoundingClientRect().top + window.scrollY + parseFloat(window.getComputedStyle(track).paddingTop));
@@ -2291,7 +2352,7 @@
 
                 scrollToColumn(index, behavior = 'smooth') {
                     if (index < 0 || index >= this.columns.length) return;
-                    const track = this.$refs.mobileBoardTrack;
+                    const track = document.getElementById('mobile-column-track');
                     const target = track?.querySelector(`[data-column-index="${index}"]`);
                     if (!target) return;
                     target.scrollIntoView({
@@ -2304,7 +2365,7 @@
                 },
 
                 revealActiveColumnTab() {
-                    this.$nextTick(() => this.$refs.mobileColumnTabs
+                    this.$nextTick(() => document.getElementById('mobile-column-tabs')
                         ?.querySelector(`[data-tab-index="${this.activeColumnIndex}"]`)
                         ?.scrollIntoView({ block: 'nearest', inline: 'nearest' }));
                 },
@@ -2312,7 +2373,7 @@
                 handleMobileBoardScroll() {
                     window.clearTimeout(this.mobileScrollTimer);
                     this.mobileScrollTimer = window.setTimeout(() => {
-                        const track = this.$refs.mobileBoardTrack;
+                        const track = document.getElementById('mobile-column-track');
                         if (!track) return;
                         const center = track.getBoundingClientRect().left + (track.clientWidth / 2);
                         let closestIndex = this.activeColumnIndex;
@@ -2333,7 +2394,7 @@
 
                 initMobileBoardObserver() {
                     this.destroyMobileBoardObserver();
-                    const track = this.$refs.mobileBoardTrack;
+                    const track = document.getElementById('mobile-column-track');
                     if (!track || !window.IntersectionObserver) return;
                     this.mobileBoardObserver = new IntersectionObserver(entries => {
                         const visible = entries
@@ -2415,7 +2476,7 @@
 
                 navigateDuringMobileDrag(targetIndex) {
                     if (!this.mobileDragActive) return;
-                    const track = this.$refs.mobileBoardTrack;
+                    const track = document.getElementById('mobile-column-track');
                     const target = track?.querySelector(`[data-column-index="${targetIndex}"]`);
                     if (!target) return;
 
@@ -2913,7 +2974,7 @@
                     const isMobile = window.matchMedia('(max-width: 767px)').matches;
                     if ((variant === 'mobile') !== isMobile) return;
                     if (this.columnSortableInstances.some(item => item.variant === variant)) return;
-                    const el = variant === 'mobile' ? this.$refs.mobileBoardTrack : document.getElementById('desktop-column-track');
+                    const el = variant === 'mobile' ? document.getElementById('mobile-column-track') : document.getElementById('desktop-column-track');
                     if (!el) return;
                     const self = this;
                     let originalOrder = [];
@@ -3565,7 +3626,7 @@
                     if (!this.canEdit) return;
                     this.columnEditingId = null;
                     this.columnFormTitle = '';
-                    this.columnFormColor = '#94A3B8';
+                    this.columnFormColor = '#8B938E';
                     this.columnFormWipLimit = '';
                     this.columnError = '';
                     this.showColumnModal = true;
@@ -3576,7 +3637,7 @@
                     if (!this.canEdit) return;
                     this.columnEditingId = column.id;
                     this.columnFormTitle = column.title;
-                    this.columnFormColor = column.dotHex || '#94A3B8';
+                    this.columnFormColor = column.dotHex || '#8B938E';
                     this.columnFormWipLimit = column.wipLimit || '';
                     this.columnError = '';
                     this.showColumnModal = true;
@@ -3587,7 +3648,7 @@
                     this.showColumnModal = false;
                     this.columnFormTitle = '';
                     this.columnEditingId = null;
-                    this.columnFormColor = '#94A3B8';
+                    this.columnFormColor = '#8B938E';
                     this.columnFormWipLimit = '';
                 },
 
@@ -3618,12 +3679,13 @@
                             this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', dotHex: data.color || this.columnFormColor, wipLimit: data.wip_limit || null, badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
                         }
                         this.closeColumnModal();
-                        this.showToast(editing ? 'نام ستون ویرایش شد' : 'ستون جدید اضافه شد');
+                        this.showToast(editing ? 'تغییرات ستون ذخیره شد' : 'ستون جدید اضافه شد');
                         if (!editing) this.$nextTick(() => { this.initSortable(String(data.id), this.boardMediaQuery?.matches ? 'mobile' : 'desktop'); if (this.boardMediaQuery?.matches) this.initMobileBoardObserver(); });
                     } catch (error) {
                         this.columnError = error.message || 'ذخیره ستون انجام نشد.';
                     } finally {
                         this.columnSaving = false;
+                        this.flushMutationSnapshot();
                     }
                 },
 

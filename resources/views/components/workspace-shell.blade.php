@@ -15,7 +15,7 @@
     <aside class="workspace-sidebar" :class="{ 'is-collapsed': sidebarCollapsed }">
         <div class="workspace-sidebar__brand">
             <a href="{{ route('today', $workspace->slug) }}" aria-label="خانه نئووا">
-                <img src="{{ asset('assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا">
+                <img src="{{ asset($board ? 'assets/logo/horizental-logo-black-transparent.png' : 'assets/logo/png/logo-monochrome-black.png') }}" alt="نئووا">
             </a>
             @if ($board)
                 <button type="button" @click="toggleSidebar()" aria-label="باز و بسته کردن نوار کناری">☰</button>
@@ -134,7 +134,7 @@
 <script>
 function workspaceShell(config) {
     return {
-        sidebarCollapsed: config.board ? localStorage.getItem('neova_board_sidebar') !== 'expanded' : false,
+        sidebarCollapsed: config.board ? localStorage.getItem('neova_board_sidebar') === 'collapsed' : false,
         workspaceOpen: false, mobileWorkspaceOpen: false, workspaceCreating: false, accountOpen: false,
         searchOpen: false, searchQuery: '', searchResults: [], searchLoading: false,
         toggleSidebar() { this.sidebarCollapsed = !this.sidebarCollapsed; localStorage.setItem('neova_board_sidebar', this.sidebarCollapsed ? 'collapsed' : 'expanded'); },

@@ -48,10 +48,10 @@ class BoardController extends Controller
             'انجام شده' => 'bg-[#22C55E]',
         ];
         $colHexColors = [
-            'پس‌زمینه' => '#94A3B8',
-            'در حال انجام' => '#0069D9',
-            'بررسی' => '#F59E0B',
-            'انجام شده' => '#22C55E',
+            'پس‌زمینه' => '#8B938E',
+            'در حال انجام' => '#4E6B5C',
+            'بررسی' => '#7183A3',
+            'انجام شده' => '#77A98E',
         ];
         $colBadge = [
             'پس‌زمینه' => 'bg-[#F1F5F9] text-[#64748B]',
@@ -66,7 +66,9 @@ class BoardController extends Controller
             'wipLimit' => $c->wip_limit,
             'workflowRole' => $c->workflow_role,
             'dotColor' => $colColors[$c->title] ?? 'bg-[#94A3B8]',
-            'dotHex' => $c->color ?: ($colHexColors[$c->title] ?? '#94A3B8'),
+            'dotHex' => $c->color ?: ($colHexColors[$c->title] ?? match ($c->workflow_role) {
+                'ready' => '#7183A3', 'active' => '#4E6B5C', 'done' => '#77A98E', default => '#8B938E',
+            }),
             'badgeClass' => $colBadge[$c->title] ?? 'bg-[#F1F5F9] text-[#64748B]',
             'tasks' => $c->tasks->map(function ($t) use ($workspace, $project) {
                 $attachmentData = app(TaskAttachmentData::class);

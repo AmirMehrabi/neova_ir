@@ -106,6 +106,23 @@ class BoardRealtimeUxTest extends TestCase
         $this->assertSame('بالا', $bulk->json('board.columns.0.tasks.0.priority'));
     }
 
+    public function test_column_colors_are_saved_and_returned_in_board_snapshots(): void
+    {
+        extract($this->board());
+        $url = route('board.column.update', [$workspace->slug, $project->slug, $ready]);
+        $this->patchJson($url, ['title' => $ready->title, 'color' => '#9581A5'])
+            ->assertOk()->assertJsonPath('board.columns.0.dotHex', '#9581A5');
+        $this->assertSame('#9581A5', $ready->fresh()->color);
+        $this->getJson(route('board.realtime.snapshot', [$workspace->slug, $project->slug]))
+            ->assertOk()->assertJsonPath('columns.0.dotHex', '#9581A5');
+        $this->patchJson($url, ['title' => $ready->title, 'color' => 'red;display:none'])
+            ->assertUnprocessable()->assertJsonValidationErrors('color');
+        $this->assertSame('#9581A5', $ready->fresh()->color);
+        $this->postJson(route('board.column.store', [$workspace->slug, $project->slug]), [
+            'project_id' => $project->id, 'title' => 'Custom', 'color' => '#123ABC',
+        ])->assertOk()->assertJsonPath('board.columns.2.dotHex', '#123ABC');
+    }
+
     public function test_project_settings_conflict_preserves_newer_name_and_returns_current_identity(): void
     {
         extract($this->board());

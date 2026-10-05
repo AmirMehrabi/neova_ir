@@ -2,6 +2,7 @@
 @import './board.css';
 
 @import './today.css';
+@import './board-direction.css';
 
 :root {
     --neova-paper: #F7F7F5;
