@@ -264,7 +264,6 @@
 }
 
 /* Keep the approved Direction B canvas authoritative over the legacy shell theme. */
-.workspace-shell.workspace-shell--today,
 .workspace-shell.workspace-shell--board { background:#F7F5EF !important; }
 @media (max-width: 767px) {
     .workspace-mobile-brand > img { width: 36px; height: 36px; filter: brightness(0); }

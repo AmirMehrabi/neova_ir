@@ -10,8 +10,21 @@ class ProjectsController extends Controller
     {
         $workspaceModel = $request->attributes->get('workspace');
         $archived = $request->boolean('archived');
-        $projects = $workspaceModel->projects()->where('is_active', ! $archived)->with(['columns' => fn ($query) => $query->withCount(['tasks' => fn ($query) => $query->active()])])->orderBy('name')->get()
+        $visibleProjects = $workspaceModel->projects()->orderBy('name')->get()
+            ->filter(fn ($project) => $project->canUserView($request->user(), $workspaceModel));
+        $projectCounts = ['active' => $visibleProjects->where('is_active', true)->count(), 'archived' => $visibleProjects->where('is_active', false)->count()];
+        $search = mb_substr(trim((string) $request->query('q', '')), 0, 100);
+        $sort = in_array($request->query('sort'), ['name', 'recent'], true) ? $request->query('sort') : 'name';
+        $projects = $workspaceModel->projects()->whereIn('id', $visibleProjects->modelKeys())->where('is_active', ! $archived)->with(['columns' => fn ($query) => $query->withCount(['tasks' => fn ($query) => $query->active()])])->orderBy('name')->get()
             ->filter(fn ($project) => $project->canUserView($request->user(), $workspaceModel))->values();
+
+        if ($search !== '') {
+            $projects = $projects->filter(fn ($project) => str_contains(mb_strtolower($project->name.' '.$project->key), mb_strtolower($search)))->values();
+        }
+        if ($sort === 'recent') {
+            $recentIds = collect(session("recent_projects.{$workspaceModel->id}", []));
+            $projects = $projects->sortBy(fn ($project) => ($index = $recentIds->search($project->id)) !== false ? $index : $recentIds->count())->values();
+        }
 
         foreach ($projects as $project) {
             $project->setAttribute('active_tasks', $project->columns->where('workflow_role', 'active')->sum('tasks_count'));
@@ -23,6 +36,9 @@ class ProjectsController extends Controller
             'projects' => $projects,
             'canManage' => $workspaceModel->canManageMembers($request->user()),
             'archived' => $archived,
+            'projectCounts' => $projectCounts,
+            'search' => $search,
+            'sort' => $sort,
         ]);
     }
 
