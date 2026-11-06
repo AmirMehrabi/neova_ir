@@ -5,7 +5,7 @@
     $navbarUnreadCount = $navbarUnreadCount ?? 0;
 @endphp
 
-<header class="app-navbar {{ $embedded ? 'app-navbar--embedded' : '' }} w-full sticky top-0 z-30 border-b {{ $dark ? 'border-white/10 bg-[#18212B]/96 shadow-[0_8px_30px_rgba(24,33,43,0.18)]' : 'border-[#E8EBE9] bg-[#FDFDFC]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' }} backdrop-blur-xl">
+<header class="app-navbar {{ $embedded ? 'app-navbar--embedded' : '' }} w-full sticky top-0 z-30 border-b {{ $dark ? 'border-white/10 bg-[#202020]/96 shadow-[0_8px_30px_rgba(24,33,43,0.18)]' : 'border-[#EBEBEB] bg-[#FAFAFA]/95 shadow-[0_8px_30px_rgba(24,33,43,0.06)]' }} backdrop-blur-xl">
     <div class="{{ $boardShell ? 'max-w-7xl mx-auto' : ($fluid ? 'max-w-[1600px] mx-auto' : 'max-w-7xl mx-auto') }} px-3 sm:px-6 h-14 md:h-16 flex items-center gap-3 md:gap-4">
         {{-- Logo --}}
         @if (! $embedded)<a href="{{ route('dashboard') }}" class="shrink-0 inline-flex items-center" aria-label="خانه نئووا">
@@ -38,15 +38,15 @@
                     @click="userDropdown = !userDropdown"
                     class="min-w-11 min-h-11 flex items-center justify-center gap-2 px-1.5 sm:px-2 py-1.5 rounded-xl sm:rounded-lg {{ $dark ? 'hover:bg-white/10' : 'hover:bg-[#F1F3F1]' }} transition-colors"
                 >
-                    <div class="w-8 h-8 rounded-full bg-[#18212B] flex items-center justify-center ring-1 ring-white/20 overflow-hidden">
+                    <div class="w-8 h-8 rounded-full bg-[#202020] flex items-center justify-center ring-1 ring-white/20 overflow-hidden">
                         @if (auth()->user()->avatar)
                             <img src="{{ asset('storage/avatars/' . auth()->user()->avatar) }}" alt="{{ auth()->user()->full_name }}" class="w-full h-full object-cover">
                         @else
                             <span class="text-[9px] text-white font-bold">{{ auth()->user()->initials }}</span>
                         @endif
                     </div>
-                    <span class="text-[11px] font-semibold {{ $dark ? 'text-white/85' : 'text-[#334155]' }} hidden sm:block">{{ auth()->user()->full_name }}</span>
-                    <svg class="hidden sm:block w-3 h-3 {{ $dark ? 'text-white/50' : 'text-[#94A3B8]' }} transition-transform" :class="userDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <span class="text-[11px] font-semibold {{ $dark ? 'text-white/85' : 'text-[#444444]' }} hidden sm:block">{{ auth()->user()->full_name }}</span>
+                    <svg class="hidden sm:block w-3 h-3 {{ $dark ? 'text-white/50' : 'text-[#888888]' }} transition-transform" :class="userDropdown ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
 
                 <div
@@ -54,11 +54,11 @@
                     x-transition:enter="transition ease-out duration-150"
                     x-transition:enter-start="opacity-0 translate-y-1"
                     x-transition:enter-end="opacity-100 translate-y-0"
-                    class="absolute left-0 top-full mt-1.5 w-52 bg-white rounded-xl border border-[#E2E8F0] overflow-hidden z-50"
+                    class="absolute left-0 top-full mt-1.5 w-52 bg-white rounded-xl border border-[#E5E5E5] overflow-hidden z-50"
                 >
-                    <div class="px-3 py-2.5 border-b border-[#F1F5F9]">
+                    <div class="px-3 py-2.5 border-b border-[#F4F4F4]">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-full bg-[#18212B] flex items-center justify-center overflow-hidden shrink-0">
+                            <div class="w-9 h-9 rounded-full bg-[#202020] flex items-center justify-center overflow-hidden shrink-0">
                                 @if (auth()->user()->avatar)
                                     <img src="{{ asset('storage/avatars/' . auth()->user()->avatar) }}" alt="" class="w-full h-full object-cover">
                                 @else
@@ -67,21 +67,21 @@
                             </div>
                             <div class="min-w-0">
                                 <p class="text-[11px] font-bold text-[#1A1D21] truncate">{{ auth()->user()->full_name }}</p>
-                                <p class="text-[10px] text-[#94A3B8]">{{ auth()->user()->phone }}</p>
+                                <p class="text-[10px] text-[#888888]">{{ auth()->user()->phone }}</p>
                             </div>
                         </div>
                     </div>
                     <div class="py-1">
-                        <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[#475569] hover:bg-[#F8FAFC] transition-colors">
-                            <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        <a href="{{ route('dashboard') }}" class="flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[#555555] hover:bg-[#F8FAFC] transition-colors">
+                            <svg class="w-3.5 h-3.5 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                             خانه
                         </a>
-                        <a href="{{ route('profile') }}" class="flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[#475569] hover:bg-[#F8FAFC] transition-colors">
-                            <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <a href="{{ route('profile') }}" class="flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[#555555] hover:bg-[#F8FAFC] transition-colors">
+                            <svg class="w-3.5 h-3.5 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                             پروفایل
                         </a>
                     </div>
-                    <div class="border-t border-[#F1F5F9] py-1">
+                    <div class="border-t border-[#F4F4F4] py-1">
                         <form action="{{ route('auth.logout') }}" method="POST">
                             @csrf
                             <button type="submit" class="w-full flex items-center gap-2.5 px-3 py-2 text-[11px] font-medium text-[#EF4444] hover:bg-red-50 transition-colors">

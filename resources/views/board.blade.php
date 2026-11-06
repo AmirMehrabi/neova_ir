@@ -130,16 +130,16 @@
                     type="button"
                     @click="filterPanelOpen = !filterPanelOpen"
                     class="board-nav-control board-topbar-filter__trigger"
-                    :class="activeFilterCount() > 0 ? 'ring-2 ring-[#18212B]/15 border-[#18212B]/30' : ''"
+                    :class="activeFilterCount() > 0 ? 'ring-2 ring-[#202020]/15 border-[#202020]/30' : ''"
                     :aria-expanded="filterPanelOpen"
                 >
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h18M6 12h12M10 20h4"/></svg>
                     <span class="board-topbar-action-label">فیلتر</span>
-                    <span x-show="activeFilterCount() > 0" class="min-w-5 h-5 px-1 rounded-full bg-[#18212B] text-white text-[10px] flex items-center justify-center" x-text="toPersianDigits(activeFilterCount())"></span>
+                    <span x-show="activeFilterCount() > 0" class="min-w-5 h-5 px-1 rounded-full bg-[#202020] text-white text-[10px] flex items-center justify-center" x-text="toPersianDigits(activeFilterCount())"></span>
                 </button>
-                <div x-show="filterPanelOpen" x-transition class="board-desktop-filter-panel absolute left-0 top-full mt-2 w-72 rounded-xl border border-[#E2E8F0] bg-white shadow-sm z-50 p-3 space-y-3">
+                <div x-show="filterPanelOpen" x-transition class="board-desktop-filter-panel absolute left-0 top-full mt-2 w-72 rounded-xl border border-[#E5E5E5] bg-white shadow-sm z-50 p-3 space-y-3">
                     <div class="flex items-center justify-between">
-                        <p class="text-[12px] font-black text-[#18212B]">فیلتر تخته</p>
+                        <p class="text-[12px] font-black text-[#202020]">فیلتر تخته</p>
                         <button x-show="activeFilterCount() > 0" type="button" @click="clearAllFilters()" class="text-[11px] font-bold text-red-500">پاک کردن</button>
                     </div>
                     <div>
@@ -148,7 +148,7 @@
                             <template x-for="member in projectMembers" :key="'filter-a-' + member.id">
                                 <button type="button" @click="toggleAssigneeFilter(member.name)" class="filter-chip" :class="isAssigneeFilterActive(member.name) ? 'is-active' : ''" x-text="member.name"></button>
                             </template>
-                            <p x-show="projectMembers.length === 0" class="text-[11px] text-[#94A3B8]">عضوی در پروژه نیست</p>
+                            <p x-show="projectMembers.length === 0" class="text-[11px] text-[#888888]">عضوی در پروژه نیست</p>
                         </div>
                     </div>
                     <div>
@@ -161,7 +161,7 @@
                     </div>
                     <div>
                         <label class="board-field-label mb-2" for="desktop-due-filter">سررسید</label>
-                        <select id="desktop-due-filter" x-model="filterByDue" class="w-full h-9 rounded-lg border border-[#E2E8F0] bg-white px-2 text-[11px]">
+                        <select id="desktop-due-filter" x-model="filterByDue" class="w-full h-9 rounded-lg border border-[#E5E5E5] bg-white px-2 text-[11px]">
                             <option value="">همه سررسیدها</option><option value="overdue">عقب‌افتاده</option><option value="today">امروز</option><option value="next7">۷ روز آینده</option><option value="undated">بدون سررسید</option>
                         </select>
                     </div>
@@ -220,15 +220,15 @@
     <div x-show="selectedTaskIds.length > 0" x-cloak class="board-bulk-bar">
         <div class="max-w-7xl mx-auto flex flex-wrap items-center gap-2 px-3 sm:px-6 py-2.5">
             <strong class="text-[11px] text-[#111111]" x-text="toPersianDigits(selectedTaskIds.length) + ' وظیفه انتخاب شده' "></strong>
-            <select x-model="bulkAction" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px] font-bold text-[#475569]">
+            <select x-model="bulkAction" class="h-8 rounded-lg border border-[#E0E0E0] bg-white px-2 text-[10px] font-bold text-[#555555]">
                 <option value="">عملیات گروهی</option><option value="priority">تغییر اولویت</option><option value="assignee">تعیین مسئول</option><option value="tag">افزودن برچسب</option><option value="column">انتقال به ستون</option><option value="due_date">پاک کردن سررسید</option><option value="archive">بایگانی وظیفه‌ها</option>
             </select>
-            <select x-show="bulkAction === 'priority'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><option value="بالا">بالا</option><option value="متوسط">متوسط</option><option value="پایین">پایین</option></select>
-            <select x-show="bulkAction === 'assignee'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><option value="">بدون مسئول</option><template x-for="member in projectMembers" :key="'bulk-' + member.id"><option :value="member.name" x-text="member.name"></option></template></select>
-            <select x-show="bulkAction === 'column'" x-model="bulkValue" class="h-8 rounded-lg border border-[#DCE8F2] bg-white px-2 text-[10px]"><template x-for="column in columns" :key="'bulk-col-' + column.id"><option :value="column.id" x-text="column.title"></option></template></select>
-            <input x-show="bulkAction === 'tag'" x-model="bulkValue" class="h-8 w-28 rounded-lg border border-[#DCE8F2] px-2 text-[10px]" placeholder="نام برچسب">
+            <select x-show="bulkAction === 'priority'" x-model="bulkValue" class="h-8 rounded-lg border border-[#E0E0E0] bg-white px-2 text-[10px]"><option value="بالا">بالا</option><option value="متوسط">متوسط</option><option value="پایین">پایین</option></select>
+            <select x-show="bulkAction === 'assignee'" x-model="bulkValue" class="h-8 rounded-lg border border-[#E0E0E0] bg-white px-2 text-[10px]"><option value="">بدون مسئول</option><template x-for="member in projectMembers" :key="'bulk-' + member.id"><option :value="member.name" x-text="member.name"></option></template></select>
+            <select x-show="bulkAction === 'column'" x-model="bulkValue" class="h-8 rounded-lg border border-[#E0E0E0] bg-white px-2 text-[10px]"><template x-for="column in columns" :key="'bulk-col-' + column.id"><option :value="column.id" x-text="column.title"></option></template></select>
+            <input x-show="bulkAction === 'tag'" x-model="bulkValue" class="h-8 w-28 rounded-lg border border-[#E0E0E0] px-2 text-[10px]" placeholder="نام برچسب">
             <button type="button" @click="applyBulkAction()" :disabled="!bulkAction || bulkLoading" class="h-8 rounded-lg bg-[#111111] px-3 text-[10px] font-black text-white disabled:opacity-40">اعمال</button>
-            <button type="button" @click="clearSelection()" class="mr-auto text-[10px] font-bold text-[#64788A]">لغو انتخاب</button>
+            <button type="button" @click="clearSelection()" class="mr-auto text-[10px] font-bold text-[#666666]">لغو انتخاب</button>
         </div>
     </div>
 
@@ -237,7 +237,7 @@
     <div x-show="activeFilterCount() > 0" x-cloak class="board-filter-bar">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 py-2.5">
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-[12px] font-bold text-[#64748B]">فیلتر فعال:</span>
+                <span class="text-[12px] font-bold text-[#666666]">فیلتر فعال:</span>
                 <template x-for="name in filterByAssignee" :key="'chip-a-' + name">
                     <button type="button" @click="toggleAssigneeFilter(name)" class="filter-chip is-active">
                         <span x-text="name"></span>
@@ -265,10 +265,10 @@
     {{-- Mobile filter sheet --}}
     <div x-show="filterPanelOpen" x-cloak class="md:hidden fixed inset-0 z-[45]" @keydown.escape.window="filterPanelOpen = false">
         <div class="absolute inset-0 bg-[#071B33]/40" @click="filterPanelOpen = false"></div>
-        <div class="absolute inset-x-0 bottom-0 max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-t-2xl bg-white border-t border-[#E2E8F0] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3 shadow-lg" @click.stop>
+        <div class="absolute inset-x-0 bottom-0 max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-t-2xl bg-white border-t border-[#E5E5E5] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] space-y-3 shadow-lg" @click.stop>
             <div class="flex items-center justify-between">
-                <p class="text-[14px] font-black text-[#18212B]">فیلتر تخته</p>
-                <button type="button" @click="filterPanelOpen = false" class="text-[12px] font-bold text-[#64748B] min-h-10 px-2">بستن</button>
+                <p class="text-[14px] font-black text-[#202020]">فیلتر تخته</p>
+                <button type="button" @click="filterPanelOpen = false" class="text-[12px] font-bold text-[#666666] min-h-10 px-2">بستن</button>
             </div>
             <div>
                 <p class="board-field-label">مسئول</p>
@@ -276,7 +276,7 @@
                     <template x-for="member in projectMembers" :key="'m-filter-a-' + member.id">
                         <button type="button" @click="toggleAssigneeFilter(member.name)" class="filter-chip" :class="isAssigneeFilterActive(member.name) ? 'is-active' : ''" x-text="member.name"></button>
                     </template>
-                    <p x-show="projectMembers.length === 0" class="text-[12px] text-[#94A3B8]">عضوی در پروژه نیست</p>
+                    <p x-show="projectMembers.length === 0" class="text-[12px] text-[#888888]">عضوی در پروژه نیست</p>
                 </div>
             </div>
             <div>
@@ -289,7 +289,7 @@
             </div>
             <div>
                 <label class="board-field-label" for="mobile-due-filter">سررسید</label>
-                <select id="mobile-due-filter" x-model="filterByDue" class="w-full min-h-11 rounded-lg border border-[#E2E8F0] bg-white px-3 text-[12px]">
+                <select id="mobile-due-filter" x-model="filterByDue" class="w-full min-h-11 rounded-lg border border-[#E5E5E5] bg-white px-3 text-[12px]">
                     <option value="">همه سررسیدها</option><option value="overdue">عقب‌افتاده</option><option value="today">امروز</option><option value="next7">۷ روز آینده</option><option value="undated">بدون سررسید</option>
                 </select>
             </div>
@@ -302,8 +302,8 @@
                 </div>
             </div>
             <div class="flex gap-2 pt-1">
-                <button type="button" @click="clearAllFilters()" class="flex-1 min-h-11 rounded-xl border border-[#E2E8F0] text-[12px] font-bold text-[#64748B]">پاک کردن</button>
-                <button type="button" @click="filterPanelOpen = false" class="flex-1 min-h-11 rounded-xl bg-[#18212B] text-white text-[12px] font-black">اعمال</button>
+                <button type="button" @click="clearAllFilters()" class="flex-1 min-h-11 rounded-xl border border-[#E5E5E5] text-[12px] font-bold text-[#666666]">پاک کردن</button>
+                <button type="button" @click="filterPanelOpen = false" class="flex-1 min-h-11 rounded-xl bg-[#202020] text-white text-[12px] font-black">اعمال</button>
             </div>
         </div>
     </div>
@@ -322,12 +322,12 @@
                     :class="[column.collapsed ? '!w-14 cursor-pointer' : '', column.workflowRole === 'active' ? 'is-active-column' : '', column.workflowRole === 'done' ? 'is-done-column' : '']"
                     :title="column.collapsed ? 'باز کردن ستون «' + column.title + '»' : ''"
                 >
-                    <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-xl border border-[#E8EBE9] px-2 py-4 text-[#18212B] shadow-sm">
+                    <div x-show="column.collapsed" class="mt-14 flex min-h-[240px] flex-col items-center justify-start rounded-xl border border-[#EBEBEB] px-2 py-4 text-[#202020] shadow-sm">
                         <div class="flex h-[170px] w-full flex-col items-center rounded-xl border border-white/60 px-1.5 py-3 text-white shadow-sm" :style="collapsedColumnStyle(column)">
                             <span class="text-sm font-black" x-text="toPersianDigits(column.tasks.length)"></span>
                             <span class="mt-4 [writing-mode:vertical-rl] rotate-180 text-xs font-black tracking-wide" x-text="column.title"></span>
                         </div>
-                        <span class="mt-auto text-[11px] font-bold text-[#64748B]">باز کردن</span>
+                        <span class="mt-auto text-[11px] font-bold text-[#666666]">باز کردن</span>
                     </div>
                     <div x-show="!column.collapsed" class="board-column-header">
                         <div class="board-column-header__identity">
@@ -348,20 +348,20 @@
                             @if ($canEdit)
                                 <div class="relative" @click.away="if (openColumnMenuId === column.id) openColumnMenuId = null">
                                     <button @click.stop="openColumnMenuId = openColumnMenuId === column.id ? null : column.id" class="board-column-header__button" title="گزینه‌های ستون" aria-label="گزینه‌های ستون" :aria-expanded="openColumnMenuId === column.id"><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg></button>
-                                    <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-44 rounded-xl border border-[#E8EBE9] bg-white py-1 shadow-xl z-20" @click.stop>
-                                        <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#475569] hover:bg-[#FBFAF7]">ویرایش نام و رنگ</button>
-                                        <div class="my-1 border-t border-[#F1F5F9]"></div>
-                                        <button @click="openColumnMenuId = null; moveColumnByStep(column.id, -1)" :disabled="columnMovePending || colIdx === 0" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به قبل</button>
-                                        <button @click="openColumnMenuId = null; moveColumnByStep(column.id, 1)" :disabled="columnMovePending || colIdx === columns.length - 1" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#475569] hover:bg-[#FBFAF7] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به بعد</button>
-                                        <label class="block px-3 py-2 text-[11px] font-bold text-[#475569]">
+                                    <div x-show="openColumnMenuId === column.id" x-transition class="absolute left-0 top-full mt-1 w-44 rounded-xl border border-[#EBEBEB] bg-white py-1 shadow-xl z-20" @click.stop>
+                                        <button @click="openColumnMenuId = null; openEditColumnModal(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-[#555555] hover:bg-[#FAFAFA]">ویرایش نام و رنگ</button>
+                                        <div class="my-1 border-t border-[#F4F4F4]"></div>
+                                        <button @click="openColumnMenuId = null; moveColumnByStep(column.id, -1)" :disabled="columnMovePending || colIdx === 0" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#555555] hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به قبل</button>
+                                        <button @click="openColumnMenuId = null; moveColumnByStep(column.id, 1)" :disabled="columnMovePending || colIdx === columns.length - 1" class="w-full px-3 py-2 text-right text-[11px] font-bold text-[#555555] hover:bg-[#FAFAFA] disabled:cursor-not-allowed disabled:opacity-35">انتقال یک جایگاه به بعد</button>
+                                        <label class="block px-3 py-2 text-[11px] font-bold text-[#555555]">
                                             جایگاه دقیق
-                                            <select :value="colIdx" :disabled="columnMovePending" @change="moveColumnToIndex(column.id, $event.target.value); openColumnMenuId = null" class="mt-1 w-full min-h-9 rounded-lg border border-[#E2E8F0] bg-white px-2">
+                                            <select :value="colIdx" :disabled="columnMovePending" @change="moveColumnToIndex(column.id, $event.target.value); openColumnMenuId = null" class="mt-1 w-full min-h-9 rounded-lg border border-[#E5E5E5] bg-white px-2">
                                                 <template x-for="(destination, position) in columns" :key="'desktop-position-' + destination.id">
                                                     <option :value="position" x-text="toPersianDigits(position + 1) + ' — ' + destination.title"></option>
                                                 </template>
                                             </select>
                                         </label>
-                                        <div class="my-1 border-t border-[#F1F5F9]"></div>
+                                        <div class="my-1 border-t border-[#F4F4F4]"></div>
                                         <button @click="openColumnMenuId = null; confirmDeleteColumn(column)" class="w-full px-3 py-2.5 text-right text-[12px] font-bold text-red-500 hover:bg-red-50">حذف</button>
                                     </div>
                                 </div>
@@ -385,7 +385,7 @@
                                     <div class="flex items-start justify-between gap-2 mb-2">
                                         <div class="flex items-center gap-2">
                                             <input type="checkbox" :checked="isTaskSelected(task.dbId)" @click.stop="toggleTaskSelection(task.dbId)" class="board-task-select" aria-label="انتخاب وظیفه">
-                                            <span class="task-card__id text-[11px] font-bold text-[#94A3B8]" x-text="task.id"></span>
+                                            <span class="task-card__id text-[11px] font-bold text-[#888888]" x-text="task.id"></span>
                                         </div>
                                         <div class="flex flex-wrap gap-1 justify-end">
                                             <span
@@ -402,27 +402,27 @@
                                             <template x-for="tag in visibleTags(task)" :key="tag">
                                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
                                             </template>
-                                            <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
+                                            <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#888888]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
                                     </div>
                                     <p x-show="task.description" class="task-card__desc" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="task-card__checklist-bar" x-show="checklistTotal(task) > 0">
                                         <span :style="'width:' + checklistPercentFor(task) + '%'"></span>
                                     </div>
-                                    <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-[#F1F5F9]">
+                                    <div class="flex items-center justify-between mt-2.5 pt-2 border-t border-[#F4F4F4]">
                                         <div class="flex items-center -space-x-1.5 space-x-reverse">
                                             <template x-for="(a, ai) in (task.assignees || []).slice(0, 3)" :key="ai">
-                                                <div class="w-6 h-6 rounded-full bg-[#18212B] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
+                                                <div class="w-6 h-6 rounded-full bg-[#202020] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
                                                     <span class="text-[8px] text-white font-bold" x-text="a.charAt(0)"></span>
                                                 </div>
                                             </template>
-                                            <span x-show="(task.assignees || []).length > 3" class="text-[10px] text-[#94A3B8] font-bold mr-1" x-text="'+' + toPersianDigits((task.assignees || []).length - 3)"></span>
+                                            <span x-show="(task.assignees || []).length > 3" class="text-[10px] text-[#888888] font-bold mr-1" x-text="'+' + toPersianDigits((task.assignees || []).length - 3)"></span>
                                         </div>
                                         <div class="flex items-center gap-2">
                                             <span x-show="checklistTotal(task) > 0" class="task-card__checklist-count" x-text="checklistLabel(task)"></span>
-                                            <span x-show="(task.comments || []).length > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="toPersianDigits((task.comments || []).length) + ' نظر'"></span>
+                                            <span x-show="(task.comments || []).length > 0" class="text-[10px] font-bold text-[#888888]" x-text="toPersianDigits((task.comments || []).length) + ' نظر'"></span>
                                             <div class="flex items-center gap-1" x-show="task.dueDate">
-                                                <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                <span class="text-[11px] font-medium" :class="isOverdue(task.dueDate, task.dueTime) ? 'text-red-500' : 'text-[#94A3B8]'" x-text="formatDate(task.dueDate, task.dueTime)"></span>
+                                                <svg class="w-3.5 h-3.5 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                <span class="text-[11px] font-medium" :class="isOverdue(task.dueDate, task.dueTime) ? 'text-red-500' : 'text-[#888888]'" x-text="formatDate(task.dueDate, task.dueTime)"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -467,7 +467,7 @@
                 </div>
             </template>
             @if ($canEdit)
-                <button @click="openColumnModal()" class="board-add-column mt-14 min-w-[72px] w-[72px] min-h-[240px] rounded-2xl border-2 border-dashed border-[#D7D1C5] hover:border-[#18212B] hover:bg-[#F1F3F2] text-[#64748B] hover:text-[#18212B] flex items-center justify-center transition-colors" title="افزودن ستون"><span class="[writing-mode:vertical-rl] text-xs font-black" x-text="'+ ستون جدید'"></span></button>
+                <button @click="openColumnModal()" class="board-add-column mt-14 min-w-[72px] w-[72px] min-h-[240px] rounded-2xl border-2 border-dashed border-[#D7D1C5] hover:border-[#202020] hover:bg-[#F1F3F2] text-[#666666] hover:text-[#202020] flex items-center justify-center transition-colors" title="افزودن ستون"><span class="[writing-mode:vertical-rl] text-xs font-black" x-text="'+ ستون جدید'"></span></button>
             @endif
         </div>
 
@@ -479,24 +479,24 @@
                         @click="scrollToColumn(index)"
                         :data-tab-index="index"
                         class="min-h-11 px-3 rounded-xl border flex items-center gap-1.5 whitespace-nowrap text-[10px] font-black transition-colors"
-                        :class="activeColumnIndex === index ? 'bg-[#F1F3F2] border-[#AEB8B2] text-[#18212B]' : 'bg-white border-[#E2E8F0] text-[#64748B]'"
+                        :class="activeColumnIndex === index ? 'bg-[#F1F3F2] border-[#AEB8B2] text-[#202020]' : 'bg-white border-[#E5E5E5] text-[#666666]'"
                         :aria-current="activeColumnIndex === index ? 'true' : 'false'"
                         :aria-selected="activeColumnIndex === index ? 'true' : 'false'"
                         role="tab"
                     >
                         <span x-text="column.title"></span>
-                        <span class="min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[9px]" :class="activeColumnIndex === index ? 'bg-[#18212B] text-white' : 'bg-[#F1F5F9] text-[#64748B]'" x-text="toPersianDigits(column.tasks.length)"></span>
+                        <span class="min-w-5 h-5 px-1 rounded-full flex items-center justify-center text-[9px]" :class="activeColumnIndex === index ? 'bg-[#202020] text-white' : 'bg-[#F4F4F4] text-[#666666]'" x-text="toPersianDigits(column.tasks.length)"></span>
                     </button>
                 </template>
             </div>
             <div class="px-3 pb-2.5 flex items-center justify-between gap-2">
                 <button type="button" @click="scrollToColumn(activeColumnIndex - 1)" :disabled="activeColumnIndex === 0" class="mobile-column-nav" aria-label="ستون قبلی">›</button>
-                <span class="text-[9px] font-bold text-[#64748B]" x-text="toPersianDigits(activeColumnIndex + 1) + ' از ' + toPersianDigits(columns.length)"></span>
-                <span class="text-[11px] font-bold text-[#64748B] truncate" x-text="columns[activeColumnIndex]?.title || ''"></span>
+                <span class="text-[9px] font-bold text-[#666666]" x-text="toPersianDigits(activeColumnIndex + 1) + ' از ' + toPersianDigits(columns.length)"></span>
+                <span class="text-[11px] font-bold text-[#666666] truncate" x-text="columns[activeColumnIndex]?.title || ''"></span>
                 <button type="button" @click="scrollToColumn(activeColumnIndex + 1)" :disabled="activeColumnIndex === columns.length - 1" class="mobile-column-nav" aria-label="ستون بعدی">‹</button>
             </div>
             @if ($canEdit)
-                <div class="board-column-order-help px-3 pb-2 text-[9px] font-bold text-[#64748B] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#18212B]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی دقیق ستون، جایگاه آن را انتخاب کنید.</div>
+                <div class="board-column-order-help px-3 pb-2 text-[9px] font-bold text-[#666666] flex items-center gap-1.5"><svg class="w-3.5 h-3.5 text-[#202020]" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>برای جابه‌جایی دقیق ستون، جایگاه آن را انتخاب کنید.</div>
             @endif
         </section>
 
@@ -547,7 +547,7 @@
                     @endif
                     <div
                         class="mobile-task-list flex flex-1 min-h-0 flex-col rounded-xl p-0 bg-[#F1F0EC] border transition-colors"
-                        :class="mobileDragActive && activeColumnIndex === colIdx ? 'border-[#18212B]/60 bg-[#EEF1EF]/65' : 'border-[#CBD5E1]/50'"
+                        :class="mobileDragActive && activeColumnIndex === colIdx ? 'border-[#202020]/60 bg-[#EEF1EF]/65' : 'border-[#CBD5E1]/50'"
                     >
                         <div class="mobile-task-scroll flex flex-1 min-h-0 flex-col gap-3" :id="'col-mobile-' + column.id" x-init="$nextTick(() => initSortable(column.id, 'mobile'))">
                         <template x-for="task in filteredTasks(column)" :key="'mobile-task-' + task.dbId">
@@ -569,18 +569,18 @@
 
                                         </div>
                                         @if ($canEdit)
-                                            <button @click.stop class="task-drag-handle w-11 h-11 -mt-2.5 -ml-2.5 rounded-xl text-[#94A3B8] flex items-center justify-center active:bg-[#F1F5F9] cursor-grab" aria-label="جابجایی وظیفه">
+                                            <button @click.stop class="task-drag-handle w-11 h-11 -mt-2.5 -ml-2.5 rounded-xl text-[#888888] flex items-center justify-center active:bg-[#F4F4F4] cursor-grab" aria-label="جابجایی وظیفه">
                                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><circle cx="8" cy="6" r="1.5"/><circle cx="16" cy="6" r="1.5"/><circle cx="8" cy="12" r="1.5"/><circle cx="16" cy="12" r="1.5"/><circle cx="8" cy="18" r="1.5"/><circle cx="16" cy="18" r="1.5"/></svg>
                                             </button>
                                         @endif
                                     </div>
-                                    <span class="task-card__id block text-[11px] font-bold text-[#94A3B8] mb-1.5" x-text="task.id"></span>
+                                    <span class="task-card__id block text-[11px] font-bold text-[#888888] mb-1.5" x-text="task.id"></span>
                                     <button type="button" class="task-card__title text-right w-full" @click.stop="if (canOpenTaskFromCard()) openEditModal(task, column.id)" :aria-label="'باز کردن وظیفه: ' + task.title" x-html="highlightText(task.title, boardSearchQuery)"></button>
                                     <div class="task-card__tags" x-show="(task.tags || []).length">
                                             <template x-for="tag in visibleTags(task)" :key="tag">
                                                 <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md" :class="getTagClass(tag)" x-text="tag"></span>
                                             </template>
-                                            <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#94A3B8]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
+                                            <span x-show="hiddenTagCount(task) > 0" class="text-[10px] font-bold text-[#888888]" x-text="'+' + toPersianDigits(hiddenTagCount(task))"></span>
                                     </div>
                                     <p x-show="task.description" class="task-card__desc" x-html="highlightText(task.description, boardSearchQuery)"></p>
                                     <div class="task-card__checklist-bar" x-show="checklistTotal(task) > 0">
@@ -589,7 +589,7 @@
                                     <div class="flex items-center justify-between mt-3 pt-3 border-t border-[#EEF2F6]">
                                         <div class="flex items-center -space-x-1.5 space-x-reverse">
                                             <template x-for="(a, ai) in (task.assignees || []).slice(0, 3)" :key="ai">
-                                                <div class="w-6 h-6 rounded-full bg-[#18212B] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
+                                                <div class="w-6 h-6 rounded-full bg-[#202020] flex items-center justify-center shadow-sm ring-2 ring-white" :style="'z-index:' + (10 - ai)">
                                                     <span class="text-[8px] text-white font-bold" x-text="a.charAt(0)"></span>
                                                 </div>
                                             </template>
@@ -597,8 +597,8 @@
                                         <div class="flex items-center gap-2">
                                             <span x-show="checklistTotal(task) > 0" class="task-card__checklist-count" x-text="checklistLabel(task)"></span>
                                             <div class="flex items-center gap-1" x-show="task.dueDate">
-                                                <svg class="w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                <span class="text-[11px] font-bold" :class="isOverdue(task.dueDate, task.dueTime) ? 'text-red-500' : 'text-[#64748B]'" x-text="formatDate(task.dueDate, task.dueTime)"></span>
+                                                <svg class="w-3.5 h-3.5 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                <span class="text-[11px] font-bold" :class="isOverdue(task.dueDate, task.dueTime) ? 'text-red-500' : 'text-[#666666]'" x-text="formatDate(task.dueDate, task.dueTime)"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -678,7 +678,7 @@
                 }"
                 aria-hidden="true"
             >
-                <div x-show="activeColumnIndex < columns.length - 1" class="w-10 h-16 rounded-r-2xl bg-[#18212B] text-white shadow-lg flex items-center justify-center">
+                <div x-show="activeColumnIndex < columns.length - 1" class="w-10 h-16 rounded-r-2xl bg-[#202020] text-white shadow-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M15 19l-7-7 7-7"/></svg>
                 </div>
             </div>
@@ -690,7 +690,7 @@
                 }"
                 aria-hidden="true"
             >
-                <div x-show="activeColumnIndex > 0" class="w-10 h-16 rounded-l-2xl bg-[#18212B] text-white shadow-lg flex items-center justify-center">
+                <div x-show="activeColumnIndex > 0" class="w-10 h-16 rounded-l-2xl bg-[#202020] text-white shadow-lg flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M9 5l7 7-7 7"/></svg>
                 </div>
             </div>
@@ -717,31 +717,31 @@
             role="dialog" aria-modal="true" aria-labelledby="project-settings-title"
             @keydown="trapProjectFocus($event)"
         >
-            <header class="px-5 py-4 border-b border-[#E2E8F0] flex items-center justify-between">
+            <header class="px-5 py-4 border-b border-[#E5E5E5] flex items-center justify-between">
                 <div>
                     <h2 id="project-settings-title" class="text-base font-black text-[#071B33]">تنظیمات پروژه</h2>
-                    <p class="text-[11px] text-[#64748B] mt-1" x-text="projectState.name"></p>
+                    <p class="text-[11px] text-[#666666] mt-1" x-text="projectState.name"></p>
                 </div>
-                <button x-ref="projectDrawerClose" aria-label="بستن تنظیمات پروژه" @click="closeProjectDrawer()" class="w-11 h-11 rounded-lg text-[#64748B] hover:text-[#071B33] hover:bg-[#F1F5F9] flex items-center justify-center">
+                <button x-ref="projectDrawerClose" aria-label="بستن تنظیمات پروژه" @click="closeProjectDrawer()" class="w-11 h-11 rounded-lg text-[#666666] hover:text-[#071B33] hover:bg-[#F4F4F4] flex items-center justify-center">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </header>
 
-            <div class="flex border-b border-[#E2E8F0] px-5" role="tablist" aria-label="بخش‌های تنظیمات پروژه" @keydown="handleProjectTabKeys($event)">
-                <button type="button" id="project-tab-settings" role="tab" aria-controls="project-panel-settings" :aria-selected="projectDrawerTab === 'settings'" :tabindex="projectDrawerTab === 'settings' ? 0 : -1" @click="selectProjectTab('settings')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'settings' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">عمومی</button>
-                <button type="button" id="project-tab-members" role="tab" aria-controls="project-panel-members" :aria-selected="projectDrawerTab === 'members'" :tabindex="projectDrawerTab === 'members' ? 0 : -1" @click="selectProjectTab('members')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'members' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">اعضای پروژه</button>
-                <button type="button" id="project-tab-activity" role="tab" aria-controls="project-panel-activity" :aria-selected="projectDrawerTab === 'activity'" :tabindex="projectDrawerTab === 'activity' ? 0 : -1" @click="selectProjectTab('activity')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'activity' ? 'text-[#18212B] border-[#18212B]' : 'text-[#64748B] border-transparent'">فعالیت‌ها</button>
+            <div class="flex border-b border-[#E5E5E5] px-5" role="tablist" aria-label="بخش‌های تنظیمات پروژه" @keydown="handleProjectTabKeys($event)">
+                <button type="button" id="project-tab-settings" role="tab" aria-controls="project-panel-settings" :aria-selected="projectDrawerTab === 'settings'" :tabindex="projectDrawerTab === 'settings' ? 0 : -1" @click="selectProjectTab('settings')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'settings' ? 'text-[#202020] border-[#202020]' : 'text-[#666666] border-transparent'">عمومی</button>
+                <button type="button" id="project-tab-members" role="tab" aria-controls="project-panel-members" :aria-selected="projectDrawerTab === 'members'" :tabindex="projectDrawerTab === 'members' ? 0 : -1" @click="selectProjectTab('members')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'members' ? 'text-[#202020] border-[#202020]' : 'text-[#666666] border-transparent'">اعضای پروژه</button>
+                <button type="button" id="project-tab-activity" role="tab" aria-controls="project-panel-activity" :aria-selected="projectDrawerTab === 'activity'" :tabindex="projectDrawerTab === 'activity' ? 0 : -1" @click="selectProjectTab('activity')" class="px-3 min-h-11 text-xs font-black border-b-2" :class="projectDrawerTab === 'activity' ? 'text-[#202020] border-[#202020]' : 'text-[#666666] border-transparent'">فعالیت‌ها</button>
             </div>
 
             <div class="flex-1 overflow-y-auto p-5">
                 <section id="project-panel-members" role="tabpanel" aria-labelledby="project-tab-members" x-show="projectDrawerTab === 'members'">
                     <div class="mb-4">
                         <h3 class="text-sm font-black text-[#071B33]">تیم پروژه</h3>
-                        <p class="text-[11px] leading-5 text-[#64748B] mt-1">افراد انتخاب‌شده می‌توانند به وظیفه‌ها تخصیص داده شوند و در گفتگوها منشن شوند.</p>
+                        <p class="text-[11px] leading-5 text-[#666666] mt-1">افراد انتخاب‌شده می‌توانند به وظیفه‌ها تخصیص داده شوند و در گفتگوها منشن شوند.</p>
                     </div>
                     <div class="relative mb-4">
-                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input x-model="projectMemberSearch" class="w-full text-xs border-2 border-[#E2E8F0] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#18212B]" placeholder="جستجوی اعضای فضای کاری…">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input x-model="projectMemberSearch" class="w-full text-xs border-2 border-[#E5E5E5] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#202020]" placeholder="جستجوی اعضای فضای کاری…">
                     </div>
                     <div class="space-y-2">
                         <template x-for="person in filteredWorkspacePeople()" :key="person.id">
@@ -749,20 +749,20 @@
                                 @click="toggleProjectMember(person)"
                                 :disabled="projectMemberSaving === person.id"
                                 class="w-full flex items-center gap-3 rounded-xl border p-3 text-right transition-all disabled:opacity-60"
-                                :class="isProjectMember(person.id) ? 'border-[#C5CCC7] bg-[#F5F7F6]' : 'border-[#E2E8F0] hover:border-[#B8C4D4] bg-white'"
+                                :class="isProjectMember(person.id) ? 'border-[#C5CCC7] bg-[#F5F7F6]' : 'border-[#E5E5E5] hover:border-[#B8C4D4] bg-white'"
                             >
                                 <div class="w-9 h-9 rounded-full bg-[#071B33] text-white flex items-center justify-center text-xs font-black" x-text="person.name.charAt(0)"></div>
                                 <div class="flex-1 min-w-0">
                                     <p class="text-[12px] font-bold text-[#111111] truncate" x-text="person.name"></p>
-                                    <p class="text-[10px] text-[#94A3B8] mt-0.5" x-text="person.phone"></p>
+                                    <p class="text-[10px] text-[#888888] mt-0.5" x-text="person.phone"></p>
                                 </div>
-                                <span class="w-6 h-6 rounded-md flex items-center justify-center border-2" :class="isProjectMember(person.id) ? 'bg-[#18212B] border-[#18212B] text-white' : 'border-[#CBD5E1] text-transparent'">
+                                <span class="w-6 h-6 rounded-md flex items-center justify-center border-2" :class="isProjectMember(person.id) ? 'bg-[#202020] border-[#202020] text-white' : 'border-[#CBD5E1] text-transparent'">
                                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                 </span>
                             </button>
                         </template>
                     </div>
-                    <div x-show="projectMembers.length > 0" class="mt-5 pt-5 border-t border-[#E2E8F0]">
+                    <div x-show="projectMembers.length > 0" class="mt-5 pt-5 border-t border-[#E5E5E5]">
                         <div class="flex items-center justify-between mb-3">
                             <h4 class="text-[11px] font-bold text-[#071B33]">فیلتر وظایف</h4>
                             <button x-show="filterByAssignee.length > 0" @click="clearAssigneeFilter()" class="text-[9px] font-bold text-[#EF4444] hover:text-red-600">پاک کردن</button>
@@ -774,15 +774,15 @@
                                     class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-right transition-all"
                                     :class="isAssigneeFilterActive(member.name) ? 'bg-[#F1F3F2] border border-[#C5CCC7]' : 'hover:bg-[#F8FAFC]'"
                                 >
-                                    <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" :class="isAssigneeFilterActive(member.name) ? 'bg-[#18212B] text-white' : 'bg-[#F1F3F2] text-[#18212B]'">
+                                    <div class="w-6 h-6 rounded-full flex items-center justify-center shrink-0" :class="isAssigneeFilterActive(member.name) ? 'bg-[#202020] text-white' : 'bg-[#F1F3F2] text-[#202020]'">
                                         <span class="text-[8px] font-bold" x-text="member.name.charAt(0)"></span>
                                     </div>
-                                    <span class="text-[11px] font-bold" :class="isAssigneeFilterActive(member.name) ? 'text-[#18212B]' : 'text-[#475569]'" x-text="member.name"></span>
-                                    <svg x-show="isAssigneeFilterActive(member.name)" class="w-3.5 h-3.5 text-[#18212B] mr-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                                    <span class="text-[11px] font-bold" :class="isAssigneeFilterActive(member.name) ? 'text-[#202020]' : 'text-[#555555]'" x-text="member.name"></span>
+                                    <svg x-show="isAssigneeFilterActive(member.name)" class="w-3.5 h-3.5 text-[#202020] mr-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                                 </button>
                             </template>
                         </div>
-                        <p x-show="filterByAssignee.length > 0" class="text-[9px] text-[#94A3B8] mt-2 text-center">نمایش وظایف <span x-text="filterByAssignee.length"></span> عضو</p>
+                        <p x-show="filterByAssignee.length > 0" class="text-[9px] text-[#888888] mt-2 text-center">نمایش وظایف <span x-text="filterByAssignee.length"></span> عضو</p>
                     </div>
                 </section>
 
@@ -792,43 +792,43 @@
                     <p x-show="projectSettingsDirty()" class="text-xs text-amber-800">تغییرات هنوز ذخیره نشده‌اند.</p>
                     <div>
                         <label for="project-settings-name" class="board-field-label">نام پروژه</label>
-                        <input id="project-settings-name" x-model="projectForm.name" class="w-full text-sm font-bold border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B]">
+                        <input id="project-settings-name" x-model="projectForm.name" class="w-full text-sm font-bold border-2 border-[#E5E5E5] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#202020]">
                     </div>
                     <div>
                         <label for="project-settings-key" class="board-field-label">کلید پروژه</label>
-                        <input id="project-settings-key" x-model="projectForm.key" maxlength="10" dir="ltr" class="w-full text-sm font-bold uppercase border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B]">
+                        <input id="project-settings-key" x-model="projectForm.key" maxlength="10" dir="ltr" class="w-full text-sm font-bold uppercase border-2 border-[#E5E5E5] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#202020]">
                     </div>
                     <div>
                         <label for="project-settings-description" class="board-field-label">توضیحات پروژه</label>
-                        <textarea id="project-settings-description" x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#18212B] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
+                        <textarea id="project-settings-description" x-model="projectForm.description" rows="5" class="w-full text-sm leading-7 border-2 border-[#E5E5E5] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#202020] resize-none" placeholder="هدف و محدوده پروژه را توضیح دهید…"></textarea>
                     </div>
-                    <div class="border-t border-[#E8EBE9] pt-5">
-                        <label class="board-field-label">چرخه کاری <span class="font-normal text-[#94A3B8]">(اختیاری)</span></label>
+                    <div class="border-t border-[#EBEBEB] pt-5">
+                        <label class="board-field-label">چرخه کاری <span class="font-normal text-[#888888]">(اختیاری)</span></label>
                         <div class="flex items-center gap-2">
-                            <select x-model="cycleLength" class="flex-1 text-xs border-2 border-[#E2E8F0] rounded-xl px-3 py-2.5 bg-white">
+                            <select x-model="cycleLength" class="flex-1 text-xs border-2 border-[#E5E5E5] rounded-xl px-3 py-2.5 bg-white">
                                 <option value="">بدون چرخه</option><option value="1">یک هفته</option><option value="2">دو هفته</option>
                             </select>
-                            <button type="button" @click="saveCycleConfig()" class="text-[10px] font-bold text-[#111111] border border-[#BFD8EC] rounded-lg px-3 py-2.5">ذخیره</button>
+                            <button type="button" @click="saveCycleConfig()" class="text-[10px] font-bold text-[#111111] border border-[#D0D0D0] rounded-lg px-3 py-2.5">ذخیره</button>
                         </div>
-                        <div x-show="activeCycle" class="mt-3 rounded-xl border border-[#DCE8F2] bg-[#F8FCFF] p-3">
+                        <div x-show="activeCycle" class="mt-3 rounded-xl border border-[#E0E0E0] bg-[#FAFAFA] p-3">
                             <p class="text-xs font-black" x-text="activeCycle ? 'چرخه ' + toPersianDigits(activeCycle.number) : ''"></p>
-                            <p class="mt-1 text-[10px] text-[#64748B]" x-text="activeCycle ? activeCycle.startsOn + ' تا ' + activeCycle.endsOn : ''"></p>
+                            <p class="mt-1 text-[10px] text-[#666666]" x-text="activeCycle ? activeCycle.startsOn + ' تا ' + activeCycle.endsOn : ''"></p>
                             <button type="button" @click="finishCycle()" class="mt-3 text-[10px] font-bold text-white bg-[#111111] rounded-lg px-3 py-2">پایان و شروع چرخه بعد</button>
                         </div>
                         <button x-show="!activeCycle && cycleLength" type="button" @click="startCycle()" class="mt-3 text-[10px] font-bold text-[#111111]">شروع چرخه با وظیفه‌های باز فعلی</button>
                     </div>
-                    <div class="border-t border-[#E8EBE9] pt-5">
+                    <div class="border-t border-[#EBEBEB] pt-5">
                         <label class="board-field-label">نقش ستون‌ها در گردش کار</label>
-                        <p class="text-[10px] leading-5 text-[#94A3B8] mb-3">نام ستون‌ها آزاد است؛ نئووا از این نقش‌ها برای امروز، کار فعال و انجام‌شده استفاده می‌کند.</p>
+                        <p class="text-[10px] leading-5 text-[#888888] mb-3">نام ستون‌ها آزاد است؛ نئووا از این نقش‌ها برای امروز، کار فعال و انجام‌شده استفاده می‌کند.</p>
                         <div class="space-y-2">
                             <template x-for="column in columns" :key="'role-' + column.id">
-                                <label class="flex items-center justify-between gap-3 text-[11px] font-bold text-[#334155]"><span x-text="column.title"></span><select x-model="column.workflowRole" @change="saveColumnRole(column)" class="text-[10px] border border-[#DCE8F2] rounded-lg px-2 py-1.5 bg-white"><option value="backlog">پس‌زمینه</option><option value="ready">آماده</option><option value="active">در حال انجام</option><option value="done">انجام شده</option><option value="other">سایر</option></select></label>
+                                <label class="flex items-center justify-between gap-3 text-[11px] font-bold text-[#444444]"><span x-text="column.title"></span><select x-model="column.workflowRole" @change="saveColumnRole(column)" class="text-[10px] border border-[#E0E0E0] rounded-lg px-2 py-1.5 bg-white"><option value="backlog">پس‌زمینه</option><option value="ready">آماده</option><option value="active">در حال انجام</option><option value="done">انجام شده</option><option value="other">سایر</option></select></label>
                             </template>
                         </div>
                     </div>
                     <div>
                         <label class="board-field-label">برچسب‌های پروژه</label>
-                        <p class="text-[11px] text-[#94A3B8] mb-2 leading-6">برچسب‌های سفارشی برای این پروژه. برچسب‌های پیش‌فرض همیشه در دسترس هستند.</p>
+                        <p class="text-[11px] text-[#888888] mb-2 leading-6">برچسب‌های سفارشی برای این پروژه. برچسب‌های پیش‌فرض همیشه در دسترس هستند.</p>
                         <div class="flex flex-wrap gap-1 mb-3">
                             <template x-for="tag in editableTags()" :key="tag.name">
                                 <span class="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-md border" :class="tag.activeClass">
@@ -846,37 +846,37 @@
                                 x-model="newTagName"
                                 @keydown.enter="addCustomTag()"
                                 type="text"
-                                class="flex-1 text-[11px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
+                                class="flex-1 text-[11px] border-2 border-[#E5E5E5] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#202020] transition-colors placeholder:text-[#CBD5E1]"
                                 placeholder="نام برچسب جدید..."
                                 maxlength="20"
                             >
                             <div class="flex gap-1">
                                 <template x-for="color in tagColors" :key="color">
-                                    <button type="button" @click="newTagColor = color" class="w-5 h-5 rounded-full border-2 transition-all" :class="newTagColor === color ? 'border-[#18212B] scale-110' : 'border-transparent'" :style="'background-color:' + color"></button>
+                                    <button type="button" @click="newTagColor = color" class="w-5 h-5 rounded-full border-2 transition-all" :class="newTagColor === color ? 'border-[#202020] scale-110' : 'border-transparent'" :style="'background-color:' + color"></button>
                                 </template>
                             </div>
-                            <button @click="addCustomTag()" :disabled="!newTagName.trim()" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] disabled:opacity-40 px-3 py-2 rounded-lg transition-colors">افزودن</button>
+                            <button @click="addCustomTag()" :disabled="!newTagName.trim()" class="text-[10px] font-bold text-white bg-[#202020] hover:bg-[#000000] disabled:opacity-40 px-3 py-2 rounded-lg transition-colors">افزودن</button>
                         </div>
                     </div>
                     @if ($canManageProject)
-                        <div class="border-t border-[#E8EBE9] pt-5">
+                        <div class="border-t border-[#EBEBEB] pt-5">
                             <h3 class="text-sm font-black">بایگانی و حذف پروژه</h3>
                             <p class="mt-2 text-xs leading-6">بایگانی، پروژه را از کارهای فعال کنار می‌گذارد و وظیفه‌ها و فایل‌ها را نگه می‌دارد.</p>
-                            <button type="button" @click="archiveProject()" :disabled="projectSettingsSaving || projectSettingsDirty()" class="mt-3 rounded-lg border border-[#D8D8D3] px-3 min-h-11 text-xs font-bold" x-text="projectState.isActive ? 'بایگانی پروژه (قابل بازگشت)' : 'بازگرداندن پروژه'"></button>
-                            <p class="mt-2 text-[11px] leading-6 text-[#64748B]">با حذف پروژه، ستون‌ها، وظیفه‌ها و فایل‌های آن نیز برای همیشه حذف می‌شوند.</p>
+                            <button type="button" @click="archiveProject()" :disabled="projectSettingsSaving || projectSettingsDirty()" class="mt-3 rounded-lg border border-[#D8D8D8] px-3 min-h-11 text-xs font-bold" x-text="projectState.isActive ? 'بایگانی پروژه (قابل بازگشت)' : 'بازگرداندن پروژه'"></button>
+                            <p class="mt-2 text-[11px] leading-6 text-[#666666]">با حذف پروژه، ستون‌ها، وظیفه‌ها و فایل‌های آن نیز برای همیشه حذف می‌شوند.</p>
                             <button type="button" x-show="!confirmingDeletion" @click="confirmingDeletion = true; $nextTick(() => { $refs.projectDeleteForm.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); $refs.projectDeleteConfirmation.focus(); })" class="mt-3 rounded-lg border border-red-200 px-3 py-2 text-[11px] font-bold text-red-700 hover:bg-red-50">حذف پروژه</button>
                             <form x-ref="projectDeleteForm" x-show="confirmingDeletion" x-cloak method="POST" action="{{ route('dashboard.project.destroy', [$workspace->slug, $project->slug]) }}" class="mt-4 rounded-xl border border-red-200 bg-red-50/50 p-4">
                                 @csrf
                                 @method('DELETE')
 <p class="text-xs text-red-700" x-show="projectSettingsDirty()">پیش از حذف، تغییرات تنظیمات را ذخیره کنید یا کنار بگذارید.</p>
-                                <label for="project-delete-confirmation" class="block text-[11px] font-bold leading-6 text-[#334155]">برای تأیید، نام پروژه «<span x-text="projectState.name"></span>» را وارد کنید.</label>
+                                <label for="project-delete-confirmation" class="block text-[11px] font-bold leading-6 text-[#444444]">برای تأیید، نام پروژه «<span x-text="projectState.name"></span>» را وارد کنید.</label>
                                 <input x-ref="projectDeleteConfirmation" id="project-delete-confirmation" name="confirmation_name" type="text" x-model="confirmationName" required autocomplete="off" class="mt-2 w-full rounded-lg border border-red-200 bg-white px-3 py-2.5 text-sm outline-none focus:border-red-600" spellcheck="false">
                                 @error('confirmation_name')
                                     <p class="mt-2 text-[11px] text-red-700">{{ $message }}</p>
                                 @enderror
                                 <div class="mt-3 flex flex-wrap gap-2">
                                     <button type="submit" :disabled="confirmationName !== projectState.name || projectSettingsDirty()" class="rounded-lg bg-red-700 px-3 py-2 text-[11px] font-bold text-white disabled:cursor-not-allowed disabled:opacity-40">حذف دائمی پروژه</button>
-                                    <button type="button" @click="confirmingDeletion = false; confirmationName = ''" class="rounded-lg px-3 py-2 text-[11px] font-bold text-[#475569] hover:bg-white">انصراف</button>
+                                    <button type="button" @click="confirmingDeletion = false; confirmationName = ''" class="rounded-lg px-3 py-2 text-[11px] font-bold text-[#555555] hover:bg-white">انصراف</button>
                                 </div>
                             </form>
                         </div>
@@ -885,33 +885,33 @@
                 <section id="project-panel-activity" role="tabpanel" aria-labelledby="project-tab-activity" x-show="projectDrawerTab === 'activity'" class="space-y-4">
                     <div>
                         <h3 class="text-sm font-black text-[#071B33]">فعالیت‌های پروژه</h3>
-                        <p class="text-[11px] leading-5 text-[#64748B] mt-1">تمام تغییرات پروژه، وظایف و اعضا</p>
+                        <p class="text-[11px] leading-5 text-[#666666] mt-1">تمام تغییرات پروژه، وظایف و اعضا</p>
                     </div>
                     <div class="relative">
-                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                        <input x-model="activitySearch" @input.debounce.300ms="loadActivity(1)" class="w-full text-xs border-2 border-[#E2E8F0] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#18212B]" placeholder="جستجو در فعالیت‌ها…">
+                        <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        <input x-model="activitySearch" @input.debounce.300ms="loadActivity(1)" class="w-full text-xs border-2 border-[#E5E5E5] rounded-xl pr-10 pl-3 py-3 focus:outline-none focus:border-[#202020]" placeholder="جستجو در فعالیت‌ها…">
                     </div>
                     <div class="grid grid-cols-2 gap-2">
-                        <select x-model="activityUserId" @change="loadActivity(1)" class="w-full text-[11px] border-2 border-[#E2E8F0] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#18212B] bg-white">
+                        <select x-model="activityUserId" @change="loadActivity(1)" class="w-full text-[11px] border-2 border-[#E5E5E5] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#202020] bg-white">
                             <option value="">همه کاربران</option>
                             <template x-for="person in activityUsers" :key="person.id"><option :value="person.id" x-text="person.name"></option></template>
                         </select>
-                        <select x-model="activityKind" @change="loadActivity(1)" class="w-full text-[11px] border-2 border-[#E2E8F0] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#18212B] bg-white">
+                        <select x-model="activityKind" @change="loadActivity(1)" class="w-full text-[11px] border-2 border-[#E5E5E5] rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#202020] bg-white">
                             <option value="">همه رویدادها</option>
                             <template x-for="kind in activityKinds" :key="kind"><option :value="kind" x-text="activityKindLabel(kind)"></option></template>
                         </select>
                     </div>
                     <div x-show="activityLoading" class="py-8 text-center">
-                        <svg class="animate-spin w-5 h-5 text-[#18212B] mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                        <p class="text-[11px] text-[#94A3B8] mt-2">در حال بارگذاری…</p>
+                        <svg class="animate-spin w-5 h-5 text-[#202020] mx-auto" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        <p class="text-[11px] text-[#888888] mt-2">در حال بارگذاری…</p>
                     </div>
                     <div x-show="!activityLoading" class="space-y-2">
                         <template x-for="item in activityItems" :key="item.id">
-                            <div class="flex gap-3 p-3 rounded-xl border border-[#E2E8F0] hover:border-[#CBD5E1] transition-colors">
+                            <div class="flex gap-3 p-3 rounded-xl border border-[#E5E5E5] hover:border-[#CBD5E1] transition-colors">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
                                      :class="{
                                          'bg-[#DCFCE7] text-[#16A34A]': item.kind.includes('added') || item.kind === 'task_created',
-                                         'bg-[#F1F3F2] text-[#18212B]': item.kind.includes('changed'),
+                                         'bg-[#F1F3F2] text-[#202020]': item.kind.includes('changed'),
                                          'bg-[#FEF3C7] text-[#D97706]': item.kind.includes('moved'),
                                          'bg-[#FEE2E2] text-[#DC2626]': item.kind.includes('deleted') || item.kind.includes('removed'),
                                          'bg-[#F3E8FF] text-[#9333EA]': item.kind.includes('comment') || item.kind.includes('mentioned'),
@@ -919,30 +919,30 @@
                                     <span class="text-[10px] font-black" x-text="activityKindLabel(item.kind).slice(0, 1)"></span>
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <p class="text-[12px] leading-5 text-[#334155]" x-html="highlightText(item.message || '', activitySearch)"></p>
-                                    <p class="text-[10px] text-[#64748B] mt-1" x-text="item.actor"></p>
-                                    <p class="text-[9px] text-[#94A3B8] mt-1" x-text="item.time || ''"></p>
+                                    <p class="text-[12px] leading-5 text-[#444444]" x-html="highlightText(item.message || '', activitySearch)"></p>
+                                    <p class="text-[10px] text-[#666666] mt-1" x-text="item.actor"></p>
+                                    <p class="text-[9px] text-[#888888] mt-1" x-text="item.time || ''"></p>
                                 </div>
                             </div>
                         </template>
                         <p x-show="activityLoading" role="status" class="text-sm">در حال بارگذاری…</p><div x-show="activityError" role="alert" class="text-sm text-red-700"><span x-text="activityError"></span><button type="button" @click="loadActivity()" class="min-h-11 px-3">تلاش دوباره</button></div>
                         <div x-show="activityItems.length === 0 && !activityLoading && !activityError" class="py-8 text-center">
-                            <p class="text-[11px] text-[#94A3B8]">فعالیتی یافت نشد</p>
+                            <p class="text-[11px] text-[#888888]">فعالیتی یافت نشد</p>
                         </div>
                     </div>
                     <div x-show="activityMeta.last_page > 1" class="flex items-center justify-between pt-2">
-                        <button @click="loadActivity(activityMeta.current_page - 1)" :disabled="activityMeta.current_page <= 1 || activityLoading" class="text-[10px] font-bold text-[#64748B] disabled:opacity-40">قبلی</button>
-                        <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(activityMeta.current_page) + ' از ' + toPersianDigits(activityMeta.last_page)"></span>
-                        <button @click="loadActivity(activityMeta.current_page + 1)" :disabled="activityMeta.current_page >= activityMeta.last_page || activityLoading" class="text-[10px] font-bold text-[#64748B] disabled:opacity-40">بعدی</button>
+                        <button @click="loadActivity(activityMeta.current_page - 1)" :disabled="activityMeta.current_page <= 1 || activityLoading" class="text-[10px] font-bold text-[#666666] disabled:opacity-40">قبلی</button>
+                        <span class="text-[10px] text-[#888888]" x-text="toPersianDigits(activityMeta.current_page) + ' از ' + toPersianDigits(activityMeta.last_page)"></span>
+                        <button @click="loadActivity(activityMeta.current_page + 1)" :disabled="activityMeta.current_page >= activityMeta.last_page || activityLoading" class="text-[10px] font-bold text-[#666666] disabled:opacity-40">بعدی</button>
                     </div>
                 </section>
             </div>
 
-            <footer class="border-t border-[#E2E8F0] p-4 bg-[#F8FAFC]">
-                <button x-show="projectDrawerTab === 'settings'" @click="saveProjectSettings()" :disabled="projectSettingsSaving" class="w-full bg-[#18212B] hover:bg-[#000000] disabled:opacity-60 text-white text-xs font-black rounded-xl px-4 py-3">
+            <footer class="border-t border-[#E5E5E5] p-4 bg-[#F8FAFC]">
+                <button x-show="projectDrawerTab === 'settings'" @click="saveProjectSettings()" :disabled="projectSettingsSaving" class="w-full bg-[#202020] hover:bg-[#000000] disabled:opacity-60 text-white text-xs font-black rounded-xl px-4 py-3">
                     <span x-text="projectSettingsSaving ? 'در حال ذخیره…' : 'ذخیره تغییرات'"></span>
                 </button>
-                <p x-show="projectDrawerTab === 'members'" class="text-[10px] text-[#64748B] text-center"><span x-text="projectMembers.length"></span> عضو در تیم پروژه</p>
+                <p x-show="projectDrawerTab === 'members'" class="text-[10px] text-[#666666] text-center"><span x-text="projectMembers.length"></span> عضو در تیم پروژه</p>
             </footer>
         </aside>
     </div>
@@ -973,7 +973,7 @@
         <div class="absolute inset-0 bg-[#071B33]/40" @click="archiveBulkConfirm = false"></div>
         <div class="board-confirm-modal relative bg-white w-full max-w-sm rounded-xl p-6 shadow-lg" role="dialog" aria-modal="true" aria-labelledby="archive-bulk-title" @keydown="trapModalFocus($event)">
             <h2 id="archive-bulk-title" class="text-sm font-bold" x-text="'بایگانی ' + toPersianDigits(selectedTaskIds.length) + ' وظیفه؟'"></h2>
-            <p class="text-xs leading-6 text-[#64748B] my-4">وظیفه‌ها از تخته کنار گذاشته می‌شوند. جزئیات آن‌ها حفظ می‌شود و از بایگانی قابل بازگرداندن هستند.</p>
+            <p class="text-xs leading-6 text-[#666666] my-4">وظیفه‌ها از تخته کنار گذاشته می‌شوند. جزئیات آن‌ها حفظ می‌شود و از بایگانی قابل بازگرداندن هستند.</p>
             <div class="flex gap-2"><button x-ref="archiveBulkCancel" type="button" @click="archiveBulkConfirm = false" class="board-archive-restore">انصراف</button><button type="button" @click="archiveBulkConfirm = false; applyBulkAction(true)" class="board-nav-control board-nav-control--primary">بایگانی وظیفه‌ها</button></div>
         </div>
     </div>
@@ -1036,7 +1036,7 @@
                         {{-- Column --}}
                         <div>
                             <label for="task-column" class="board-field-label">ستون / وضعیت</label>
-                            <select id="task-column" x-model="form.columnId" :disabled="!canEditTask" class="w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#18212B] transition-colors bg-white disabled:bg-[#F1F5F9]">
+                            <select id="task-column" x-model="form.columnId" :disabled="!canEditTask" class="w-full text-xs font-semibold border-2 border-[#E5E5E5] rounded-lg px-2.5 py-2 focus:outline-none focus:border-[#202020] transition-colors bg-white disabled:bg-[#F4F4F4]">
                                 <template x-for="col in columns" :key="col.id">
                                     <option :value="col.id" x-text="col.title"></option>
                                 </template>
@@ -1054,8 +1054,8 @@
                                 @keydown.enter.prevent="if (canEditTask) assigneeOpen = !assigneeOpen"
                                 @keydown.space.prevent="if (canEditTask) assigneeOpen = !assigneeOpen"
                                 @click="if (canEditTask) assigneeOpen = !assigneeOpen"
-                                class="w-full min-h-[36px] border-2 border-[#E2E8F0] rounded-lg px-2.5 py-1.5 transition-colors bg-white flex flex-wrap items-center gap-1"
-                                :class="canEditTask ? 'cursor-pointer hover:border-[#CBD5E1]' : 'cursor-default bg-[#F1F5F9]'"
+                                class="w-full min-h-[36px] border-2 border-[#E5E5E5] rounded-lg px-2.5 py-1.5 transition-colors bg-white flex flex-wrap items-center gap-1"
+                                :class="canEditTask ? 'cursor-pointer hover:border-[#CBD5E1]' : 'cursor-default bg-[#F4F4F4]'"
                             >
                                 <template x-for="name in form.assignees" :key="name">
                                     <span class="inline-flex items-center gap-1 bg-[#F1F3F2] text-[#000000] text-[10px] font-bold px-2 py-0.5 rounded-md">
@@ -1068,7 +1068,7 @@
                                     </span>
                                 </template>
                                 <span x-show="form.assignees.length === 0" class="text-xs text-[#CBD5E1]">انتخاب مسئول</span>
-                                <svg class="w-3.5 h-3.5 text-[#94A3B8] mr-auto shrink-0" :class="assigneeOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                <svg class="w-3.5 h-3.5 text-[#888888] mr-auto shrink-0" :class="assigneeOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </div>
                             <div
                                 x-show="assigneeOpen"
@@ -1078,17 +1078,17 @@
                                 x-transition:leave="transition ease-in duration-100"
                                 x-transition:leave-start="opacity-100 translate-y-0"
                                 x-transition:leave-end="opacity-0 -translate-y-1"
-                                class="task-floating-menu bg-white border-2 border-[#E2E8F0] rounded-xl shadow-lg shadow-black/10 overflow-hidden"
+                                class="task-floating-menu bg-white border-2 border-[#E5E5E5] rounded-xl shadow-lg shadow-black/10 overflow-hidden"
                                 :style="floatingMenuStyle($refs.assigneeTrigger, Math.max($refs.assigneeTrigger?.offsetWidth || 240, 280), 320)"
                             >
-                                <div class="p-2 border-b border-[#F1F5F9]">
+                                <div class="p-2 border-b border-[#F4F4F4]">
                                     <div class="relative">
-                                        <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#94A3B8]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                        <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#888888]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                                         <input
                                             x-model="assigneeSearch"
                                             @keydown.escape.stop.prevent="assigneeOpen = false"
                                             type="text"
-                                            class="w-full text-xs border border-[#E2E8F0] rounded-lg pr-7 pl-2 py-1.5 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
+                                            class="w-full text-xs border border-[#E5E5E5] rounded-lg pr-7 pl-2 py-1.5 focus:outline-none focus:border-[#202020] transition-colors placeholder:text-[#CBD5E1]"
                                             placeholder="جستجو..."
                                             x-effect="if (assigneeOpen) $nextTick(() => $el.focus({ preventScroll: true }))"
                                         >
@@ -1096,10 +1096,10 @@
                                 </div>
                                 <button
                                     @click="toggleAllAssignees()"
-                                    class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold hover:bg-[#F8FAFC] transition-colors border-b border-[#F1F5F9]"
-                                    :class="form.assignees.length === assignees.length ? 'text-[#18212B]' : 'text-[#64748B]'"
+                                    class="w-full flex items-center gap-2 px-3 py-2 text-[11px] font-semibold hover:bg-[#F8FAFC] transition-colors border-b border-[#F4F4F4]"
+                                    :class="form.assignees.length === assignees.length ? 'text-[#202020]' : 'text-[#666666]'"
                                 >
-                                    <div class="w-4 h-4 rounded border-2 flex items-center justify-center transition-colors" :class="form.assignees.length === assignees.length ? 'border-[#18212B] bg-[#18212B]' : 'border-[#CBD5E1]'">
+                                    <div class="w-4 h-4 rounded border-2 flex items-center justify-center transition-colors" :class="form.assignees.length === assignees.length ? 'border-[#202020] bg-[#202020]' : 'border-[#CBD5E1]'">
                                         <svg x-show="form.assignees.length === assignees.length" class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                     </div>
                                     <span x-text="form.assignees.length === assignees.length ? 'حذف همه' : 'انتخاب همه'"></span>
@@ -1111,17 +1111,17 @@
                                             class="w-full flex items-center gap-2.5 px-3 py-2 hover:bg-[#F8FAFC] transition-colors"
                                             :class="form.assignees.includes(name) ? 'bg-[#F1F3F2]/50' : ''"
                                         >
-                                            <div class="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors" :class="form.assignees.includes(name) ? 'border-[#18212B] bg-[#18212B]' : 'border-[#CBD5E1]'">
+                                            <div class="w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 transition-colors" :class="form.assignees.includes(name) ? 'border-[#202020] bg-[#202020]' : 'border-[#CBD5E1]'">
                                                 <svg x-show="form.assignees.includes(name)" class="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
                                             </div>
-                                            <div class="w-5 h-5 rounded-full bg-[#18212B] flex items-center justify-center shrink-0">
+                                            <div class="w-5 h-5 rounded-full bg-[#202020] flex items-center justify-center shrink-0">
                                                 <span class="text-[7px] text-white font-bold" x-text="name.charAt(0)"></span>
                                             </div>
-                                            <span class="text-[11px] font-semibold" :class="form.assignees.includes(name) ? 'text-[#000000]' : 'text-[#475569]'" x-text="name"></span>
+                                            <span class="text-[11px] font-semibold" :class="form.assignees.includes(name) ? 'text-[#000000]' : 'text-[#555555]'" x-text="name"></span>
                                         </button>
                                     </template>
                                     <div x-show="filteredAssignees(assigneeSearch).length === 0" class="px-3 py-4 text-center">
-                                        <p class="text-[11px] text-[#94A3B8]">نتیجه‌ای یافت نشد</p>
+                                        <p class="text-[11px] text-[#888888]">نتیجه‌ای یافت نشد</p>
                                     </div>
                                 </div>
                             </div>
@@ -1131,9 +1131,9 @@
                         <div class="relative">
                             <label for="task-due-date" class="board-field-label">تاریخ و ساعت سررسید</label>
                             <div class="relative">
-                                <input :value="taskDeadlineInputValue()" id="task-due-date" x-ref="dueDateInput" @click="openJalaliDatePicker()" @keydown.enter.prevent="openJalaliDatePicker()" @keydown.space.prevent="openJalaliDatePicker()" @keydown.arrow-down.prevent="openJalaliDatePicker()" @jdp:change="updateTaskDeadline($event.target.value)" @pointerdown.window="if (!$event.target.closest('jdp-container, #task-due-date')) closeJalaliDatePicker()" aria-haspopup="dialog" type="text" :disabled="!canEditTask" readonly autocomplete="off" class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E2E8F0] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F1F5F9]" placeholder="انتخاب تاریخ و ساعت">
-                                <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#94A3B8] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <button x-show="form.dueDate && canEditTask" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#94A3B8] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
+                                <input :value="taskDeadlineInputValue()" id="task-due-date" x-ref="dueDateInput" @click="openJalaliDatePicker()" @keydown.enter.prevent="openJalaliDatePicker()" @keydown.space.prevent="openJalaliDatePicker()" @keydown.arrow-down.prevent="openJalaliDatePicker()" @jdp:change="updateTaskDeadline($event.target.value)" @pointerdown.window="if (!$event.target.closest('jdp-container, #task-due-date')) closeJalaliDatePicker()" aria-haspopup="dialog" type="text" :disabled="!canEditTask" readonly autocomplete="off" class="jalali-date-input w-full text-xs font-semibold border-2 border-[#E5E5E5] rounded-lg pr-9 pl-8 py-2 focus:outline-none transition-colors bg-white disabled:bg-[#F4F4F4]" placeholder="انتخاب تاریخ و ساعت">
+                                <svg class="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#888888] pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7V3m8 4V3m-9 4h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <button x-show="form.dueDate && canEditTask" type="button" @click="clearJalaliDate()" class="absolute left-2 top-1/2 -translate-y-1/2 text-[#888888] hover:text-red-500" aria-label="پاک کردن تاریخ">×</button>
                             </div>
                             <p x-show="form.dueDate" class="task-due-timezone">به وقت {{ $workspace->timezone ?: 'Asia/Tehran' }}</p>
                             <p x-show="form.dueDate && isOverdue(form.dueDate, form.dueTime)" class="text-[10px] text-red-500 font-bold mt-1">سررسید گذشته</p>
@@ -1144,21 +1144,21 @@
                             <label class="board-field-label mb-2">اولویت</label>
                             <div class="flex flex-wrap gap-1">
                                 <template x-for="p in [{name:'بالا', color:'bg-red-500'}, {name:'متوسط', color:'bg-violet-500'}, {name:'پایین', color:'bg-slate-400'}]" :key="p.name">
-                                    <label class="flex items-center gap-1.5 text-[10px] cursor-pointer px-2 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#18212B] bg-[#F1F3F2]' : 'border-transparent hover:bg-white'">
+                                    <label class="flex items-center gap-1.5 text-[10px] cursor-pointer px-2 py-1.5 rounded-lg border transition-all duration-150" :class="form.priority === p.name ? 'border-[#202020] bg-[#F1F3F2]' : 'border-transparent hover:bg-white'">
                                         <input type="radio" :value="p.name" x-model="form.priority" :disabled="!canEditTask" class="hidden">
                                         <span class="w-2 h-2 rounded-full" :class="p.color"></span>
-                                        <span class="font-semibold" :class="form.priority === p.name ? 'text-[#000000]' : 'text-[#64748B]'" x-text="p.name"></span>
+                                        <span class="font-semibold" :class="form.priority === p.name ? 'text-[#000000]' : 'text-[#666666]'" x-text="p.name"></span>
                                     </label>
                                 </template>
                             </div>
                         </div>
 
                         {{-- Tags --}}
-                        <div x-data="{ labelsOpen: false, tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F1F5F9] text-[#94A3B8] hover:border-blue-200 hover:text-blue-500' }] }" data-task-labels @pointerdown.window="if (!$event.target.closest('[data-task-labels]')) { labelsOpen = false; tagManagerOpen = false }" @keydown.escape.stop.prevent="labelsOpen = false; tagManagerOpen = false">
+                        <div x-data="{ labelsOpen: false, tagManagerOpen: false, newTagName: '', newTagColor: '#8B5CF6', tagColors: [{ hex: '#8B5CF6', active: 'border-purple-400 bg-purple-50 text-purple-700', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-purple-200 hover:text-purple-500' }, { hex: '#475569', active: 'border-gray-500 bg-gray-100 text-gray-800', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-gray-300 hover:text-gray-700' }, { hex: '#F59E0B', active: 'border-amber-400 bg-amber-50 text-amber-700', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-amber-200 hover:text-amber-500' }, { hex: '#22C55E', active: 'border-green-400 bg-green-50 text-green-700', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-green-200 hover:text-green-500' }, { hex: '#EF4444', active: 'border-red-400 bg-red-50 text-red-700', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-red-200 hover:text-red-500' }, { hex: '#14B8A6', active: 'border-teal-400 bg-teal-50 text-teal-700', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-teal-200 hover:text-teal-500' }, { hex: '#EC4899', active: 'border-pink-400 bg-pink-50 text-pink-700', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-pink-200 hover:text-pink-500' }, { hex: '#3B82F6', active: 'border-blue-400 bg-blue-50 text-blue-700', inactive: 'border-[#F4F4F4] text-[#888888] hover:border-blue-200 hover:text-blue-500' }] }" data-task-labels @pointerdown.window="if (!$event.target.closest('[data-task-labels]')) { labelsOpen = false; tagManagerOpen = false }" @keydown.escape.stop.prevent="labelsOpen = false; tagManagerOpen = false">
                             <div class="flex items-center justify-between mb-2">
                                 <label class="board-field-label mb-0">برچسب‌ها</label>
                                 @if ($canEdit)
-                                    <button x-show="canEditTask" type="button" @click="tagManagerOpen = !tagManagerOpen" class="text-[10px] font-bold text-[#64748B] hover:text-[#18212B] transition-colors" x-text="tagManagerOpen ? 'بستن' : 'مدیریت'"></button>
+                                    <button x-show="canEditTask" type="button" @click="tagManagerOpen = !tagManagerOpen" class="text-[10px] font-bold text-[#666666] hover:text-[#202020] transition-colors" x-text="tagManagerOpen ? 'بستن' : 'مدیریت'"></button>
                                 @endif
                             </div>
                             <div class="task-selected-labels">
@@ -1175,27 +1175,27 @@
                                 </template>
                             </div>
                             {{-- Tag Manager --}}
-                            <div x-show="tagManagerOpen && canEditTask" x-transition class="mt-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E2E8F0] space-y-3">
+                            <div x-show="tagManagerOpen && canEditTask" x-transition class="mt-3 p-3 bg-[#F8FAFC] rounded-xl border border-[#E5E5E5] space-y-3">
                                 <template x-for="(tag, idx) in allTags" :key="'mgr-' + tag.name">
                                     <div class="flex items-center justify-between">
-                                        <span class="text-[11px] font-bold text-[#475569]" x-text="tag.name"></span>
+                                        <span class="text-[11px] font-bold text-[#555555]" x-text="tag.name"></span>
                                         <button type="button" @click="const tagName = allTags[idx].name; allTags.splice(idx, 1); const ti = form.tags.indexOf(tagName); if (ti !== -1) form.tags.splice(ti, 1);" class="text-[10px] text-red-400 hover:text-red-600 transition-colors">حذف</button>
                                     </div>
                                 </template>
-                                <div class="border-t border-[#E2E8F0] pt-3 space-y-2">
+                                <div class="border-t border-[#E5E5E5] pt-3 space-y-2">
                                     <input
                                         x-model="newTagName"
                                         type="text"
-                                        class="w-full text-[11px] border border-[#E2E8F0] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#18212B] transition-colors placeholder:text-[#CBD5E1]"
+                                        class="w-full text-[11px] border border-[#E5E5E5] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#202020] transition-colors placeholder:text-[#CBD5E1]"
                                         placeholder="نام برچسب جدید..."
                                         @keydown.enter="if (newTagName.trim()) { allTags.push({ name: newTagName.trim(), activeClass: tagColors.find(c => c.hex === newTagColor)?.active || '', inactiveClass: tagColors.find(c => c.hex === newTagColor)?.inactive || '' }); newTagName = '' }"
                                     >
                                     <div class="flex items-center gap-1.5">
                                         <template x-for="tc in tagColors" :key="tc.hex">
-                                            <button type="button" @click="newTagColor = tc.hex" class="w-5 h-5 rounded-full border-2 transition-all" :class="newTagColor === tc.hex ? 'border-[#18212B] scale-110' : 'border-transparent'" :style="'background-color:' + tc.hex"></button>
+                                            <button type="button" @click="newTagColor = tc.hex" class="w-5 h-5 rounded-full border-2 transition-all" :class="newTagColor === tc.hex ? 'border-[#202020] scale-110' : 'border-transparent'" :style="'background-color:' + tc.hex"></button>
                                         </template>
                                     </div>
-                                    <button type="button" @click="if (newTagName.trim()) { allTags.push({ name: newTagName.trim(), activeClass: tagColors.find(c => c.hex === newTagColor)?.active || '', inactiveClass: tagColors.find(c => c.hex === newTagColor)?.inactive || '' }); newTagName = '' }" class="w-full text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#253342] rounded-lg py-1.5 transition-colors" :disabled="!newTagName.trim()">افزودن برچسب</button>
+                                    <button type="button" @click="if (newTagName.trim()) { allTags.push({ name: newTagName.trim(), activeClass: tagColors.find(c => c.hex === newTagColor)?.active || '', inactiveClass: tagColors.find(c => c.hex === newTagColor)?.inactive || '' }); newTagName = '' }" class="w-full text-[10px] font-bold text-white bg-[#202020] hover:bg-[#253342] rounded-lg py-1.5 transition-colors" :disabled="!newTagName.trim()">افزودن برچسب</button>
                                 </div>
                             </div>
                         </div>
@@ -1231,7 +1231,7 @@
                             rows="5"
                             aria-label="توضیحات وظیفه"
                             :disabled="!canEditTask"
-                            class="w-full text-sm text-[#1A1D21] border-2 border-[#E2E8F0] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#111111] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
+                            class="w-full text-sm text-[#1A1D21] border-2 border-[#E5E5E5] rounded-xl px-3.5 py-3 focus:outline-none focus:border-[#111111] transition-colors resize-none leading-relaxed placeholder:text-[#CBD5E1]"
                             placeholder="توضیحات کارت را بنویسید..."
                             @input="handleMentionInput('description', $event)"
                             @keydown.down.prevent="moveMentionSelection(1)"
@@ -1248,7 +1248,7 @@
                                     </button>
                                 </template>
                         </div>
-                        <p x-show="canEditTask" class="text-[10px] text-[#94A3B8] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                        <p x-show="canEditTask" class="text-[10px] text-[#888888] mt-1.5">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                     </section>
                     {{-- Checklist stays visible independently of advanced details. --}}
                     <section x-show="canEditTask || form.checklist.length" class="task-modal-section task-checklist-section" aria-labelledby="task-checklist-title">
@@ -1295,35 +1295,35 @@
                     <section class="task-modal-section task-files-section" aria-labelledby="task-attachments-title">
                         <div class="task-modal-section__heading">
                             <div><div class="task-modal-section__title" id="task-attachments-title">پیوست‌ها</div></div>
-                            <span class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(descriptionAttachments().length) + ' فایل'"></span>
+                            <span class="text-[10px] text-[#888888]" x-text="toPersianDigits(descriptionAttachments().length) + ' فایل'"></span>
                         </div>
                         @if ($canEdit)
                         <div x-show="canEditTask"
                             class="mt-3 rounded-xl border-2 border-dashed px-3 py-3 transition-colors"
-                            :class="attachmentDragTarget === 'description' ? 'border-[#0069D9] bg-[#F0F8FF]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
+                            :class="attachmentDragTarget === 'description' ? 'border-[#303030] bg-[#F3F3F3]' : 'border-[#D8E0EB] bg-[#FAFCFE]'"
                             @dragover.prevent="attachmentDragTarget = 'description'"
                             @dragleave.prevent="attachmentDragTarget = null"
                             @drop.prevent="attachmentDragTarget = null; queueAttachmentFiles($event.dataTransfer.files, 'description')"
                         >
                             <div class="flex flex-wrap items-center justify-between gap-2">
                                 <div>
-                                    <p class="text-[11px] font-bold text-[#334155]">افزودن فایل</p>
-                                    <p class="mt-0.5 text-[9px] text-[#94A3B8]">فایل‌ها را رها کنید، تصویر را بچسبانید یا تا ۱۰ فایل انتخاب کنید.</p>
+                                    <p class="text-[11px] font-bold text-[#444444]">افزودن فایل</p>
+                                    <p class="mt-0.5 text-[9px] text-[#888888]">فایل‌ها را رها کنید، تصویر را بچسبانید یا تا ۱۰ فایل انتخاب کنید.</p>
                                 </div>
-                                <button type="button" @click="$refs.descriptionFiles.click()" class="rounded-lg border border-[#BFD8EC] bg-white px-3 py-1.5 text-[10px] font-bold text-[#111111]">افزودن فایل</button>
+                                <button type="button" @click="$refs.descriptionFiles.click()" class="rounded-lg border border-[#D0D0D0] bg-white px-3 py-1.5 text-[10px] font-bold text-[#111111]">افزودن فایل</button>
                                 <input x-ref="descriptionFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'description'); $event.target.value = ''">
                             </div>
                             <div x-show="pendingDescriptionFiles.length" x-cloak class="mt-3 grid gap-2 sm:grid-cols-2">
                                 <template x-for="item in pendingDescriptionFiles" :key="item.localId">
-                                    <div class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2">
-                                        <button type="button" @click="openAttachmentPreview(item)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
+                                    <div class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E5E5E5] bg-white p-2">
+                                        <button type="button" @click="openAttachmentPreview(item)" class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F4F4F4] text-[9px] font-black text-[#666666]">
                                             <img x-show="item.category === 'image'" :src="item.previewUrl" class="h-full w-full object-cover" alt="">
                                             <span x-show="item.category !== 'image'" x-text="attachmentLabel(item)"></span>
                                         </button>
                                         <div class="min-w-0 flex-1">
-                                            <p class="truncate text-[10px] font-bold text-[#334155]" x-text="item.name"></p>
-                                            <p class="text-[9px] text-[#94A3B8]" x-text="attachmentStatusText(item)"></p>
-                                            <div x-show="item.status === 'uploading'" class="mt-1 h-1 overflow-hidden rounded bg-[#E2E8F0]"><div class="h-full bg-[#0069D9]" :style="`width:${item.progress}%`"></div></div>
+                                            <p class="truncate text-[10px] font-bold text-[#444444]" x-text="item.name"></p>
+                                            <p class="text-[9px] text-[#888888]" x-text="attachmentStatusText(item)"></p>
+                                            <div x-show="item.status === 'uploading'" class="mt-1 h-1 overflow-hidden rounded bg-[#E5E5E5]"><div class="h-full bg-[#303030]" :style="`width:${item.progress}%`"></div></div>
                                         </div>
                                         <button type="button" @click="removePendingAttachment(item, 'description')" class="shrink-0 text-[9px] font-bold text-red-500" x-text="item.status === 'uploading' ? 'لغو' : 'حذف'"></button>
                                     </div>
@@ -1332,31 +1332,31 @@
                         </div>
                         @endif
                         <div x-show="descriptionAttachments().length" class="mb-3 flex flex-wrap gap-1.5">
-                            <template x-for="filter in attachmentFilters" :key="filter.value"><button type="button" @click="attachmentFilter = filter.value" class="rounded-full border px-2.5 py-1 text-[9px] font-bold" :class="attachmentFilter === filter.value ? 'border-[#18212B] bg-[#18212B] text-white' : 'border-[#E2E8F0] bg-white text-[#64748B]'" x-text="filter.label"></button></template>
+                            <template x-for="filter in attachmentFilters" :key="filter.value"><button type="button" @click="attachmentFilter = filter.value" class="rounded-full border px-2.5 py-1 text-[9px] font-bold" :class="attachmentFilter === filter.value ? 'border-[#202020] bg-[#202020] text-white' : 'border-[#E5E5E5] bg-white text-[#666666]'" x-text="filter.label"></button></template>
                         </div>
                         <div class="grid gap-2 sm:grid-cols-2">
                             <template x-for="attachment in filteredAttachments().filter(item => item.context !== 'comment')" :key="attachment.id">
-                                <div class="flex min-w-0 items-center gap-2.5 border border-[#E8EBE9] rounded-xl p-2.5">
-                                    <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F1F5F9] text-[9px] font-black text-[#64748B]">
+                                <div class="flex min-w-0 items-center gap-2.5 border border-[#EBEBEB] rounded-xl p-2.5">
+                                    <button type="button" @click="openAttachmentPreview(attachment)" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#F4F4F4] text-[9px] font-black text-[#666666]">
                                         <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
                                         <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
                                     </button>
-                                    <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#334155]" x-text="attachment.name"></p><p class="mt-0.5 text-[8px] text-[#94A3B8]"><span x-text="attachment.context === 'comment' ? 'گفتگو' : 'توضیحات'"></span> · <span x-text="formatFileSize(attachment.size)"></span></p><div class="mt-1 flex gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[8px] font-bold text-[#0069D9]">پیش‌نمایش</button><a :href="attachment.downloadUrl" class="text-[8px] font-bold text-[#334155]">دانلود</a>@if ($canEdit)<button type="button" x-show="canEditTask" @click="deleteAttachment(attachment)" class="text-[8px] font-bold text-red-500">حذف</button>@endif</div></div>
+                                    <div class="min-w-0 flex-1"><p class="truncate text-[10px] font-bold text-[#444444]" x-text="attachment.name"></p><p class="mt-0.5 text-[8px] text-[#888888]"><span x-text="attachment.context === 'comment' ? 'گفتگو' : 'توضیحات'"></span> · <span x-text="formatFileSize(attachment.size)"></span></p><div class="mt-1 flex gap-2"><button x-show="attachment.previewable" type="button" @click="openAttachmentPreview(attachment)" class="text-[8px] font-bold text-[#303030]">پیش‌نمایش</button><a :href="attachment.downloadUrl" class="text-[8px] font-bold text-[#444444]">دانلود</a>@if ($canEdit)<button type="button" x-show="canEditTask" @click="deleteAttachment(attachment)" class="text-[8px] font-bold text-red-500">حذف</button>@endif</div></div>
                                 </div>
                             </template>
-                            <p x-show="descriptionAttachments().length === 0" class="text-[11px] text-[#94A3B8]">فایلی پیوست نشده است.</p>
-                            <p x-show="descriptionAttachments().length && filteredAttachments().filter(item => item.context !== 'comment').length === 0" class="text-[11px] text-[#94A3B8]">فایلی در این دسته وجود ندارد.</p>
+                            <p x-show="descriptionAttachments().length === 0" class="text-[11px] text-[#888888]">فایلی پیوست نشده است.</p>
+                            <p x-show="descriptionAttachments().length && filteredAttachments().filter(item => item.context !== 'comment').length === 0" class="text-[11px] text-[#888888]">فایلی در این دسته وجود ندارد.</p>
                         </div>
                     </section>
                     {{-- Comments --}}
                     <section x-show="editingTask" x-cloak class="task-modal-section" aria-labelledby="task-comments-title">
                         <div class="task-modal-section__heading">
                             <div class="task-modal-section__title" id="task-comments-title">گفتگو</div>
-                            <span x-show="form.comments.length" class="text-[10px] text-[#94A3B8]" x-text="toPersianDigits(form.comments.length) + ' پیام'"></span>
+                            <span x-show="form.comments.length" class="text-[10px] text-[#888888]" x-text="toPersianDigits(form.comments.length) + ' پیام'"></span>
                         </div>
                         @if ($canEdit)
                         <div x-show="canEditTask" class="mt-3 flex gap-2.5">
-                            <div class="w-7 h-7 rounded-full bg-[#18212B] flex items-center justify-center shrink-0 shadow-sm">
+                            <div class="w-7 h-7 rounded-full bg-[#202020] flex items-center justify-center shrink-0 shadow-sm">
                                 <span class="text-[9px] text-white font-bold">ش</span>
                             </div>
                             <div class="flex-1 relative">
@@ -1364,7 +1364,7 @@
                                     x-ref="commentMentionTrigger"
                                     x-model="newComment"
                                     rows="2"
-                                    class="w-full text-sm border-2 border-[#E2E8F0] rounded-xl px-3 py-2 focus:outline-none focus:border-[#18212B] transition-colors resize-none placeholder:text-[#CBD5E1]"
+                                    class="w-full text-sm border-2 border-[#E5E5E5] rounded-xl px-3 py-2 focus:outline-none focus:border-[#202020] transition-colors resize-none placeholder:text-[#CBD5E1]"
                                     placeholder="پیام بنویسید..."
                                     @input="handleMentionInput('comment', $event)"
                                     @keydown.down.prevent="moveMentionSelection(1)"
@@ -1382,20 +1382,20 @@
                                         </button>
                                     </template>
                                 </div>
-                                <p class="text-[10px] text-[#94A3B8] mt-1">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
+                                <p class="text-[10px] text-[#888888] mt-1">برای اشاره به هم‌تیمی‌ها @ تایپ کنید.</p>
                                 <div class="mt-2 flex flex-wrap gap-2" x-show="pendingCommentFiles.length">
                                     <template x-for="item in pendingCommentFiles" :key="item.localId">
-                                        <div class="flex max-w-full items-center gap-2 rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] px-2 py-1.5">
-                                            <button type="button" @click="openAttachmentPreview(item)" class="text-[9px] font-black text-[#64748B]" x-text="attachmentLabel(item)"></button>
-                                            <span class="max-w-36 truncate text-[9px] font-bold text-[#334155]" x-text="item.name"></span>
+                                        <div class="flex max-w-full items-center gap-2 rounded-lg border border-[#E5E5E5] bg-[#F8FAFC] px-2 py-1.5">
+                                            <button type="button" @click="openAttachmentPreview(item)" class="text-[9px] font-black text-[#666666]" x-text="attachmentLabel(item)"></button>
+                                            <span class="max-w-36 truncate text-[9px] font-bold text-[#444444]" x-text="item.name"></span>
                                             <button type="button" @click="removePendingAttachment(item, 'comment')" class="text-[9px] text-red-500">×</button>
                                         </div>
                                     </template>
                                 </div>
                                 <div class="flex items-center justify-between mt-1.5">
-                                    <button type="button" @click="$refs.commentFiles.click()" class="text-[10px] font-bold text-[#64748B] hover:text-[#18212B]">＋ افزودن فایل</button>
+                                    <button type="button" @click="$refs.commentFiles.click()" class="text-[10px] font-bold text-[#666666] hover:text-[#202020]">＋ افزودن فایل</button>
                                     <input x-ref="commentFiles" type="file" multiple class="hidden" @change="queueAttachmentFiles($event.target.files, 'comment'); $event.target.value = ''">
-                                    <button x-show="newComment.trim() || pendingCommentFiles.length" @click="addComment()" :disabled="commentPosting" class="text-[10px] font-bold text-white bg-[#18212B] hover:bg-[#000000] disabled:opacity-60 px-3 py-1 rounded-lg transition-all" x-text="commentPosting ? 'در حال ارسال…' : 'ارسال (Ctrl+Enter)'"></button>
+                                    <button x-show="newComment.trim() || pendingCommentFiles.length" @click="addComment()" :disabled="commentPosting" class="text-[10px] font-bold text-white bg-[#202020] hover:bg-[#000000] disabled:opacity-60 px-3 py-1 rounded-lg transition-all" x-text="commentPosting ? 'در حال ارسال…' : 'ارسال (Ctrl+Enter)'"></button>
                                 </div>
                             </div>
                         </div>
@@ -1403,24 +1403,24 @@
                         <div class="task-comment-history space-y-3">
                             <template x-for="(comment, idx) in form.comments" :key="idx">
                                 <div class="flex gap-3">
-                                    <div class="w-7 h-7 rounded-full bg-[#18212B] flex items-center justify-center shrink-0 shadow-sm">
+                                    <div class="w-7 h-7 rounded-full bg-[#202020] flex items-center justify-center shrink-0 shadow-sm">
                                         <span class="text-[9px] text-white font-bold" x-text="comment.author.charAt(0)"></span>
                                     </div>
-                                    <div class="flex-1 bg-[#F8FAFC] rounded-xl px-3.5 py-2.5 border border-[#F1F5F9]">
+                                    <div class="flex-1 bg-[#F8FAFC] rounded-xl px-3.5 py-2.5 border border-[#F4F4F4]">
                                         <div class="flex items-center gap-2 mb-1">
                                             <span class="text-[11px] font-bold text-[#1A1D21]" x-text="comment.author"></span>
-                                            <span class="text-[9px] text-[#94A3B8]" x-text="comment.time"></span>
+                                            <span class="text-[9px] text-[#888888]" x-text="comment.time"></span>
                                         </div>
-                                        <p class="text-[12px] text-[#475569] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
-                                        <p x-show="!comment.text && !(comment.attachments || []).length" class="text-[10px] text-[#94A3B8]">پیوست حذف شده است.</p>
+                                        <p class="text-[12px] text-[#555555] leading-relaxed" x-html="formatMentionText(comment.text)"></p>
+                                        <p x-show="!comment.text && !(comment.attachments || []).length" class="text-[10px] text-[#888888]">پیوست حذف شده است.</p>
                                         <div x-show="(comment.attachments || []).length" class="mt-2 grid gap-2 sm:grid-cols-2">
                                             <template x-for="attachment in (comment.attachments || [])" :key="attachment.id">
-                                                <button type="button" @click="openAttachmentPreview(attachment)" class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E2E8F0] bg-white p-2 text-right">
-                                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F1F5F9] text-[8px] font-black text-[#64748B]">
+                                                <button type="button" @click="openAttachmentPreview(attachment)" class="flex min-w-0 items-center gap-2 rounded-lg border border-[#E5E5E5] bg-white p-2 text-right">
+                                                    <span class="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md bg-[#F4F4F4] text-[8px] font-black text-[#666666]">
                                                         <img x-show="attachment.category === 'image'" :src="attachment.previewUrl" class="h-full w-full object-cover" alt="">
                                                         <span x-show="attachment.category !== 'image'" x-text="attachmentLabel(attachment)"></span>
                                                     </span>
-                                                    <span class="min-w-0"><span class="block truncate text-[9px] font-bold text-[#334155]" x-text="attachment.name"></span><span class="text-[8px] text-[#94A3B8]" x-text="formatFileSize(attachment.size)"></span></span>
+                                                    <span class="min-w-0"><span class="block truncate text-[9px] font-bold text-[#444444]" x-text="attachment.name"></span><span class="text-[8px] text-[#888888]" x-text="formatFileSize(attachment.size)"></span></span>
                                                 </button>
                                             </template>
                                         </div>
@@ -1434,18 +1434,18 @@
                 </div>
 
                 {{-- Footer --}}
-                <div class="task-modal-footer sticky bottom-0 bg-white border-t border-[#E2E8F0] px-4 md:px-6 py-3 flex items-center justify-between">
+                <div class="task-modal-footer sticky bottom-0 bg-white border-t border-[#E5E5E5] px-4 md:px-6 py-3 flex items-center justify-between">
                     <button x-show="form.archivedAt" type="button" @click="requestCloseModal()" class="board-archive-restore">بستن</button>
                     @if ($canEdit)
                         <div x-show="!form.archivedAt" class="task-save-actions flex items-center gap-2">
                             <p x-show="taskError" x-text="taskError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p>
-                            <button type="button" @click="requestCloseModal()" :disabled="taskSaving" class="task-modal-cancel text-[11px] font-bold text-[#64748B] border-2 border-[#E2E8F0] hover:bg-[#F8FCFF] disabled:opacity-60 px-5 py-2.5 rounded-xl transition-colors">انصراف</button>
-                            <button type="button" @click="saveTask()" :disabled="!canEditTask || taskSaving" :aria-busy="taskSaving" class="task-modal-primary text-[11px] font-bold text-white bg-[#18212B] hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-sm transition-colors">
+                            <button type="button" @click="requestCloseModal()" :disabled="taskSaving" class="task-modal-cancel text-[11px] font-bold text-[#666666] border-2 border-[#E5E5E5] hover:bg-[#FAFAFA] disabled:opacity-60 px-5 py-2.5 rounded-xl transition-colors">انصراف</button>
+                            <button type="button" @click="saveTask()" :disabled="!canEditTask || taskSaving" :aria-busy="taskSaving" class="task-modal-primary text-[11px] font-bold text-white bg-[#202020] hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait px-5 py-2.5 rounded-xl shadow-sm transition-colors">
                                 <span x-text="taskSaving ? 'در حال ذخیره…' : (editingTask ? 'ذخیره تغییرات' : 'ایجاد وظیفه')"></span>
                             </button>
                         </div>
                     @else
-                        <div class="flex-1 text-[11px] leading-5 text-[#64748B] bg-white border border-[#E2E8F0] rounded-lg px-3 py-2.5">شما دسترسی مشاهده دارید و نمی‌توانید این وظیفه را تغییر دهید.</div>
+                        <div class="flex-1 text-[11px] leading-5 text-[#666666] bg-white border border-[#E5E5E5] rounded-lg px-3 py-2.5">شما دسترسی مشاهده دارید و نمی‌توانید این وظیفه را تغییر دهید.</div>
                     @endif
                 </div>
 
@@ -1457,16 +1457,16 @@
     <div x-show="attachmentPreview" x-cloak class="fixed inset-0 z-[90] flex items-center justify-center p-4">
         <div class="absolute inset-0 bg-[#07111F]/75 backdrop-blur-sm" @click="closeAttachmentPreview()"></div>
         <div class="relative flex max-h-[90vh] w-full max-w-5xl flex-col overflow-hidden rounded-2xl bg-white shadow-2xl" role="dialog" aria-modal="true" aria-label="پیش‌نمایش فایل" @click.stop>
-            <div class="flex items-center justify-between gap-3 border-b border-[#E2E8F0] px-4 py-3">
-                <div class="min-w-0"><p class="truncate text-xs font-black text-[#18212B]" x-text="attachmentPreview?.name"></p><p class="mt-0.5 text-[9px] text-[#94A3B8]" x-text="formatFileSize(attachmentPreview?.size)"></p></div>
-                <div class="flex items-center gap-2"><a x-show="attachmentPreview?.downloadUrl" :href="attachmentPreview?.downloadUrl" class="rounded-lg border border-[#D8E0EB] px-3 py-1.5 text-[10px] font-bold text-[#334155]">دانلود</a><button type="button" @click="closeAttachmentPreview()" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F1F5F9] text-lg text-[#64748B]" aria-label="بستن">×</button></div>
+            <div class="flex items-center justify-between gap-3 border-b border-[#E5E5E5] px-4 py-3">
+                <div class="min-w-0"><p class="truncate text-xs font-black text-[#202020]" x-text="attachmentPreview?.name"></p><p class="mt-0.5 text-[9px] text-[#888888]" x-text="formatFileSize(attachmentPreview?.size)"></p></div>
+                <div class="flex items-center gap-2"><a x-show="attachmentPreview?.downloadUrl" :href="attachmentPreview?.downloadUrl" class="rounded-lg border border-[#D8E0EB] px-3 py-1.5 text-[10px] font-bold text-[#444444]">دانلود</a><button type="button" @click="closeAttachmentPreview()" class="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F4F4F4] text-lg text-[#666666]" aria-label="بستن">×</button></div>
             </div>
             <div class="flex min-h-64 flex-1 items-center justify-center overflow-auto bg-[#F8FAFC] p-4">
                 <template x-if="attachmentPreview?.category === 'image'"><img :src="attachmentPreview?.previewUrl" class="max-h-[72vh] max-w-full rounded-lg object-contain" :alt="attachmentPreview?.name"></template>
                 <template x-if="attachmentPreview?.category === 'pdf' || attachmentPreview?.category === 'text'"><iframe :src="attachmentPreview?.previewUrl" class="h-[72vh] w-full rounded-lg border-0 bg-white" title="پیش‌نمایش فایل"></iframe></template>
                 <template x-if="attachmentPreview?.category === 'audio'"><audio :src="attachmentPreview?.previewUrl" controls class="w-full max-w-xl"></audio></template>
                 <template x-if="attachmentPreview?.category === 'video'"><video :src="attachmentPreview?.previewUrl" controls class="max-h-[72vh] max-w-full rounded-lg bg-black"></video></template>
-                <template x-if="attachmentPreview && !['image','pdf','text','audio','video'].includes(attachmentPreview.category)"><div class="text-center"><div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-lg font-black text-[#64748B] shadow-sm" x-text="attachmentLabel(attachmentPreview)"></div><p class="mt-4 text-xs font-bold text-[#334155]">برای این نوع فایل پیش‌نمایش مرورگر موجود نیست.</p></div></template>
+                <template x-if="attachmentPreview && !['image','pdf','text','audio','video'].includes(attachmentPreview.category)"><div class="text-center"><div class="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-white text-lg font-black text-[#666666] shadow-sm" x-text="attachmentLabel(attachmentPreview)"></div><p class="mt-4 text-xs font-bold text-[#444444]">برای این نوع فایل پیش‌نمایش مرورگر موجود نیست.</p></div></template>
             </div>
         </div>
     </div>
@@ -1475,9 +1475,9 @@
     <div x-show="showColumnModal" x-cloak x-transition:enter="transition-opacity ease-out duration-100" x-transition:leave="transition-opacity ease-in duration-75" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="closeColumnModal()">
         <div class="column-modal-backdrop absolute inset-0" @click="closeColumnModal()"></div>
         <form @submit.prevent="addColumn()" class="board-form-modal relative bg-white w-full max-w-md rounded-xl shadow-lg overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-labelledby="column-modal-title" @keydown="trapModalFocus($event)">
-            <div class="p-6 border-b border-[#F1EFEA]"><h4 id="column-modal-title" class="text-base font-black text-[#18212B]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#64748B] mt-1" x-text="columnEditingId ? 'نام، رنگ و ظرفیت این مرحله را تنظیم کنید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
+            <div class="p-6 border-b border-[#F1F1F1]"><h4 id="column-modal-title" class="text-base font-black text-[#202020]" x-text="columnEditingId ? 'ویرایش ستون' : 'افزودن ستون'"></h4><p class="text-xs text-[#666666] mt-1" x-text="columnEditingId ? 'نام، رنگ و ظرفیت این مرحله را تنظیم کنید.' : 'یک مرحله جدید برای جریان کار پروژه بسازید.'"></p></div>
             <button type="button" @click="closeColumnModal()" class="modal-close-button absolute left-4 top-4" aria-label="بستن پنجره"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18"/></svg></button>
-            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#64748B] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#64748B] mb-2">ظرفیت کار هم‌زمان <span class="font-normal text-[#94A3B8]">(اختیاری)</span></label><input x-model="columnFormWipLimit" type="number" min="1" max="999" class="w-full h-11 rounded-xl border-2 border-[#E8EBE9] px-4 text-sm font-bold text-[#18212B] outline-none focus:border-[#18212B]" placeholder="مثلاً ۵"></div><fieldset class="column-color-picker">
+            <div class="p-6 space-y-5"><div><label class="block text-[11px] font-black text-[#666666] mb-2">نام ستون</label><input x-ref="columnTitle" x-model="columnFormTitle" type="text" maxlength="100" required class="w-full h-12 rounded-xl border-2 border-[#EBEBEB] px-4 text-sm font-bold text-[#202020] outline-none focus:border-[#202020]" placeholder="مثلاً آماده انتشار"></div><div><label class="block text-[11px] font-black text-[#666666] mb-2">ظرفیت کار هم‌زمان <span class="font-normal text-[#888888]">(اختیاری)</span></label><input x-model="columnFormWipLimit" type="number" min="1" max="999" class="w-full h-11 rounded-xl border-2 border-[#EBEBEB] px-4 text-sm font-bold text-[#202020] outline-none focus:border-[#202020]" placeholder="مثلاً ۵"></div><fieldset class="column-color-picker">
                     <legend>رنگ ستون</legend>
                     <p>این رنگ برای پس‌زمینه ستون و نشان کارت‌ها استفاده می‌شود.</p>
                     <div class="column-color-picker__presets">
@@ -1488,16 +1488,16 @@
                     <label class="column-color-picker__custom" for="column-custom-color"><span>رنگ دلخواه</span><input id="column-custom-color" type="color" x-model="columnFormColor"><code x-text="columnFormColor.toUpperCase()"></code></label>
                     <div class="column-color-preview" :style="columnStyle({ dotHex: columnFormColor })" aria-label="پیش‌نمایش رنگ ستون"><div><i></i><strong x-text="columnFormTitle || 'ستون جدید'"></strong><small>۲</small></div><span>پیش‌نمایش یک وظیفه در این ستون</span></div>
                 </fieldset><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2" role="alert"></p></div>
-            <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" :disabled="columnSaving" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button type="submit" :disabled="columnSaving" :aria-busy="columnSaving" class="flex-1 h-11 rounded-xl bg-[#18212B] text-white text-xs font-black hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait" x-text="columnSaving ? 'در حال ذخیره…' : (columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون')"></button></div>
+            <div class="flex gap-2.5 px-6 pb-6"><button type="button" @click="closeColumnModal()" :disabled="columnSaving" class="flex-1 h-11 rounded-xl border-2 border-[#EBEBEB] text-xs font-bold text-[#666666] disabled:opacity-50">انصراف</button><button type="submit" :disabled="columnSaving" :aria-busy="columnSaving" class="flex-1 h-11 rounded-xl bg-[#202020] text-white text-xs font-black hover:bg-[#253342] disabled:opacity-60 disabled:cursor-wait" x-text="columnSaving ? 'در حال ذخیره…' : (columnEditingId ? 'ذخیره تغییرات' : 'افزودن ستون')"></button></div>
         </form>
     </div>
 
     {{-- Delete Column Confirmation Modal --}}
     <div x-show="showColumnDeleteModal" x-cloak x-transition:enter="transition-opacity ease-out duration-100" x-transition:leave="transition-opacity ease-in duration-75" class="fixed inset-0 z-[60] flex items-center justify-center p-4" @keydown.escape.window="showColumnDeleteModal = false">
-        <div class="absolute inset-0 bg-[#18212B]/55" @click="showColumnDeleteModal = false"></div>
+        <div class="absolute inset-0 bg-[#202020]/55" @click="showColumnDeleteModal = false"></div>
         <div class="board-confirm-modal relative bg-white w-full max-w-sm rounded-xl shadow-lg overflow-hidden" @click.stop role="dialog" aria-modal="true" aria-label="تأیید حذف ستون" @keydown="trapModalFocus($event)">
             <button type="button" @click="showColumnDeleteModal = false" class="modal-close-button absolute left-4 top-4" aria-label="بستن پنجره"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18"/></svg></button>
-            <div class="p-6 text-center"><div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M12 9v3m0 4h.01M5.2 19h13.6c1.5 0 2.4-1.6 1.65-2.9L13.65 4.2a1.9 1.9 0 0 0-3.3 0L3.55 16.1C2.8 17.4 3.7 19 5.2 19Z"/></svg></div><h4 class="text-sm font-black text-[#18212B]">حذف ستون «<span x-text="columnDeleteTarget.title"></span>»؟</h4><p class="text-xs leading-6 text-[#64748B] mt-2 mb-5">این ستون و <span class="font-black text-red-500" x-text="columnDeleteTarget.taskCount"></span> وظیفه داخل آن حذف می‌شوند و قابل بازگشت نیستند.</p><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3" role="alert"></p><div class="flex gap-2.5"><button @click="showColumnDeleteModal = false" :disabled="columnDeleting" class="flex-1 h-11 rounded-xl border-2 border-[#E8EBE9] text-xs font-bold text-[#64748B] disabled:opacity-50">انصراف</button><button @click="deleteColumn()" :disabled="columnDeleting" :aria-busy="columnDeleting" class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-xs font-black" x-text="columnDeleting ? 'در حال حذف…' : 'حذف ستون'"></button></div></div>
+            <div class="p-6 text-center"><div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4"><svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-width="1.8" d="M12 9v3m0 4h.01M5.2 19h13.6c1.5 0 2.4-1.6 1.65-2.9L13.65 4.2a1.9 1.9 0 0 0-3.3 0L3.55 16.1C2.8 17.4 3.7 19 5.2 19Z"/></svg></div><h4 class="text-sm font-black text-[#202020]">حذف ستون «<span x-text="columnDeleteTarget.title"></span>»؟</h4><p class="text-xs leading-6 text-[#666666] mt-2 mb-5">این ستون و <span class="font-black text-red-500" x-text="columnDeleteTarget.taskCount"></span> وظیفه داخل آن حذف می‌شوند و قابل بازگشت نیستند.</p><p x-show="columnError" x-text="columnError" class="text-[10px] leading-5 text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2 mb-3" role="alert"></p><div class="flex gap-2.5"><button @click="showColumnDeleteModal = false" :disabled="columnDeleting" class="flex-1 h-11 rounded-xl border-2 border-[#EBEBEB] text-xs font-bold text-[#666666] disabled:opacity-50">انصراف</button><button @click="deleteColumn()" :disabled="columnDeleting" :aria-busy="columnDeleting" class="flex-1 h-11 rounded-xl bg-red-500 hover:bg-red-600 disabled:opacity-60 text-white text-xs font-black" x-text="columnDeleting ? 'در حال حذف…' : 'حذف ستون'"></button></div></div>
         </div>
     </div>
 
@@ -1522,9 +1522,9 @@
                     <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
                 <h4 class="text-sm font-bold text-[#1A1D21] mb-1">حذف وظیفه</h4>
-                <p class="text-xs text-[#64748B] mb-5">آیا از حذف این وظیفه مطمئن هستید؟ این عمل قابل بازگشت نیست.</p>
+                <p class="text-xs text-[#666666] mb-5">آیا از حذف این وظیفه مطمئن هستید؟ این عمل قابل بازگشت نیست.</p>
                 <div class="flex gap-2.5">
-                    <button @click="showDeleteModal = false" class="flex-1 text-xs font-semibold text-[#64748B] hover:text-[#1A1D21] px-4 py-2.5 rounded-xl border-2 border-[#E2E8F0] hover:border-[#CBD5E1] transition-all">انصراف</button>
+                    <button @click="showDeleteModal = false" class="flex-1 text-xs font-semibold text-[#666666] hover:text-[#1A1D21] px-4 py-2.5 rounded-xl border-2 border-[#E5E5E5] hover:border-[#CBD5E1] transition-all">انصراف</button>
                     <button @click="deleteTask()" :disabled="taskDeleting" :aria-busy="taskDeleting" class="flex-1 text-xs font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-60 disabled:cursor-wait px-4 py-2.5 rounded-xl shadow-md shadow-red-500/25 transition-all active:scale-[0.97]" x-text="taskDeleting ? 'در حال حذف…' : 'حذف'"></button>
                 </div>
             </div>
@@ -1703,12 +1703,12 @@
                 },
 
                 allTags: [
-                    { name: 'طراحی', activeClass: 'border-purple-400 bg-purple-50 text-purple-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-purple-200 hover:text-purple-500' },
-                    { name: 'توسعه', activeClass: 'border-gray-500 bg-gray-100 text-gray-800', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-gray-300 hover:text-gray-700' },
-                    { name: 'بک‌اند', activeClass: 'border-amber-400 bg-amber-50 text-amber-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-amber-200 hover:text-amber-500' },
-                    { name: 'فرانت‌اند', activeClass: 'border-green-400 bg-green-50 text-green-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-green-200 hover:text-green-500' },
-                    { name: 'باگ', activeClass: 'border-red-400 bg-red-50 text-red-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-red-200 hover:text-red-500' },
-                    { name: 'بهبود', activeClass: 'border-teal-400 bg-teal-50 text-teal-700', inactiveClass: 'border-[#F1F5F9] text-[#94A3B8] hover:border-teal-200 hover:text-teal-500' },
+                    { name: 'طراحی', activeClass: 'border-purple-400 bg-purple-50 text-purple-700', inactiveClass: 'border-[#F4F4F4] text-[#888888] hover:border-purple-200 hover:text-purple-500' },
+                    { name: 'توسعه', activeClass: 'border-gray-500 bg-gray-100 text-gray-800', inactiveClass: 'border-[#F4F4F4] text-[#888888] hover:border-gray-300 hover:text-gray-700' },
+                    { name: 'بک‌اند', activeClass: 'border-amber-400 bg-amber-50 text-amber-700', inactiveClass: 'border-[#F4F4F4] text-[#888888] hover:border-amber-200 hover:text-amber-500' },
+                    { name: 'فرانت‌اند', activeClass: 'border-green-400 bg-green-50 text-green-700', inactiveClass: 'border-[#F4F4F4] text-[#888888] hover:border-green-200 hover:text-green-500' },
+                    { name: 'باگ', activeClass: 'border-red-400 bg-red-50 text-red-700', inactiveClass: 'border-[#F4F4F4] text-[#888888] hover:border-red-200 hover:text-red-500' },
+                    { name: 'بهبود', activeClass: 'border-teal-400 bg-teal-50 text-teal-700', inactiveClass: 'border-[#F4F4F4] text-[#888888] hover:border-teal-200 hover:text-teal-500' },
                 ],
 
                 customTags: @json($customTags ?? []),
@@ -1729,12 +1729,8 @@
                 columnStyle(column) {
                     const candidate = column.dotHex || '#8B938E';
                     const accent = /^#[0-9a-f]{6}$/i.test(candidate) ? candidate.toUpperCase() : '#8B938E';
-                    const preset = this.columnColors.find(color => color.hex === accent);
-                    const paper = [247, 245, 239];
-                    const surface = preset?.surface || '#' + paper.map((channel, index) => {
-                        const color = parseInt(accent.slice(1 + index * 2, 3 + index * 2), 16);
-                        return Math.round(channel * 0.86 + color * 0.14).toString(16).padStart(2, '0');
-                    }).join('');
+                    // Keep custom colors as small accents; column surfaces stay neutral.
+                    const surface = '#F3F3F3';
                     return `--column-accent:${accent};--column-surface:${surface};`;
                 },
 
@@ -2822,13 +2818,13 @@
                         .replaceAll('"', '&quot;')
                         .replaceAll("'", '&#039;');
                     return escaped
-                        .replace(/@\[([^\]]+)\]\(user:\d+\)/gu, '<span class="inline-flex bg-[#F1F3F2] text-[#18212B] font-bold rounded px-1.5 py-0.5">@$1</span>')
+                        .replace(/@\[([^\]]+)\]\(user:\d+\)/gu, '<span class="inline-flex bg-[#F1F3F2] text-[#202020] font-bold rounded px-1.5 py-0.5">@$1</span>')
                         .replaceAll('\n', '<br>');
                 },
 
                 getTagClass(tagName) {
                     const tag = this.allTags.find(t => t.name === tagName);
-                    if (!tag) return 'bg-[#F1F5F9] text-[#94A3B8]';
+                    if (!tag) return 'bg-[#F4F4F4] text-[#888888]';
                     return tag.activeClass.split(' ').filter(c => c.startsWith('bg-') || c.startsWith('text-')).join(' ');
                 },
 
@@ -2837,7 +2833,7 @@
                     const custom = (this.customTags || []).map(t => ({
                         name: t.name,
                         activeClass: `border-[${t.color}] bg-[${t.color}]/10 text-[${t.color}]`,
-                        inactiveClass: `border-[#F1F5F9] text-[#94A3B8] hover:border-[${t.color}]/30`,
+                        inactiveClass: `border-[#F4F4F4] text-[#888888] hover:border-[${t.color}]/30`,
                         isCustom: true,
                     }));
                     return hardcoded.concat(custom);
@@ -3732,7 +3728,7 @@
                             const column = this.columns.find(item => item.id === String(data.id));
                             if (column) { column.title = data.title; column.dotHex = data.color || this.columnFormColor; column.wipLimit = data.wip_limit || null; }
                         } else {
-                            this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#94A3B8]', dotHex: data.color || this.columnFormColor, wipLimit: data.wip_limit || null, badgeClass: 'bg-[#F1F5F9] text-[#64748B]', tasks: [], collapsed: false });
+                            this.columns.push({ id: String(data.id), title: data.title, dotColor: 'bg-[#888888]', dotHex: data.color || this.columnFormColor, wipLimit: data.wip_limit || null, badgeClass: 'bg-[#F4F4F4] text-[#666666]', tasks: [], collapsed: false });
                         }
                         this.closeColumnModal();
                         this.showToast(editing ? 'تغییرات ستون ذخیره شد' : 'ستون جدید اضافه شد');
